@@ -1,0 +1,106 @@
+
+import 'package:flutter/material.dart';
+import 'package:flutter_project_1/Student Page/login.dart';
+import 'package:flutter_project_1/Loading.dart';
+void main() {
+  runApp(MaterialApp(
+    theme: ThemeData(
+      fontFamily: 'Montserrat',
+    ),
+    initialRoute: '/home',
+    routes: { // Pages routing
+      '/': (context) => Loading(),
+      '/home': (context) => Home(),
+      '/login': (context) => Login(),
+    },
+  )); // MaterialApp
+}
+
+class Home extends StatelessWidget {
+  const Home({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Color(0xFFEAF5FB),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center, // To align the whole page in vertically centered
+        children: [
+          Container( // Logo
+            margin: EdgeInsets.fromLTRB(0,150,0,0),
+            child: Image(
+                image: AssetImage('assets/logo.png')
+            ),
+          ),
+          Text( // Subheader
+            'Welcome to Attendly',
+            style: TextStyle(
+              fontFamily: 'Montserrat',
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
+          Container( // Subheader
+            margin: EdgeInsetsGeometry.symmetric(vertical: 60),
+            child: Text(
+              'Secure, Fast, and Reliable class attendance monitoring with face verification and network-based authentication',
+              textAlign: TextAlign.center,
+              style: TextStyle( // Text Style
+                fontSize: 18,
+                fontFamily: 'Montserrat',
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          OutlinedButton( // Get started button
+            onPressed: () {
+              Navigator.pushNamed(context, '/login');
+            },
+            style: ElevatedButton.styleFrom( // Button style
+              shape: RoundedRectangleBorder( // To achieved a round rectangle border radius
+                borderRadius: BorderRadius.circular(50)
+              ),
+              padding: EdgeInsets.symmetric(vertical: 5, horizontal: 5), // Button padding
+              backgroundColor: Color(0xFF004280), // Button BG color
+            ),
+            child: Row( // To arrange in row the widgets inside the button
+              mainAxisSize: MainAxisSize.min, // To avoid full-width button
+              children: [
+                CircleAvatar( // Icon with circular border
+                  radius: 15, // Circle size
+                  backgroundColor: Colors.white,
+                  child: Icon( // Icon
+                    Icons.arrow_forward,
+                    size: 18, // Icon size
+                    color: Color(0xFF004280),
+                  ),
+                ),
+                Container(
+                  padding: EdgeInsets.fromLTRB(10,0,15,0),
+                  child: Text(
+                    'Get Started',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontFamily: 'Montserrat',
+                    ),
+                  ),
+                )
+              ],
+            )
+          ),
+          Container( // Footer
+            margin: EdgeInsets.fromLTRB(0,150,0,0),
+            child: Text(
+              '© 2025 Attendly. All rights reserved.',
+              style: TextStyle(
+                fontFamily: 'Montserrat',
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
