@@ -1,7 +1,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_project_1/Student Page/login.dart';
-import 'package:flutter_project_1/Loading.dart';
 import 'package:flutter_project_1/Student Page/face_registration.dart';
 
 void main() {
@@ -12,16 +11,15 @@ void main() {
     ),
     initialRoute: '/home',
     routes: { // Pages routing
-      '/': (context) => Loading(),
-      '/home': (context) => Home(),
+      '/home': (context) => LandingPage(),
       '/login': (context) => Login(),
       '/face_registration': (context) => Face_Registration(),
     },
   )); // MaterialApp
 }
 
-class Home extends StatelessWidget {
-  const Home({super.key});
+class LandingPage extends StatelessWidget {
+  const LandingPage({super.key});
 
   @override
   Widget build(BuildContext context) {
