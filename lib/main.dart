@@ -2,16 +2,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_project_1/Student Page/login.dart';
 import 'package:flutter_project_1/Loading.dart';
+import 'package:flutter_project_1/Student Page/face_registration.dart';
+
 void main() {
   runApp(MaterialApp(
     theme: ThemeData(
       fontFamily: 'Montserrat',
+      scaffoldBackgroundColor: const Color(0xFFEAF5FB),
     ),
     initialRoute: '/home',
     routes: { // Pages routing
       '/': (context) => Loading(),
       '/home': (context) => Home(),
       '/login': (context) => Login(),
+      '/face_registration': (context) => Face_Registration(),
     },
   )); // MaterialApp
 }
@@ -55,7 +59,9 @@ class Home extends StatelessWidget {
           ),
           OutlinedButton( // Get started button
             onPressed: () {
-              Navigator.pushNamed(context, '/login');
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (_) => const Login()),
+              );
             },
             style: ElevatedButton.styleFrom( // Button style
               shape: RoundedRectangleBorder( // To achieved a round rectangle border radius

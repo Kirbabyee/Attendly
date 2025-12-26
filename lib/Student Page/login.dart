@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_project_1/Student Page/face_registration.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -243,7 +244,9 @@ class _LoginState extends State<Login> {
                             // All inputs are valid
                             final studentNo = _studentNoController.text;
                             final password = _passwordController.text;
-                            print('Login OK: $studentNo');
+                            Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(builder: (_) => const Face_Registration()),
+                            );
                           }
                         },
                         child: Text(
