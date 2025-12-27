@@ -7,7 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 
-import 'package:flutter_project_1/Student Page/dashboard.dart';
+
+import 'loading_screen.dart';
 
 class Face_Registration extends StatefulWidget {
   const Face_Registration({super.key});
@@ -86,7 +87,7 @@ class _Face_RegistrationState extends State<Face_Registration> {
     if (!mounted) return;
 
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const Dashboard()),
+      MaterialPageRoute(builder: (_) => const DashboardLoading()),
     );
   }
 
