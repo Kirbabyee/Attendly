@@ -6,10 +6,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
-import 'package:flutter_project_1/Student%20Page/face_verified.dart';
+import 'package:flutter_project_1/Student Page/attendance/face_verified.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 
-import '../widgets/student_information_card.dart';
+import '../../widgets/student_information_card.dart';
 
 import 'package:flutter_project_1/Student%20Page/dashboard.dart';
 
@@ -230,7 +230,7 @@ class _Face_VerificationState extends State<Face_Verification> {
     return InputImage.fromBytes(bytes: bytes, metadata: metadata);
   }
 
-  // ✅ Mirror + more realistic thresholds (front camera fix)
+  // Mirror + more realistic thresholds (front camera fix)
   bool _isFaceInsideGuide(Rect faceBox, Size imageSize) {
     // Mirror horizontally because front camera preview is mirrored
     final mirroredFaceBox = Rect.fromLTRB(

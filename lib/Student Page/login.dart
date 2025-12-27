@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_project_1/Student Page/face_registration.dart';
 import 'package:flutter_project_1/Student%20Page/dashboard.dart';
+import 'package:flutter_project_1/Student%20Page/mainshell.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -256,7 +257,7 @@ class _LoginState extends State<Login> {
                             final studentNo = _studentNoController.text;
                             final password = _passwordController.text;
                             Navigator.of(context).pushReplacement(
-                              MaterialPageRoute(builder: (_) => const Dashboard()),
+                              MaterialPageRoute(builder: (_) => const Mainshell()),
                             );
                           }
                         },

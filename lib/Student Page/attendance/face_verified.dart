@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import '../widgets/student_information_card.dart';
-import 'dashboard.dart';
+import '../../widgets/student_information_card.dart';
+import '../dashboard.dart';
 
 class Face_Verified extends StatefulWidget {
   const Face_Verified({super.key});

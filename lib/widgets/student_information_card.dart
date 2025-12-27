@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_project_1/Student%20Page/mainshell.dart';
 
 import '../Student Page/dashboard.dart';
 
@@ -45,7 +46,7 @@ class AttendlyBlueHeader extends StatelessWidget {
               IconButton(
                 onPressed: () {
                   Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (_) => const Dashboard())
+                    MaterialPageRoute(builder: (_) => const Mainshell())
                   );
                 },
                 icon: const Icon(

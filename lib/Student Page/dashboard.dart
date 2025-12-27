@@ -1,17 +1,15 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import '../widgets/navbar.dart';
 
 class Dashboard extends StatefulWidget {
   const Dashboard({super.key});
 
   @override
   State<Dashboard> createState() => _DashboardState();
+
 }
 
 class _DashboardState extends State<Dashboard> {
-  int _currentIndex = 0; // Set Home selected by default
-
   Widget textBold(tag, name) {
     return Text.rich(
       TextSpan(
@@ -148,7 +146,7 @@ class _DashboardState extends State<Dashboard> {
         child: Column(
           children: [
             Container(
-              height: 300,
+              height: 250,
               decoration: BoxDecoration(
                 color: Color(0xFF004280),
                 borderRadius: BorderRadius.vertical(
@@ -159,23 +157,6 @@ class _DashboardState extends State<Dashboard> {
               padding: EdgeInsets.all(10),
               child: Column(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      IconButton(
-                        onPressed: () {},
-                        icon: Icon(CupertinoIcons.line_horizontal_3,
-                            color: Colors.white),
-                      ),
-                      IconButton(
-                        onPressed: () {
-
-                        },
-                        icon: Icon(CupertinoIcons.square_arrow_right,
-                            color: Colors.white),
-                      ),
-                    ],
-                  ),
                   SizedBox(height: 10),
                   Container(
                     margin: EdgeInsets.symmetric(horizontal: 20),
@@ -259,7 +240,6 @@ class _DashboardState extends State<Dashboard> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 12),
                   classCard(
                     'Introduction to Human Computer Interaction',
                     'CCS101',
@@ -289,14 +269,6 @@ class _DashboardState extends State<Dashboard> {
             ),
           ],
         ),
-      ),
-
-      // ✅ ADD THIS
-      bottomNavigationBar: AttendlyNavBar(
-        currentIndex: _currentIndex,
-        onTap: (i) {
-          setState(() => _currentIndex = i);
-        },
       ),
     );
   }

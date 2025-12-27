@@ -2,8 +2,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_project_1/Student Page/login.dart';
 import 'package:flutter_project_1/Student Page/face_registration.dart';
-import 'package:flutter_project_1/Student Page/face_verification.dart';
+import 'package:flutter_project_1/Student%20Page/attendance/face_verification.dart';
 import 'package:flutter_project_1/Student%20Page/dashboard.dart';
+import 'package:flutter_project_1/Student%20Page/help.dart';
+import 'package:flutter_project_1/Student%20Page/history.dart';
+import 'package:flutter_project_1/Student%20Page/settings.dart';
 
 void main() {
   runApp(MaterialApp(
@@ -18,6 +21,9 @@ void main() {
       '/dashboard' : (context) => Dashboard(),
       '/face_registration': (context) => Face_Registration(),
       '/face_verification': (context) => Face_Verification(),
+      '/history': (context) => History(),
+      '/settings': (context) => Settings(),
+      '/help': (context) => Help(),
     },
   )); // MaterialApp
 }
