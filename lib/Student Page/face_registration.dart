@@ -17,17 +17,78 @@ class Face_Registration extends StatefulWidget {
 }
 
 class _Face_RegistrationState extends State<Face_Registration> {
+
   CameraController? _controller;
   Future<void>? _initFuture;
 
   late final FaceDetector _faceDetector;
 
+  bool _showingModal = false;
   bool _navigated = false;
   Timer? _alignmentTimer;
 
   bool _processing = false;
   bool _faceAligned = false;
   DateTime _lastRun = DateTime.fromMillisecondsSinceEpoch(0);
+
+  // Show the Success Modal
+  void _showSuccessModal() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.check_circle,
+                color: Colors.green,
+                size: 48,
+              ),
+            ],
+          ),
+          content: Text(
+            'Face Successfully Registered',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // close modal
+                _navigateNext();
+              },
+              child: const Text('Continue'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Navigate through the next page after the user close the modal
+  void _navigateNext() async {
+    if (_navigated) return;
+    _navigated = true;
+
+    // Stop camera stream
+    try {
+      if (_controller?.value.isStreamingImages == true) {
+        await _controller!.stopImageStream();
+      }
+    } catch (_) {}
+
+    if (!mounted) return;
+
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => const Dashboard()),
+    );
+  }
 
   @override
   void initState() {
@@ -49,7 +110,6 @@ class _Face_RegistrationState extends State<Face_Registration> {
     _faceDetector.close();
     super.dispose();
   }
-
 
   Future<void> _stopCamera() async {
     final c = _controller;
@@ -120,34 +180,22 @@ class _Face_RegistrationState extends State<Face_Registration> {
 
           if (!mounted) return;
 
-          // Update UI state
+          // Update UI
           if (aligned != _faceAligned) {
             setState(() => _faceAligned = aligned);
           }
 
-          // Start delay when face is aligned
-          if (aligned && !_navigated) {
-            _alignmentTimer ??= Timer(const Duration(seconds: 2), () async {
-              if (!mounted || _navigated) return;
+          // Start delay when aligned
+          if (aligned && !_showingModal && !_navigated) {
+            _alignmentTimer ??= Timer(const Duration(seconds: 2), () {
+              if (!mounted || _showingModal || _navigated) return;
 
-              _navigated = true;
-
-              // Stop camera stream
-              try {
-                if (_controller?.value.isStreamingImages == true) {
-                  await _controller!.stopImageStream();
-                }
-              } catch (_) {}
-
-              // Navigate after delay
-              if (!mounted) return;
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (_) => const Dashboard()),
-              );
+              _showingModal = true;
+              _showSuccessModal();
             });
           }
 
-          // Cancel delay if face moves away
+          // Cancel if face moves
           if (!aligned) {
             _alignmentTimer?.cancel();
             _alignmentTimer = null;
@@ -171,7 +219,6 @@ class _Face_RegistrationState extends State<Face_Registration> {
 
   double _area(Rect r) => r.width * r.height;
 
-  // ✅ UPDATED for latest ML Kit: no planeData / no InputImagePlaneMetadata
   InputImage _cameraImageToInputImage(
       CameraImage image,
       CameraDescription description,
@@ -208,8 +255,8 @@ class _Face_RegistrationState extends State<Face_Registration> {
     );
   }
 
-  /// Check if detected face box is mostly inside the centered guide region.
-  /// Uses IMAGE coordinates (not UI pixels).
+  // Check if detected face box is mostly inside the centered guide region.
+  // Uses IMAGE coordinates (not UI pixels).
   bool _isFaceInsideGuide(Rect faceBox, Size imageSize) {
     // MIRROR face box horizontally (front camera fix)
     final mirroredFaceBox = Rect.fromLTRB(

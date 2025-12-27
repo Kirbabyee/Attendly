@@ -145,7 +145,7 @@ class _DashboardState extends State<Dashboard> {
         child: Column(
           children: [
             Container(
-              height: 310,
+              height: 300,
               decoration: BoxDecoration(
                 color: Color(0xFF004280),
                 borderRadius: BorderRadius.vertical(
@@ -171,6 +171,7 @@ class _DashboardState extends State<Dashboard> {
                       ),
                     ],
                   ),
+                  SizedBox(height: 10),
                   Container(
                     margin: EdgeInsets.symmetric(horizontal: 20),
                     child: Row(
@@ -180,7 +181,6 @@ class _DashboardState extends State<Dashboard> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            SizedBox(height: 20),
                             Text('Welcome to Attendly',
                                 style: TextStyle(color: Colors.white)),
                             Text(
