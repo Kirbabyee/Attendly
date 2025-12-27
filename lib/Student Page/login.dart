@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_project_1/Student Page/face_registration.dart';
+import 'package:flutter_project_1/Student%20Page/dashboard.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -87,7 +88,7 @@ class _LoginState extends State<Login> {
                         ),
                         SizedBox(height: 5,),
                         SizedBox(
-                          height: 70,
+                          height: 55,
                           width: 300,
                           child: TextFormField( // Input box
                             style: TextStyle(fontSize: 14),
@@ -96,43 +97,49 @@ class _LoginState extends State<Login> {
                               FilteringTextInputFormatter.digitsOnly, // ⛔ blocks letters/symbols
                             ],
                             decoration: InputDecoration(
-                                errorMaxLines: 1,
-                                errorStyle: TextStyle(
-                                  fontSize: 10,
-                                  height: 1,
+                              errorMaxLines: 1,
+                              errorStyle: TextStyle(
+                                fontSize: 10,
+                                height: 1,
+                              ),
+                              hintText: 'Enter Student No.', // Placeholder
+                              hintStyle: TextStyle(
+                                color: Colors.grey, // Change placeholder color
+                                fontSize: 14,
+                              ),
+                              prefixIcon: Icon(
+                                Icons.person_2_outlined, // Add icon to the placeholder
+                                color: Colors.grey, // Change the color of the icon
+                              ),
+                              contentPadding: const EdgeInsets.symmetric( // Add padding
+                                horizontal: 10,
+                                vertical: 10,
+                              ),
+                              // Add border to the input box
+                              enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: const BorderSide(
+                                      color: Colors.grey
+                                  )
+                              ),
+                              focusedBorder: OutlineInputBorder(  // Change color of the border when clicked
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: const BorderSide(
+                                      color: Colors.black
+                                  )
+                              ),
+                              errorBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: const BorderSide(
+                                      color: Colors.red
+                                  )
+                              ),
+                              focusedErrorBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: const BorderSide(
+                                    color: Colors.red
                                 ),
-                                hintText: 'Enter Student No.', // Placeholder
-                                hintStyle: TextStyle(
-                                  color: Colors.grey, // Change placeholder color
-                                  fontSize: 14,
-                                ),
-                                prefixIcon: Icon(
-                                  Icons.person_2_outlined, // Add icon to the placeholder
-                                  color: Colors.grey, // Change the color of the icon
-                                ),
-                                contentPadding: const EdgeInsets.symmetric( // Add padding
-                                  horizontal: 10,
-                                  vertical: 10,
-                                ),
-                                // Add border to the input box
-                                enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    borderSide: const BorderSide(
-                                        color: Colors.grey
-                                    )
-                                ),
-                                focusedBorder: OutlineInputBorder(  // Change color of the border when clicked
-                                    borderRadius: BorderRadius.circular(10),
-                                    borderSide: const BorderSide(
-                                        color: Colors.black
-                                    )
-                                ),
-                                errorBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    borderSide: const BorderSide(
-                                        color: Colors.red
-                                    )
-                                )
+                              ),
                             ),
                             validator: (value) {
                               final v = value?.trim() ?? '';
@@ -147,7 +154,7 @@ class _LoginState extends State<Login> {
                         Container(child: Text('Password'),),
                         SizedBox(height: 5,),
                         SizedBox(
-                          height: 70,
+                          height: 55,
                           width: 300,
                           child: TextFormField( // Input box
                             style: TextStyle(fontSize: 14),
@@ -182,22 +189,28 @@ class _LoginState extends State<Login> {
                               ),
                               // Add border to the input box
                               enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                  borderSide: const BorderSide(
-                                      color: Colors.grey
-                                  )
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: const BorderSide(
+                                    color: Colors.grey
+                                )
                               ),
                               focusedBorder: OutlineInputBorder(  // Change color of the border when clicked
-                                  borderRadius: BorderRadius.circular(10),
-                                  borderSide: const BorderSide(
-                                      color: Colors.black
-                                  )
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: const BorderSide(
+                                    color: Colors.black
+                                )
                               ),
                               errorBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                  borderSide: const BorderSide(
-                                      color: Colors.red
-                                  )
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: const BorderSide(
+                                    color: Colors.red
+                                )
+                              ),
+                              focusedErrorBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: const BorderSide(
+                                    color: Colors.red
+                                ),
                               ),
                             ),
                             validator: (value) {
@@ -209,11 +222,9 @@ class _LoginState extends State<Login> {
                           ),
                         ),
                         Container(
+                          height: 40,
                           margin: EdgeInsets.fromLTRB(165,0,0,0),
                           child: TextButton(
-                            style: TextButton.styleFrom(
-                                minimumSize: Size(100, 10)
-                            ),
                             onPressed: () {
                               print('forgot password');
                             },
@@ -245,7 +256,7 @@ class _LoginState extends State<Login> {
                             final studentNo = _studentNoController.text;
                             final password = _passwordController.text;
                             Navigator.of(context).pushReplacement(
-                              MaterialPageRoute(builder: (_) => const Face_Registration()),
+                              MaterialPageRoute(builder: (_) => const Dashboard()),
                             );
                           }
                         },

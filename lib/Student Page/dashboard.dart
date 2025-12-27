@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'navbar.dart';
+import '../widgets/navbar.dart';
 
 class Dashboard extends StatefulWidget {
   const Dashboard({super.key});
@@ -27,6 +27,7 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
+  // Classcard Template
   Widget classCard(String course, String classCode, String professor, String room,
       String sched, bool session) {
     return Container(
@@ -67,7 +68,9 @@ class _DashboardState extends State<Dashboard> {
                 ),
                 session
                     ? IconButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/face_verification');
+                  },
                   icon: Icon(CupertinoIcons.right_chevron, size: 16),
                 )
                     : SizedBox(),
@@ -165,7 +168,9 @@ class _DashboardState extends State<Dashboard> {
                             color: Colors.white),
                       ),
                       IconButton(
-                        onPressed: () {},
+                        onPressed: () {
+
+                        },
                         icon: Icon(CupertinoIcons.square_arrow_right,
                             color: Colors.white),
                       ),

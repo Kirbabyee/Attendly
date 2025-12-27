@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_project_1/Student Page/login.dart';
 import 'package:flutter_project_1/Student Page/face_registration.dart';
+import 'package:flutter_project_1/Student Page/face_verification.dart';
+import 'package:flutter_project_1/Student%20Page/dashboard.dart';
 
 void main() {
   runApp(MaterialApp(
@@ -13,7 +15,9 @@ void main() {
     routes: { // Pages routing
       '/home': (context) => LandingPage(),
       '/login': (context) => Login(),
+      '/dashboard' : (context) => Dashboard(),
       '/face_registration': (context) => Face_Registration(),
+      '/face_verification': (context) => Face_Verification(),
     },
   )); // MaterialApp
 }
