@@ -20,7 +20,8 @@ class _HistoryState extends State<History> {
         child: Column(
           children: [
             Container(
-              height: 150,
+              height: 100,
+              padding: EdgeInsets.symmetric(horizontal: 30),
               decoration: BoxDecoration(
                 color: Color(0xFF004280),
                 borderRadius: BorderRadius.vertical(
@@ -29,7 +30,7 @@ class _HistoryState extends State<History> {
                 )
               ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Container(
@@ -39,7 +40,8 @@ class _HistoryState extends State<History> {
                     ),
                     child: Icon(
                       Icons.history_sharp,
-                      size: 100,
+                      size: 50,
+                      color: Colors.white,
                     ),
                   ),
                   SizedBox(width: 15,),

@@ -131,7 +131,8 @@ class _HelpState extends State<Help> {
         child: Column(
           children: [
             Container(
-              height: 150,
+              height: 100,
+              padding: EdgeInsets.symmetric(horizontal: 30),
               decoration: const BoxDecoration(
                 color: Color(0xFF004280),
                 borderRadius: BorderRadius.vertical(
@@ -139,7 +140,7 @@ class _HelpState extends State<Help> {
                 ),
               ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Container(
@@ -150,7 +151,7 @@ class _HelpState extends State<Help> {
                     child: const Icon(
                       CupertinoIcons.question_circle,
                       color: Colors.white,
-                      size: 100,
+                      size: 50,
                     ),
                   ),
                   const SizedBox(width: 15),

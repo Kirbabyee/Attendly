@@ -6,7 +6,7 @@ import 'package:flutter_project_1/Student%20Page/attendance/face_verification.da
 import 'package:flutter_project_1/Student%20Page/dashboard.dart';
 import 'package:flutter_project_1/Student%20Page/Help/help.dart';
 import 'package:flutter_project_1/Student%20Page/History/history.dart';
-import 'package:flutter_project_1/Student%20Page/settings.dart';
+import 'package:flutter_project_1/Student%20Page/Settings/settings.dart';
 
 void main() {
   runApp(MaterialApp(
