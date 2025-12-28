@@ -4,8 +4,8 @@ import 'package:flutter_project_1/Student%20Page/settings.dart';
 
 import '../widgets/navbar.dart';
 import 'dashboard.dart';
-import 'help.dart';
-import 'history.dart';
+import 'Help/help.dart';
+import 'History/history.dart';
 
 class Mainshell extends StatefulWidget {
   const Mainshell({super.key});

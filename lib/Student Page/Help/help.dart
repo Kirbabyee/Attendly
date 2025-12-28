@@ -1,18 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/material_symbols_icons.dart';
 
-import '../widgets/searchbar.dart';
-
-class History extends StatefulWidget {
-  const History({super.key});
+class Help extends StatefulWidget {
+  const Help({super.key});
 
   @override
-  State<History> createState() => _HistoryState();
+  State<Help> createState() => _HelpState();
 }
 
-class _HistoryState extends State<History> {
-
+class _HelpState extends State<Help> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -20,13 +16,13 @@ class _HistoryState extends State<History> {
         child: Column(
           children: [
             Container(
-              height: 200,
+              height: 150,
               decoration: BoxDecoration(
-                color: Color(0xFF004280),
-                borderRadius: BorderRadius.vertical(
-                  top: Radius.zero,
-                  bottom: Radius.circular(20)
-                )
+                  color: Color(0xFF004280),
+                  borderRadius: BorderRadius.vertical(
+                      top: Radius.zero,
+                      bottom: Radius.circular(20)
+                  )
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -38,7 +34,8 @@ class _HistoryState extends State<History> {
                       color: Color(0x30FFFFFF),
                     ),
                     child: Icon(
-                      Icons.history_sharp,
+                      CupertinoIcons.question_circle,
+                      color: Colors.white,
                       size: 100,
                     ),
                   ),
@@ -49,19 +46,19 @@ class _HistoryState extends State<History> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Attendance History',
+                          'Help & Support',
                           style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white,
-                            fontSize: 15
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white,
+                              fontSize: 15
                           ),
                         ),
                         SizedBox(height: 10,),
                         Text(
-                          'View your complete attendance records',
+                          'Get answers and assistance',
                           style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.white
+                              fontSize: 11,
+                              color: Colors.white
                           ),
                         )
                       ],
@@ -70,8 +67,6 @@ class _HistoryState extends State<History> {
                 ],
               ),
             ),
-            SizedBox(height: 20,),
-            AppSearchBar()
           ],
         ),
       ),

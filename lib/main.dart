@@ -4,8 +4,8 @@ import 'package:flutter_project_1/Student Page/login.dart';
 import 'package:flutter_project_1/Student Page/face_registration.dart';
 import 'package:flutter_project_1/Student%20Page/attendance/face_verification.dart';
 import 'package:flutter_project_1/Student%20Page/dashboard.dart';
-import 'package:flutter_project_1/Student%20Page/help.dart';
-import 'package:flutter_project_1/Student%20Page/history.dart';
+import 'package:flutter_project_1/Student%20Page/Help/help.dart';
+import 'package:flutter_project_1/Student%20Page/History/history.dart';
 import 'package:flutter_project_1/Student%20Page/settings.dart';
 
 void main() {
