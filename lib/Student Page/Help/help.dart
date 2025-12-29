@@ -37,9 +37,10 @@ class _HelpState extends State<Help> {
     required String answer,
   }) {
     final bool isExpanded = expandedIndex == index;
+    final screenHeight = MediaQuery.of(context).size.height;
 
     return Container(
-      width: 350,
+      width: screenHeight > 700 ? 350 : 320,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -78,7 +79,7 @@ class _HelpState extends State<Help> {
                     const SizedBox(height: 10),
                     Text(
                       question,
-                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                      style: TextStyle(fontSize: screenHeight > 700 ? 15 : 14, fontWeight: FontWeight.w600),
                     ),
                   ],
                 ),
@@ -113,7 +114,7 @@ class _HelpState extends State<Help> {
                 padding: const EdgeInsets.only(top: 12),
                 child: Text(
                   answer,
-                  style: const TextStyle(fontSize: 13, color: Colors.black87),
+                  style: TextStyle(fontSize: screenHeight > 700 ? 13 : 12, color: Colors.black87),
                 ),
               )
                   : const SizedBox.shrink(),
@@ -126,6 +127,7 @@ class _HelpState extends State<Help> {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -159,8 +161,8 @@ class _HelpState extends State<Help> {
                     height: 50,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text(
+                      children: [
+                        const Text(
                           'Help & Support',
                           style: TextStyle(
                             fontWeight: FontWeight.w500,
@@ -168,8 +170,8 @@ class _HelpState extends State<Help> {
                             fontSize: 15,
                           ),
                         ),
-                        SizedBox(height: 10),
-                        Text(
+                        SizedBox(height: screenHeight > 700 ? 10 : 5),
+                        const Text(
                           'Get answers and assistance',
                           style: TextStyle(
                             fontSize: 11,
@@ -205,7 +207,7 @@ class _HelpState extends State<Help> {
                     
                     // Contact Support
                     Container(
-                      width: 350,
+                      width: screenHeight > 700 ? 350 : 320,
                       padding: EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         color: Colors.white,

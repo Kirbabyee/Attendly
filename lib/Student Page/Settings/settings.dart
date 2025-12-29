@@ -55,19 +55,22 @@ class _SettingsState extends State<Settings> {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
+            // HEADER (fixed)
             Container(
               height: 100,
               padding: EdgeInsets.symmetric(horizontal: 30),
               decoration: BoxDecoration(
-                  color: Color(0xFF004280),
-                  borderRadius: BorderRadius.vertical(
-                      top: Radius.zero,
-                      bottom: Radius.circular(20)
-                  )
+                color: Color(0xFF004280),
+                borderRadius: BorderRadius.vertical(
+                  top: Radius.zero,
+                  bottom: Radius.circular(20),
+                ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
@@ -84,7 +87,7 @@ class _SettingsState extends State<Settings> {
                       size: 50,
                     ),
                   ),
-                  SizedBox(width: 15,),
+                  SizedBox(width: 15),
                   Container(
                     height: 50,
                     child: Column(
@@ -93,17 +96,17 @@ class _SettingsState extends State<Settings> {
                         Text(
                           'Settings',
                           style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              color: Colors.white,
-                              fontSize: 15
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white,
+                            fontSize: 15,
                           ),
                         ),
-                        SizedBox(height: 10,),
+                        SizedBox(height: screenHeight > 700 ? 10 : 5),
                         Text(
                           'Manage your preferences',
                           style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.white
+                            fontSize: 11,
+                            color: Colors.white,
                           ),
                         )
                       ],
@@ -112,401 +115,372 @@ class _SettingsState extends State<Settings> {
                 ],
               ),
             ),
-            SizedBox(height: 20,),
 
-            // Account Information
-            SizedBox(
-              width: 350,
-              height: 80,
-              child: OutlinedButton(
-                style: OutlinedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadiusGeometry.circular(8)
-                  ),
-                  backgroundColor: Colors.white,
-                  side: BorderSide.none
-                ),
-                onPressed: () {
-                },
-                child: Container(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.person_outline_outlined,
-                              color: Colors.black,
-                            ),
-                            SizedBox(width: 10,),
-                            Text(
-                              'Account Information',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black
-                              ),
-                            )
-                          ],
-                        ),
-                      ),
-                      Icon(
-                        Icons.keyboard_arrow_right,
-                        color: Colors.black,
-                      )
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(height: 20,),
-
-            // Notification
-            Container(
-              width: 350,
-              padding: EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadiusGeometry.circular(8)
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.notifications_outlined,
-                          size: 20,
-                          color: Colors.black,
-                        ),
-                        SizedBox(width: 10,),
-                        Text(
-                          'Notification',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black
+            // ✅ SCROLLABLE CONTENT
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                child: Column(
+                  children: [
+                    // Account Information
+                    SizedBox(
+                      width: screenHeight > 700 ? 350 : 320,
+                      height: 80,
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadiusGeometry.circular(8),
                           ),
-                        )
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 10,),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 25, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: Color(0x90D9D9D9),
-                      borderRadius: BorderRadiusGeometry.circular(8)
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Push Notification',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600
-                              ),
-                            ),
-                            Text(
-                              'Receive app notifications',
-                              style: TextStyle(
-                                fontSize: 11
-                              ),
-                            ),
-                          ],
+                          backgroundColor: Colors.white,
+                          side: BorderSide.none,
                         ),
-                        Switch( // Switch button
-                          value: isOn,
-                          onChanged: (value) {
-                            setState(() {
-                              isOn = value;
-                            });
-                          },
-                          activeThumbColor: Colors.white,
-                          activeTrackColor: Color(0xFF043B6F),
-                          inactiveTrackColor: Colors.white,
-                        )
-                      ],
-                    ),
-                  )
-                ],
-              ),
-            ),
-            SizedBox(height: 20,),
-
-            // Security & Privacy
-            Container(
-              width: 350,
-              padding: EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadiusGeometry.circular(8)
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.notifications_outlined,
-                          size: 20,
-                          color: Colors.black,
-                        ),
-                        SizedBox(width: 10,),
-                        Text(
-                          'Notification',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black
-                          ),
-                        )
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 10,),
-                  SizedBox(
-                    child: OutlinedButton(
-                      onPressed: () {},
-                      style: OutlinedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadiusGeometry.circular(8)
-                        ),
-                        side: BorderSide.none,
-                        backgroundColor: Color(0x90D9D9D9),
-                      ),
-                      child: Container(
-                        padding: EdgeInsets.symmetric(vertical: 10),
+                        onPressed: () {},
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            Row(
                               children: [
+                                Icon(Icons.person_outline_outlined, color: Colors.black),
+                                SizedBox(width: 10),
                                 Text(
-                                  'Change Password',
+                                  'Account Information',
                                   style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.black
-                                  ),
-                                ),
-                                Text(
-                                  'Update your account password',
-                                  style: TextStyle(
-                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
                                     color: Colors.black,
-                                    fontWeight: FontWeight.w300
                                   ),
                                 ),
                               ],
                             ),
-                            Icon(Icons.keyboard_arrow_right)
+                            Icon(Icons.keyboard_arrow_right, color: Colors.black),
                           ],
                         ),
                       ),
                     ),
-                  )
-                ],
-              ),
-            ),
-            SizedBox(height: 20,),
+                    SizedBox(height: 20),
 
-            // About
-            Container(
-              width: 350,
-              padding: EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadiusGeometry.circular(8)
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.info_outline_rounded,
-                        size: 20,
+                    // Notification
+                    Container(
+                      width: screenHeight > 700 ? 350 : 320,
+                      padding: EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadiusGeometry.circular(8),
                       ),
-                      SizedBox(width: 10,),
-                      Text(
-                        'About',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold
-                        ),
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.notifications_outlined, size: 20, color: Colors.black),
+                              SizedBox(width: 10),
+                              Text(
+                                'Notification',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              )
+                            ],
+                          ),
+                          SizedBox(height: 10),
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 25, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: Color(0x90D9D9D9),
+                              borderRadius: BorderRadiusGeometry.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Push Notification',
+                                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                                    ),
+                                    Text('Receive app notifications', style: TextStyle(fontSize: 11)),
+                                  ],
+                                ),
+                                Transform.scale(
+                                  scale: screenHeight > 700 ? 1 : .8,
+                                  child: Switch(
+                                    value: isOn,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        isOn = value;
+                                      });
+                                    },
+                                    activeThumbColor: Colors.white,
+                                    activeTrackColor: Color(0xFF043B6F),
+                                    inactiveTrackColor: Colors.white,
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  SizedBox(height: 20,),
-                  Container(
-                    width: 280,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('App Version'),
-                        Text('1.0.0'),
-                      ],
                     ),
-                  ),
-                  SizedBox(height: 10,),
-                  Container(
-                    width: 280,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Build'),
-                        Text('2025.30.14'),
-                      ],
-                    ),
-                  )
-                ],
-              ),
-            ),
+                    SizedBox(height: 20),
 
-            // Terms and Privacy Policy
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(
-                  height: 35,
-                  child: TextButton(
-                    style: TextButton.styleFrom(
-                      shape: RoundedRectangleBorder()
-                    ),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        barrierDismissible: true,
-                        builder: (context) {
-                          return AlertDialog(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadiusGeometry.circular(8)
-                            ),
-                            backgroundColor: Colors.white,
-                            title: const Text(
-                              'Terms of Service',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500
-                              ),
-                            ),
-                            content: SingleChildScrollView( // 👈 makes it scrollable
-                              child: Text(
-                                termOfService,
-                                textAlign: TextAlign.justify,
-                              ),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                    child: Text(
-                      'Terms of Service',
-                      style: TextStyle(
-                        fontSize: 12
+                    // Security & Privacy
+                    Container(
+                      width: screenHeight > 700 ? 350 : 320,
+                      padding: EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadiusGeometry.circular(8),
                       ),
-                    )
-                  )
-                ),
-                SizedBox(
-                  height: 35,
-                  child: TextButton(
-                    style: TextButton.styleFrom(
-                      shape: RoundedRectangleBorder()
-                    ),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        barrierDismissible: true,
-                        builder: (context) {
-                          return AlertDialog(
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadiusGeometry.circular(8)
-                            ),
-                            backgroundColor: Colors.white,
-                            title: const Text(
-                              'Privacy Policy',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.w500
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.lock_outline, size: 20, color: Colors.black),
+                              SizedBox(width: 10),
+                              Text(
+                                'Security & Privacy',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              )
+                            ],
+                          ),
+                          SizedBox(height: 10),
+                          OutlinedButton(
+                            onPressed: () {},
+                            style: OutlinedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadiusGeometry.circular(8),
                               ),
+                              side: BorderSide.none,
+                              backgroundColor: Color(0x90D9D9D9),
                             ),
-                            content: SingleChildScrollView(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  const Text(
-                                    'Attendly is committed to protecting user privacy and handling personal data responsibly.',
-                                    style: TextStyle(fontSize: 14, height: 1.6),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Change Password',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Update your account password',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.w300,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-
-                                  sectionTitle('Information Collected'),
-                                  bullet('Student and professor identification details'),
-                                  bullet('Device identifiers used for presence validation'),
-                                  bullet('Facial biometric data for face verification'),
-                                  bullet('Attendance timestamps and class records'),
-
-                                  sectionTitle('Use of Information'),
-                                  bullet('Verifying student identity and physical presence'),
-                                  bullet('Recording and managing attendance'),
-                                  bullet('Supporting academic and administrative processes'),
-
-                                  sectionTitle('Data Protection'),
-                                  const Text(
-                                    'Facial data is stored as encrypted templates and protected through access controls.',
-                                    style: TextStyle(fontSize: 14, height: 1.6),
-                                  ),
-
-                                  sectionTitle('User Rights'),
-                                  bullet('Access attendance records'),
-                                  bullet('Request correction of inaccurate information'),
-                                  bullet('Request face re-enrollment'),
-
-                                  sectionTitle('Policy Updates'),
-                                  const Text(
-                                    'This Privacy Policy may be updated to reflect system or regulatory changes.',
-                                    style: TextStyle(fontSize: 14, height: 1.6),
-                                  ),
+                                  Icon(Icons.keyboard_arrow_right),
                                 ],
                               ),
                             ),
-                          );
-                        },
-                      );
-                    },
-                    child: Text(
-                      'Privacy Policy',
-                      style: TextStyle(
-                          fontSize: 12
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 3,),
+                    SizedBox(height: 20),
 
-            // Logout Button
-            OutlinedButton.icon(
-              style: OutlinedButton.styleFrom(
-                backgroundColor: Color(0xFFFDDCDC),
-                side: BorderSide.none
-              ),
-              onPressed: () {
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (_) => const Login()),
-                );
-              },
-              icon: Icon(
-                Icons.logout_outlined,
-                color: Colors.red,
-              ),
-              label: Text(
-                'Logout',
-                style: TextStyle(
-                  color: Colors.red
+                    // About
+                    Container(
+                      width: screenHeight > 700 ? 350 : 320,
+                      padding: EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadiusGeometry.circular(8),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.info_outline_rounded, size: 20),
+                              SizedBox(width: 10),
+                              Text('About', style: TextStyle(fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                          SizedBox(height: 20),
+                          SizedBox(
+                            width: 280,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('App Version'),
+                                Text('1.0.0'),
+                              ],
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                          SizedBox(
+                            width: 280,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('Build'),
+                                Text('2025.30.14'),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    SizedBox(height: 10),
+
+                    // Terms and Privacy Policy
+                    // Terms and Privacy Policy
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                            height: 35,
+                            child: TextButton(
+                                style: TextButton.styleFrom(
+                                    shape: RoundedRectangleBorder()
+                                ),
+                                onPressed: () {
+                                  showDialog(
+                                    context: context,
+                                    barrierDismissible: true,
+                                    builder: (context) {
+                                      return AlertDialog(
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadiusGeometry.circular(8)
+                                        ),
+                                        backgroundColor: Colors.white,
+                                        title: const Text(
+                                          'Terms of Service',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.w500
+                                          ),
+                                        ),
+                                        content: SingleChildScrollView( // 👈 makes it scrollable
+                                          child: Text(
+                                            termOfService,
+                                            textAlign: TextAlign.justify,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
+                                child: Text(
+                                  'Terms of Service',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.black
+                                  ),
+                                )
+                            )
+                        ),
+                        SizedBox(
+                          height: 35,
+                          child: TextButton(
+                            style: TextButton.styleFrom(
+                                shape: RoundedRectangleBorder()
+                            ),
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                barrierDismissible: true,
+                                builder: (context) {
+                                  return AlertDialog(
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadiusGeometry.circular(8)
+                                    ),
+                                    backgroundColor: Colors.white,
+                                    title: const Text(
+                                      'Privacy Policy',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w500
+                                      ),
+                                    ),
+                                    content: SingleChildScrollView(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          const Text(
+                                            'Attendly is committed to protecting user privacy and handling personal data responsibly.',
+                                            style: TextStyle(fontSize: 14, height: 1.6),
+                                          ),
+
+                                          sectionTitle('Information Collected'),
+                                          bullet('Student and professor identification details'),
+                                          bullet('Device identifiers used for presence validation'),
+                                          bullet('Facial biometric data for face verification'),
+                                          bullet('Attendance timestamps and class records'),
+
+                                          sectionTitle('Use of Information'),
+                                          bullet('Verifying student identity and physical presence'),
+                                          bullet('Recording and managing attendance'),
+                                          bullet('Supporting academic and administrative processes'),
+
+                                          sectionTitle('Data Protection'),
+                                          const Text(
+                                            'Facial data is stored as encrypted templates and protected through access controls.',
+                                            style: TextStyle(fontSize: 14, height: 1.6),
+                                          ),
+
+                                          sectionTitle('User Rights'),
+                                          bullet('Access attendance records'),
+                                          bullet('Request correction of inaccurate information'),
+                                          bullet('Request face re-enrollment'),
+
+                                          sectionTitle('Policy Updates'),
+                                          const Text(
+                                            'This Privacy Policy may be updated to reflect system or regulatory changes.',
+                                            style: TextStyle(fontSize: 14, height: 1.6),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                            child: Text(
+                              'Privacy Policy',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 12
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    SizedBox(height: 10),
+
+                    // Logout Button
+                    OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: Color(0xFFFDDCDC),
+                        side: BorderSide.none,
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(builder: (_) => const Login()),
+                        );
+                      },
+                      icon: Icon(Icons.logout_outlined, color: Colors.red),
+                      label: Text('Logout', style: TextStyle(color: Colors.red)),
+                    ),
+
+                    SizedBox(height: 20),
+                  ],
                 ),
-              )
+              ),
             ),
           ],
         ),

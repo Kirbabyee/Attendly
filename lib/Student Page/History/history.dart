@@ -15,6 +15,7 @@ class _HistoryState extends State<History> {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -58,7 +59,7 @@ class _HistoryState extends State<History> {
                             fontSize: 15
                           ),
                         ),
-                        SizedBox(height: 10,),
+                        SizedBox(height: screenHeight > 700 ? 10 : 5,),
                         Text(
                           'View your complete attendance records',
                           style: TextStyle(

@@ -10,15 +10,15 @@ class Dashboard extends StatefulWidget {
 }
 
 class _DashboardState extends State<Dashboard> {
-  Widget textBold(tag, name) {
+  Widget textBold(tag, name, double screenHeight) {
     return Text.rich(
       TextSpan(
         text: tag,
-        style: TextStyle(fontSize: 14),
+        style: TextStyle(fontSize: screenHeight > 700 ? 14 : 13),
         children: [
           TextSpan(
             text: name,
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: screenHeight > 700 ? 14 : 13),
           ),
         ],
       ),
@@ -27,9 +27,9 @@ class _DashboardState extends State<Dashboard> {
 
   // Classcard Template
   Widget classCard(String course, String classCode, String professor, String room,
-      String sched, bool session) {
+      String sched, bool session, double screenHeight) {
     return Container(
-      margin: EdgeInsets.symmetric(vertical: 20),
+      margin: EdgeInsets.symmetric(vertical: screenHeight > 700 ? 20 : 12),
       padding: EdgeInsets.all(10),
       width: 350,
       decoration: BoxDecoration(
@@ -44,8 +44,8 @@ class _DashboardState extends State<Dashboard> {
         ],
       ),
       child: DefaultTextStyle(
-        style: const TextStyle(
-          fontSize: 12,
+        style: TextStyle(
+          fontSize: screenHeight > 700 ? 12 : 11,
           color: Colors.black,
           fontFamily: 'Montserrat',
         ),
@@ -61,7 +61,9 @@ class _DashboardState extends State<Dashboard> {
                       course,
                       style: TextStyle(fontWeight: FontWeight.w500),
                     ),
+                    SizedBox(height: 5,),
                     Text(classCode),
+                    SizedBox(height: 10,),
                   ],
                 ),
                 session
@@ -69,7 +71,7 @@ class _DashboardState extends State<Dashboard> {
                   onPressed: () {
                     Navigator.pushNamed(context, '/face_verification');
                   },
-                  icon: Icon(CupertinoIcons.right_chevron, size: 16),
+                  icon: Icon(CupertinoIcons.right_chevron, size: screenHeight > 700 ? 16 : 14),
                 )
                     : SizedBox(),
               ],
@@ -82,7 +84,7 @@ class _DashboardState extends State<Dashboard> {
                   children: [
                     Row(
                       children: [
-                        Icon(CupertinoIcons.person, size: 20),
+                        Icon(CupertinoIcons.person, size: screenHeight > 700 ? 20 : 18),
                         SizedBox(width: 5),
                         Text(professor),
                       ],
@@ -90,7 +92,7 @@ class _DashboardState extends State<Dashboard> {
                     SizedBox(height: 5),
                     Row(
                       children: [
-                        Icon(Icons.pin_drop_outlined, size: 20),
+                        Icon(Icons.pin_drop_outlined, size: screenHeight > 700 ? 20 : 18),
                         SizedBox(width: 5),
                         Text(room),
                       ],
@@ -98,7 +100,7 @@ class _DashboardState extends State<Dashboard> {
                     SizedBox(height: 5),
                     Row(
                       children: [
-                        Icon(CupertinoIcons.clock, size: 20),
+                        Icon(CupertinoIcons.clock, size: screenHeight > 700 ? 20 : 18),
                         SizedBox(width: 5),
                         Text(sched),
                       ],
@@ -118,13 +120,13 @@ class _DashboardState extends State<Dashboard> {
                     color:
                     session ? Color(0xFFDBFCE7) : Color(0x90DBEAFE),
                   ),
-                  width: 120,
+                  width: screenHeight > 700 ? 120 : 100,
                   height: 20,
                   child: Text(
                     session ? 'Session Started' : 'Upcoming',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: screenHeight > 700 ? 11 : 10,
                       color: session
                           ? Color(0xFF016224)
                           : Color(0x90004280),
@@ -141,12 +143,14 @@ class _DashboardState extends State<Dashboard> {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    print(screenHeight);
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
             Container(
-              height: 250,
+              height: screenHeight > 700 ? 250 : 230,
               decoration: BoxDecoration(
                 color: Color(0xFF004280),
                 borderRadius: BorderRadius.vertical(
@@ -168,12 +172,16 @@ class _DashboardState extends State<Dashboard> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text('Welcome to Attendly',
-                                style: TextStyle(color: Colors.white)),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: screenHeight > 700 ? 14 : 12
+                              )
+                            ),
                             Text(
                               'Alfred!',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                fontSize: 30,
+                                fontSize: screenHeight > 700 ? 30 : 25,
                                 color: Colors.white,
                               ),
                             ),
@@ -188,31 +196,34 @@ class _DashboardState extends State<Dashboard> {
                           onPressed: () {},
                           child: Text(
                             'Join a class',
-                            style: TextStyle(color: Color(0xFFB09602)),
+                            style: TextStyle(
+                              color: Color(0xFFB09602),
+                              fontSize: screenHeight > 700 ? 14 : 12
+                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  SizedBox(height: 20),
+                  SizedBox(height: screenHeight > 700 ? 20 : 12),
                   Container(
                     margin: EdgeInsets.symmetric(horizontal: 10),
-                    padding: EdgeInsets.fromLTRB(20, 20, 20, 20),
+                    padding: EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadiusGeometry.circular(10),
                     ),
                     child: Row(
                       children: [
-                        Image.asset('assets/avatar.png', width: 80),
-                        SizedBox(width: 20),
+                        Image.asset('assets/avatar.png', width: screenHeight > 700 ? 80 : 75),
+                        SizedBox(width: screenHeight > 700 ? 20 : 25),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            textBold('Name: ', 'Alfred Valiente'),
-                            textBold('Student No.: ', '20231599'),
-                            textBold('Year Level: ', 'Third Year'),
-                            textBold('Section: ', 'A'),
+                            textBold('Name: ', 'Alfred Valiente', screenHeight),
+                            textBold('Student No.: ', '20231599', screenHeight),
+                            textBold('Year Level: ', 'Third Year', screenHeight),
+                            textBold('Section: ', 'A', screenHeight),
                           ],
                         )
                       ],
@@ -224,7 +235,7 @@ class _DashboardState extends State<Dashboard> {
             SizedBox(height: 16),
             Expanded(
               child: ListView(
-                padding: EdgeInsets.symmetric(horizontal: 20),
+                padding: EdgeInsets.symmetric(horizontal: screenHeight > 700 ? 20 : 15),
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -232,11 +243,14 @@ class _DashboardState extends State<Dashboard> {
                       Text(
                         'My Classes',
                         style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 16),
+                            fontWeight: FontWeight.bold, fontSize: screenHeight > 700 ? 16 : 14),
                       ),
                       IconButton(
                         onPressed: () {},
-                        icon: Icon(CupertinoIcons.archivebox),
+                        icon: Icon(
+                          CupertinoIcons.archivebox,
+                          size: screenHeight > 700 ? 25 : 20,
+                        ),
                       ),
                     ],
                   ),
@@ -247,6 +261,7 @@ class _DashboardState extends State<Dashboard> {
                     'Room 301',
                     'Monday: 9:00 - 11:00 AM',
                     true,
+                    screenHeight
                   ),
                   classCard(
                     'Introduction to Human Computer Interaction',
@@ -255,6 +270,7 @@ class _DashboardState extends State<Dashboard> {
                     'Room 301',
                     'Monday: 9:00 - 11:00 AM',
                     false,
+                    screenHeight
                   ),
                   classCard(
                     'Introduction to Human Computer Interaction',
@@ -263,6 +279,7 @@ class _DashboardState extends State<Dashboard> {
                     'Room 301',
                     'Monday: 9:00 - 11:00 AM',
                     false,
+                    screenHeight
                   ),
                 ],
               ),

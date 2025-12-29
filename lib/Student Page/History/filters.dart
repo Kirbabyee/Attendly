@@ -95,7 +95,7 @@ class _DataFilterState extends State<DataFilter> {
     });
   }
 
-  Widget statusChip(String label) {
+  Widget statusChip(String label, double screenHeight) {
     return ChoiceChip(
       backgroundColor: Color(0x90D9D9D9),
       side: BorderSide.none,
@@ -106,7 +106,7 @@ class _DataFilterState extends State<DataFilter> {
       label: Text(
         label,
         style: TextStyle(
-          fontSize: 11,
+          fontSize: screenHeight > 700 ? 11 : 10,
           color: selectedStatus == label
               ? Colors.white
               : Colors.black,
@@ -122,6 +122,7 @@ class _DataFilterState extends State<DataFilter> {
   }
 
   Widget _statusBadge(String status) {
+    final screenHeight = MediaQuery.of(context).size.height;
     Color borderColor;
     Color bgColor;
     Color textColor;
@@ -149,13 +150,13 @@ class _DataFilterState extends State<DataFilter> {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+      padding: EdgeInsets.symmetric(horizontal: screenHeight > 700 ? 20 : 16, vertical: 5),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: borderColor),
         color: bgColor,
       ),
-      child: Text(status, style: TextStyle(fontSize: 10, color: textColor)),
+      child: Text(status, style: TextStyle(fontSize: screenHeight > 700 ? 10 : 8, color: textColor)),
     );
   }
 
@@ -167,22 +168,29 @@ class _DataFilterState extends State<DataFilter> {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       body: SafeArea(
         child: Center(
           child: SizedBox(
-            width: 350,
+            width: screenHeight > 700 ? 350 : 320,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 // Search
                 Center(
                   child: SizedBox(
-                    height: 40,
+                    height: screenHeight > 700 ? 40 : 35,
                     child: TextField(
+                      style: TextStyle(
+                        fontSize: screenHeight > 700 ? 16 : 14
+                      ),
                       controller: searchController,
                       onChanged: (_) => applyFilters(),
                       decoration: InputDecoration(
+                        hintStyle: TextStyle(
+                          fontSize: screenHeight > 700 ? 16 : 14
+                        ),
                         hintText: 'Search course',
                         prefixIcon: const Icon(Icons.search),
                         contentPadding: EdgeInsets.symmetric(vertical: 10),
@@ -230,25 +238,25 @@ class _DataFilterState extends State<DataFilter> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Record Details',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: screenHeight > 700 ? 15 : 14),
                       ),
-                      const SizedBox(height: 5),
+                      screenHeight > 700 ? SizedBox(height: 5) : SizedBox(),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          statusChip('All'),
-                          statusChip('Present'),
-                          statusChip('Late'),
-                          statusChip('Absent'),
+                          statusChip('All', screenHeight),
+                          statusChip('Present', screenHeight),
+                          statusChip('Late', screenHeight),
+                          statusChip('Absent', screenHeight),
                         ],
                       ),
                     ],
                   ),
                 ),
 
-                const SizedBox(height: 10),
+                SizedBox(height: screenHeight > 700 ? 10 : 5),
 
                 // ✅ LIST AREA (scrollable)
                 Expanded(
@@ -278,15 +286,15 @@ class _DataFilterState extends State<DataFilter> {
                           child: ListTile(
                             title: Text(
                               record.courseName,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontWeight: FontWeight.w500,
-                                fontSize: 12
+                                fontSize: screenHeight > 700 ? 12 : 11
                               ),
                             ),
                             subtitle: Text(
                               '${record.className} • ${record.date.toIso8601String().split("T")[0]}',
                               style: TextStyle(
-                                fontSize: 11
+                                fontSize: screenHeight > 700 ? 11 : 10
                               ),
                             ),
                             trailing: _statusBadge(record.status),

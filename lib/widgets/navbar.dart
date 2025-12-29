@@ -17,6 +17,7 @@ class AttendlyNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.width;
     final items = const [
       _NavItem(icon: CupertinoIcons.home, label: 'Home'),
       _NavItem(icon: CupertinoIcons.clock, label: 'History'),
@@ -27,9 +28,9 @@ class AttendlyNavBar extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        padding: EdgeInsets.fromLTRB(screenHeight > 700 ? 16 : 12, 0, screenHeight > 700 ? 16 : 12, screenHeight > 700 ? 12 : 8),
         child: SizedBox(
-          height: 72,
+          height: screenHeight > 700 ? 72 : 62,
           child: LayoutBuilder(
             builder: (context, constraints) {
               final w = constraints.maxWidth;
@@ -46,7 +47,7 @@ class AttendlyNavBar extends StatelessWidget {
                     child: Container(
                       decoration: BoxDecoration(
                         color: _bg,
-                        borderRadius: BorderRadius.circular(22),
+                        borderRadius: BorderRadius.circular(screenHeight > 700 ? 22 : 20),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -54,23 +55,23 @@ class AttendlyNavBar extends StatelessWidget {
                           final selected = i == currentIndex;
                           return Expanded(
                             child: InkWell(
-                              borderRadius: BorderRadius.circular(22),
+                              borderRadius: BorderRadius.circular(screenHeight > 700 ? 22 : 20),
                               onTap: () => onTap(i),
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                padding: EdgeInsets.symmetric(vertical: screenHeight > 700 ? 10 : 8),
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Icon(
                                       items[i].icon,
-                                      size: 22,
+                                      size: screenHeight > 700 ? 22 : 20,
                                       color: selected ? Colors.transparent : _inactive,
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
                                       items[i].label,
                                       style: TextStyle(
-                                        fontSize: 11,
+                                        fontSize: screenHeight > 700 ? 11 : 10,
                                         fontWeight: FontWeight.w600,
                                         color: selected ? Colors.transparent : _inactive,
                                       ),
@@ -93,7 +94,7 @@ class AttendlyNavBar extends StatelessWidget {
                     top: -10,
                     child: Container(
                       width: 64,
-                      height: 72,
+                      height: screenHeight > 700 ? 72 : 70,
                       decoration: BoxDecoration(
                         color: _active,
                         borderRadius: BorderRadius.circular(16),
@@ -111,13 +112,13 @@ class AttendlyNavBar extends StatelessWidget {
                           Icon(
                             items[currentIndex].icon,
                             color: _bg,
-                            size: 24,
+                            size: screenHeight > 700 ? 24 : 20,
                           ),
                           const SizedBox(height: 4),
                           Text(
                             items[currentIndex].label,
-                            style: const TextStyle(
-                              fontSize: 11,
+                            style: TextStyle(
+                              fontSize: screenHeight > 700 ? 11 : 10,
                               fontWeight: FontWeight.w700,
                               color: _bg,
                             ),

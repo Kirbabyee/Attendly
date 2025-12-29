@@ -28,6 +28,8 @@ class _LoginState extends State<Login> {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.width;
+    print(screenHeight);
     final isKeyboard = MediaQuery.of(context).viewInsets.bottom != 0;
     return Scaffold(
         resizeToAvoidBottomInset: false,
@@ -39,7 +41,7 @@ class _LoginState extends State<Login> {
                 Visibility(
                   visible: (!isKeyboard ? true : false), // bool
                   child: Positioned(
-                    top: 0,
+                    top: screenHeight > 700 ? 0 : -50,
                     left: 0,
                     right: 0,
                     child: Image.asset(
@@ -50,7 +52,7 @@ class _LoginState extends State<Login> {
                   ),
                 ),
                 Positioned(
-                  top: 0,
+                  top: screenHeight > 700 ? 0 : -50,
                   left: 0,
                   right: 0,
                   child: Image.asset(
@@ -61,215 +63,229 @@ class _LoginState extends State<Login> {
                 ),
               ],
             ),
-            Center(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  SizedBox(height: !isKeyboard ? 210 : 70,),
-                  Image.asset('assets/logo.png'), // Logo
-                  SizedBox(height: 10,),
-                  Container(
-                    child: Text(
-                      'Log in to your Account',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
+            Container(
+              child: Center(
+                child: Column(
+                  children: [
+                    SizedBox(height: !isKeyboard && screenHeight > 700 ? 210 : 130,),
+                    Image.asset(
+                      width: screenHeight > 700 ? 400 : 300,
+                      'assets/logo.png'
+                    ), // Logo
+                    SizedBox(height: 10,),
+                    Container(
+                      child: Text(
+                        'Log in to your Account',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                  ),
-                  SizedBox(height: 45,),
-                  // Input Boxes
-                  Form( // Put to form to add validations
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Student No.
-                        Container(
-                          child: Text('Student No.'),
-                        ),
-                        SizedBox(height: 5,),
-                        SizedBox(
-                          height: 55,
-                          width: 300,
-                          child: TextFormField( // Input box
-                            style: TextStyle(fontSize: 14),
-                            keyboardType: TextInputType.emailAddress,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly, // ⛔ blocks letters/symbols
-                            ],
-                            decoration: InputDecoration(
-                              errorMaxLines: 1,
-                              errorStyle: TextStyle(
-                                fontSize: 10,
-                                height: 1,
+                    SizedBox(height: screenHeight > 700 ? 45 : 30,),
+                    // Input Boxes
+                    Form( // Put to form to add validations
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Student No.
+                          Container(
+                            child: Text(
+                              'Student No.',
+                              style: TextStyle(
+                                fontSize: screenHeight > 700 ? 14 : 12
                               ),
-                              hintText: 'Enter Student No.', // Placeholder
-                              hintStyle: TextStyle(
-                                color: Colors.grey, // Change placeholder color
-                                fontSize: 14,
+                            ),
+                          ),
+                          SizedBox(height: 5,),
+                          SizedBox(
+                            height: screenHeight > 700 ? 55 : 48,
+                            width: 300,
+                            child: TextFormField( // Input box
+                              style: TextStyle(fontSize: 14),
+                              keyboardType: TextInputType.emailAddress,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                              decoration: InputDecoration(
+                                errorMaxLines: 1,
+                                errorStyle: TextStyle(
+                                  fontSize: 10,
+                                  height: 1,
+                                ),
+                                hintText: 'Enter Student No.', // Placeholder
+                                hintStyle: TextStyle(
+                                  color: Colors.grey, // Change placeholder color
+                                  fontSize: 14,
+                                ),
+                                prefixIcon: Icon(
+                                  Icons.person_2_outlined, // Add icon to the placeholder
+                                  color: Colors.grey, // Change the color of the icon
+                                ),
+                                contentPadding: const EdgeInsets.symmetric( // Add padding
+                                  horizontal: 10,
+                                  vertical: 10,
+                                ),
+                                // Add border to the input box
+                                enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                    borderSide: const BorderSide(
+                                        color: Colors.grey
+                                    )
+                                ),
+                                focusedBorder: OutlineInputBorder(  // Change color of the border when clicked
+                                    borderRadius: BorderRadius.circular(10),
+                                    borderSide: const BorderSide(
+                                        color: Colors.black
+                                    )
+                                ),
+                                errorBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                    borderSide: const BorderSide(
+                                        color: Colors.red
+                                    )
+                                ),
+                                focusedErrorBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: const BorderSide(
+                                      color: Colors.red
+                                  ),
+                                ),
                               ),
-                              prefixIcon: Icon(
-                                Icons.person_2_outlined, // Add icon to the placeholder
-                                color: Colors.grey, // Change the color of the icon
-                              ),
-                              contentPadding: const EdgeInsets.symmetric( // Add padding
-                                horizontal: 10,
-                                vertical: 10,
-                              ),
-                              // Add border to the input box
-                              enabledBorder: OutlineInputBorder(
+                              validator: (value) {
+                                final v = value?.trim() ?? '';
+                                if (v.isEmpty) return 'Student number is required';
+                                if (v.length < 8) return 'Student number is too short';
+                                return null;
+                              },
+                            ),
+                          ),
+                          SizedBox(height: screenHeight > 700 ? 15 : 10),
+                          // Password
+                          Container(child: Text(
+                            'Password',
+                            style: TextStyle(
+                                fontSize: screenHeight > 700 ? 14 : 12
+                            ),
+                          ),),
+                          SizedBox(height: 5,),
+                          SizedBox(
+                            height: screenHeight > 700 ? 55 : 48,
+                            width: 300,
+                            child: TextFormField( // Input box
+                              style: TextStyle(fontSize: 14),
+                              obscureText: (showPassword ? true : false),
+                              decoration: InputDecoration(
+                                errorMaxLines: 1,
+                                errorStyle: TextStyle(
+                                  fontSize: 10,
+                                  height: 1,
+                                ),
+                                hintText: 'Enter Password', // Placeholder
+                                hintStyle: TextStyle(
+                                  color: Colors.grey, // Change placeholder color
+                                  fontSize: 14,
+                                ),
+                                prefixIcon: Icon(
+                                  Icons.lock_outline, // Add icon to the placeholder
+                                  color: Colors.grey, // Change the color of the icon
+                                  size: 20,
+                                ),
+                                suffixIcon: IconButton(
+                                  icon: Icon(showPassword ? Icons.visibility_off : Icons.visibility),
+                                  onPressed: () {
+                                    setState(() {
+                                      showPassword = !showPassword;
+                                    });
+                                  },
+                                ),
+                                contentPadding: const EdgeInsets.symmetric( // Add padding
+                                  horizontal: 10,
+                                  vertical: 10,
+                                ),
+                                // Add border to the input box
+                                enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(10),
                                   borderSide: const BorderSide(
                                       color: Colors.grey
                                   )
-                              ),
-                              focusedBorder: OutlineInputBorder(  // Change color of the border when clicked
+                                ),
+                                focusedBorder: OutlineInputBorder(  // Change color of the border when clicked
                                   borderRadius: BorderRadius.circular(10),
                                   borderSide: const BorderSide(
                                       color: Colors.black
                                   )
-                              ),
-                              errorBorder: OutlineInputBorder(
+                                ),
+                                errorBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(10),
                                   borderSide: const BorderSide(
                                       color: Colors.red
                                   )
+                                ),
+                                focusedErrorBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: const BorderSide(
+                                      color: Colors.red
+                                  ),
+                                ),
                               ),
-                              focusedErrorBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(
-                                    color: Colors.red
+                              validator: (value) {
+                                final v = value ?? '';
+                                if (v.isEmpty) return 'Password is required';
+                                if (v.length < 8) return 'Minimum 8 characters';
+                                return null;
+                              },
+                            ),
+                          ),
+                          Container(
+                            height: 40,
+                            margin: EdgeInsets.fromLTRB(165,0,0,0),
+                            child: TextButton(
+                              onPressed: () {
+                                print('forgot password');
+                              },
+                              child: Text(
+                                'Forgot Password?',
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 12,
                                 ),
                               ),
                             ),
-                            validator: (value) {
-                              final v = value?.trim() ?? '';
-                              if (v.isEmpty) return 'Student number is required';
-                              if (v.length < 8) return 'Student number is too short';
-                              return null;
-                            },
                           ),
-                        ),
-                        SizedBox(height: 2,),
-                        // Password
-                        Container(child: Text('Password'),),
-                        SizedBox(height: 5,),
-                        SizedBox(
-                          height: 55,
-                          width: 300,
-                          child: TextFormField( // Input box
-                            style: TextStyle(fontSize: 14),
-                            obscureText: (showPassword ? true : false),
-                            decoration: InputDecoration(
-                              errorMaxLines: 1,
-                              errorStyle: TextStyle(
-                                fontSize: 10,
-                                height: 1,
-                              ),
-                              hintText: 'Enter Password', // Placeholder
-                              hintStyle: TextStyle(
-                                color: Colors.grey, // Change placeholder color
-                                fontSize: 14,
-                              ),
-                              prefixIcon: Icon(
-                                Icons.lock_outline, // Add icon to the placeholder
-                                color: Colors.grey, // Change the color of the icon
-                                size: 20,
-                              ),
-                              suffixIcon: IconButton(
-                                icon: Icon(showPassword ? Icons.visibility_off : Icons.visibility),
-                                onPressed: () {
-                                  setState(() {
-                                    showPassword = !showPassword;
-                                  });
-                                },
-                              ),
-                              contentPadding: const EdgeInsets.symmetric( // Add padding
-                                horizontal: 10,
-                                vertical: 10,
-                              ),
-                              // Add border to the input box
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(
-                                    color: Colors.grey
-                                )
-                              ),
-                              focusedBorder: OutlineInputBorder(  // Change color of the border when clicked
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(
-                                    color: Colors.black
-                                )
-                              ),
-                              errorBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(
-                                    color: Colors.red
-                                )
-                              ),
-                              focusedErrorBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(
-                                    color: Colors.red
-                                ),
-                              ),
-                            ),
-                            validator: (value) {
-                              final v = value ?? '';
-                              if (v.isEmpty) return 'Password is required';
-                              if (v.length < 8) return 'Minimum 8 characters';
-                              return null;
-                            },
-                          ),
-                        ),
-                        Container(
-                          height: 40,
-                          margin: EdgeInsets.fromLTRB(165,0,0,0),
-                          child: TextButton(
-                            onPressed: () {
-                              print('forgot password');
-                            },
-                            child: Text(
-                              'Forgot Password?',
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 70,),
-                  !isKeyboard ? Container(
-                    child: OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                            minimumSize: Size(150, 40),
-                            backgroundColor: Color(0xFF004280),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadiusGeometry.circular(6)
-                            )
-                        ),
-                        onPressed: () {
-                          if (_formKey.currentState!.validate()) {
-                            // All inputs are valid
-                            final studentNo = _studentNoController.text;
-                            final password = _passwordController.text;
-                            Navigator.of(context).pushReplacement(
-                              MaterialPageRoute(builder: (_) => const Mainshell()),
-                            );
-                          }
-                        },
-                        child: Text(
-                          'Sign In',
-                          style: TextStyle(
-                            color: Colors.white,
+                    SizedBox(height: 70,),
+                    !isKeyboard ? Container(
+                      child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                              minimumSize: Size(150, 40),
+                              backgroundColor: Color(0xFF004280),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadiusGeometry.circular(6)
+                              )
                           ),
-                        )
-                    ),
-                  ) : Container(),
-                ],
+                          onPressed: () {
+                            if (_formKey.currentState!.validate()) {
+                              // All inputs are valid
+                              final studentNo = _studentNoController.text;
+                              final password = _passwordController.text;
+                              Navigator.of(context).pushReplacement(
+                                MaterialPageRoute(builder: (_) => const Mainshell()),
+                              );
+                            }
+                          },
+                          child: Text(
+                            'Sign In',
+                            style: TextStyle(
+                              color: Colors.white,
+                            ),
+                          )
+                      ),
+                    ) : Container(),
+                  ],
+                ),
               ),
             )
           ],

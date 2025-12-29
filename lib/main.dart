@@ -33,6 +33,10 @@ class LandingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+    final screenHeight = MediaQuery.of(context).size.height;
+    print(screenHeight);
+
     return Scaffold(
       backgroundColor: Color(0xFFEAF5FB),
       body: Column(
@@ -40,9 +44,10 @@ class LandingPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center, // To align the whole page in vertically centered
         children: [
           Container( // Logo
-            margin: EdgeInsets.fromLTRB(0,150,0,0),
+            margin: EdgeInsets.fromLTRB(0,screenHeight > 700 ? 150 : 80,0,0),
             child: Image(
-                image: AssetImage('assets/logo.png')
+              width: screenHeight > 700 ? 400 : 350,
+              image: AssetImage('assets/logo.png')
             ),
           ),
           Text( // Subheader
@@ -50,16 +55,16 @@ class LandingPage extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'Montserrat',
               fontWeight: FontWeight.bold,
-              fontSize: 16,
+              fontSize: screenHeight > 700 ? 16 : 14,
             ),
           ),
           Container( // Subheader
-            margin: EdgeInsetsGeometry.symmetric(vertical: 60),
+            margin: EdgeInsetsGeometry.symmetric(vertical: screenHeight > 700 ? 60 : 50),
             child: Text(
               'Secure, Fast, and Reliable class attendance monitoring with face verification and network-based authentication',
               textAlign: TextAlign.center,
               style: TextStyle( // Text Style
-                fontSize: 18,
+                fontSize: screenHeight > 700 ? 18 : 16,
                 fontFamily: 'Montserrat',
                 fontWeight: FontWeight.bold,
               ),
@@ -104,7 +109,7 @@ class LandingPage extends StatelessWidget {
             )
           ),
           Container( // Footer
-            margin: EdgeInsets.fromLTRB(0,150,0,0),
+            margin: EdgeInsets.fromLTRB(0, screenHeight > 700 ? 150 : 90,0,0),
             child: Text(
               '© 2025 Attendly. All rights reserved.',
               style: TextStyle(
