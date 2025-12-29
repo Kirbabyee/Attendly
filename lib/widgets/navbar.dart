@@ -4,11 +4,13 @@ import 'package:flutter/cupertino.dart';
 class AttendlyNavBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
+  final double screenHeight;
 
   const AttendlyNavBar({
     super.key,
     required this.currentIndex,
     required this.onTap,
+    required this.screenHeight,
   });
 
   static const _bg = Color(0xFF003B73); // dark blue
@@ -17,7 +19,7 @@ class AttendlyNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.width;
+    print(screenHeight);
     final items = const [
       _NavItem(icon: CupertinoIcons.home, label: 'Home'),
       _NavItem(icon: CupertinoIcons.clock, label: 'History'),
@@ -28,9 +30,9 @@ class AttendlyNavBar extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Padding(
-        padding: EdgeInsets.fromLTRB(screenHeight > 700 ? 16 : 12, 0, screenHeight > 700 ? 16 : 12, screenHeight > 700 ? 12 : 8),
+        padding: EdgeInsets.fromLTRB(screenHeight > 370 ? 16 : 12, 0, screenHeight > 370 ? 16 : 12, screenHeight > 370 ? 12 : 8),
         child: SizedBox(
-          height: screenHeight > 700 ? 72 : 62,
+          height: screenHeight > 370 ? 72 : 62,
           child: LayoutBuilder(
             builder: (context, constraints) {
               final w = constraints.maxWidth;
@@ -47,7 +49,7 @@ class AttendlyNavBar extends StatelessWidget {
                     child: Container(
                       decoration: BoxDecoration(
                         color: _bg,
-                        borderRadius: BorderRadius.circular(screenHeight > 700 ? 22 : 20),
+                        borderRadius: BorderRadius.circular(screenHeight > 370 ? 22 : 20),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -55,23 +57,23 @@ class AttendlyNavBar extends StatelessWidget {
                           final selected = i == currentIndex;
                           return Expanded(
                             child: InkWell(
-                              borderRadius: BorderRadius.circular(screenHeight > 700 ? 22 : 20),
+                              borderRadius: BorderRadius.circular(screenHeight > 370 ? 22 : 20),
                               onTap: () => onTap(i),
                               child: Padding(
-                                padding: EdgeInsets.symmetric(vertical: screenHeight > 700 ? 10 : 8),
+                                padding: EdgeInsets.symmetric(vertical: screenHeight > 370 ? 10 : 8),
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Icon(
                                       items[i].icon,
-                                      size: screenHeight > 700 ? 22 : 20,
+                                      size: screenHeight > 370 ? 22 : 20,
                                       color: selected ? Colors.transparent : _inactive,
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
                                       items[i].label,
                                       style: TextStyle(
-                                        fontSize: screenHeight > 700 ? 11 : 10,
+                                        fontSize: screenHeight > 370 ? 11 : 10,
                                         fontWeight: FontWeight.w600,
                                         color: selected ? Colors.transparent : _inactive,
                                       ),
@@ -94,7 +96,7 @@ class AttendlyNavBar extends StatelessWidget {
                     top: -10,
                     child: Container(
                       width: 64,
-                      height: screenHeight > 700 ? 72 : 70,
+                      height: screenHeight > 370 ? 72 : 70,
                       decoration: BoxDecoration(
                         color: _active,
                         borderRadius: BorderRadius.circular(16),
@@ -112,14 +114,14 @@ class AttendlyNavBar extends StatelessWidget {
                           Icon(
                             items[currentIndex].icon,
                             color: _bg,
-                            size: screenHeight > 700 ? 24 : 20,
+                            size: screenHeight > 370 ? 24 : 20,
                           ),
                           const SizedBox(height: 4),
                           Text(
                             items[currentIndex].label,
                             style: TextStyle(
-                              fontSize: screenHeight > 700 ? 11 : 10,
-                              fontWeight: FontWeight.w700,
+                              fontSize: screenHeight > 370 ? 11 : 10,
+                              fontWeight: FontWeight.bold,
                               color: _bg,
                             ),
                           ),

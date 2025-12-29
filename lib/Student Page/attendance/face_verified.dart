@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_project_1/Student%20Page/mainshell.dart';
 
 import '../../widgets/student_information_card.dart';
 import '../dashboard.dart';
@@ -17,7 +18,7 @@ class _Face_VerifiedState extends State<Face_Verified> {
       if (Navigator.of(context).canPop()) {
         Navigator.of(context).pop();
         Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const Dashboard())
+            MaterialPageRoute(builder: (_) => const Mainshell())
         );
       }
     });
@@ -30,7 +31,7 @@ class _Face_VerifiedState extends State<Face_Verified> {
           onTap: () {
             Navigator.of(context).pop();
             Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => const Dashboard())
+              MaterialPageRoute(builder: (_) => const Mainshell())
             );
           },
           child: AlertDialog(
@@ -66,6 +67,8 @@ class _Face_VerifiedState extends State<Face_Verified> {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.width;
+    print(screenHeight);
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -86,13 +89,12 @@ class _Face_VerifiedState extends State<Face_Verified> {
                   name: 'Alfred S. Valiente',
                   studentNo: '20231599',
                 ),
-                const SizedBox(height: 30),
+                SizedBox(height: screenHeight > 370 ? 30 : 20),
               ],
             ),
-            SizedBox(height: 10,),
             Container(
               padding: const EdgeInsets.all(15),
-              width: 350,
+              width: screenHeight > 370 ? 350 : 320,
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(8),
@@ -117,42 +119,44 @@ class _Face_VerifiedState extends State<Face_Verified> {
                   ),
                   const SizedBox(height: 8),
                   // Grey camera box
-                  Container(
-                    width: 300,
-                    height: 250,
-                    margin: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.black, width: 1),
-                      color: const Color(0xFF9BC9F5),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          CupertinoIcons.check_mark_circled,
-                          color: Colors.green,
-                          size: 100,
-                        ),
-                        Text(
-                          'Face Verified Successfully',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
+                  Center(
+                    child: Container(
+                      width: screenHeight > 370 ? 300 : 250,
+                      height: screenHeight > 370 ? 250 : 150,
+                      margin: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.black, width: 1),
+                        color: const Color(0xFF9BC9F5),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            CupertinoIcons.check_mark_circled,
+                            color: Colors.green,
+                            size: screenHeight > 370 ? 100 : 50,
+                          ),
+                          Text(
+                            'Face Verified Successfully',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: screenHeight > 370 ? 12 : 11,
 
+                            ),
                           ),
-                        ),
-                        Text(
-                          'You can now submit your attendance',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 11
-                          ),
-                        )
-                      ],
+                          Text(
+                            'You can now submit your attendance',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: screenHeight > 370 ? 11 : 10
+                            ),
+                          )
+                        ],
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 15),
+                  SizedBox(height: screenHeight > 370 ? 15 : 10),
                   Center(
                     child: OutlinedButton(
                       style: OutlinedButton.styleFrom(
@@ -178,15 +182,19 @@ class _Face_VerifiedState extends State<Face_Verified> {
                       },
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
-                        children: const [
+                        children: [
                           Icon(
                             Icons.check_circle_outline,
-                            color: Colors.white
+                            color: Colors.white,
+                            size: screenHeight > 370 ? 18 : 16,
                           ),
                           SizedBox(width: 10),
                           Text(
                             'Submit Attendance',
-                            style: TextStyle(color: Colors.white),
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: screenHeight > 370 ? 14 : 12
+                            ),
                           ),
                         ],
                       ),

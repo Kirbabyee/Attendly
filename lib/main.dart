@@ -2,7 +2,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_project_1/Student Page/login.dart';
 import 'package:flutter_project_1/Student Page/face_registration.dart';
+import 'package:flutter_project_1/Student%20Page/Settings/account_information.dart';
+import 'package:flutter_project_1/Student%20Page/Settings/change_password.dart';
 import 'package:flutter_project_1/Student%20Page/attendance/face_verification.dart';
+import 'package:flutter_project_1/Student%20Page/attendance/face_verified.dart';
 import 'package:flutter_project_1/Student%20Page/dashboard.dart';
 import 'package:flutter_project_1/Student%20Page/Help/help.dart';
 import 'package:flutter_project_1/Student%20Page/History/history.dart';
@@ -24,6 +27,9 @@ void main() {
       '/history': (context) => History(),
       '/settings': (context) => Settings(),
       '/help': (context) => Help(),
+      '/face_verified': (context) => Face_Verified(),
+      '/account_information': (context) => AccountInformation(),
+      '/change_password': (context) => ChangePassword(),
     },
   )); // MaterialApp
 }

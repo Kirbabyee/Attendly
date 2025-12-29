@@ -265,72 +265,9 @@ class _Face_VerificationState extends State<Face_Verification> {
     return coverage > 0.55 && sizeOk;
   }
 
-  void _showSuccessModal() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return AlertDialog(
-          shape:
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          title: Row(
-            children: const [
-              Icon(Icons.check_circle, color: Colors.green),
-              SizedBox(width: 8),
-              Text('Success'),
-            ],
-          ),
-          content: const Text('Face verification successful!'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // close modal
-                _goToDashboardWithLoading();
-              },
-              child: const Text('Continue'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<void> _goToDashboardWithLoading() async {
-    if (_navigated) return;
-    _navigated = true;
-
-    // Stop stream
-    try {
-      if (_controller?.value.isStreamingImages == true) {
-        await _controller!.stopImageStream();
-      }
-    } catch (_) {}
-
-    if (!mounted) return;
-
-    // Show loading dialog
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
-    );
-
-    // Simulate loading (replace with real API call if you have one)
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (!mounted) return;
-
-    // Close loading
-    Navigator.of(context).pop();
-
-    // Navigate to dashboard
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const Dashboard()),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.width;
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -361,7 +298,7 @@ class _Face_VerificationState extends State<Face_Verification> {
               // Face Verification card
               Container(
                 padding: const EdgeInsets.all(15),
-                width: 350,
+                width: screenHeight > 370 ? 350 : 320,
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(8),

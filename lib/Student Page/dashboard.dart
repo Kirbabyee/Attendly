@@ -144,7 +144,6 @@ class _DashboardState extends State<Dashboard> {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-    print(screenHeight);
     return Scaffold(
       body: SafeArea(
         child: Column(

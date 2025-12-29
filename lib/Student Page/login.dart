@@ -41,7 +41,7 @@ class _LoginState extends State<Login> {
                 Visibility(
                   visible: (!isKeyboard ? true : false), // bool
                   child: Positioned(
-                    top: screenHeight > 700 ? 0 : -50,
+                    top: screenHeight > 370 ? 0 : -50,
                     left: 0,
                     right: 0,
                     child: Image.asset(
@@ -52,7 +52,7 @@ class _LoginState extends State<Login> {
                   ),
                 ),
                 Positioned(
-                  top: screenHeight > 700 ? 0 : -50,
+                  top: screenHeight > 370 ? 0 : -50,
                   left: 0,
                   right: 0,
                   child: Image.asset(
@@ -67,9 +67,9 @@ class _LoginState extends State<Login> {
               child: Center(
                 child: Column(
                   children: [
-                    SizedBox(height: !isKeyboard && screenHeight > 700 ? 210 : 130,),
+                    SizedBox(height: !isKeyboard && screenHeight > 370 ? 210 : 130,),
                     Image.asset(
-                      width: screenHeight > 700 ? 400 : 300,
+                      width: screenHeight > 370 ? 400 : 300,
                       'assets/logo.png'
                     ), // Logo
                     SizedBox(height: 10,),
@@ -81,7 +81,7 @@ class _LoginState extends State<Login> {
                         ),
                       ),
                     ),
-                    SizedBox(height: screenHeight > 700 ? 45 : 30,),
+                    SizedBox(height: screenHeight > 370 ? 45 : 30,),
                     // Input Boxes
                     Form( // Put to form to add validations
                       key: _formKey,
@@ -93,13 +93,13 @@ class _LoginState extends State<Login> {
                             child: Text(
                               'Student No.',
                               style: TextStyle(
-                                fontSize: screenHeight > 700 ? 14 : 12
+                                fontSize: screenHeight > 370 ? 14 : 12
                               ),
                             ),
                           ),
                           SizedBox(height: 5,),
                           SizedBox(
-                            height: screenHeight > 700 ? 55 : 48,
+                            height: screenHeight > 370 ? 55 : 48,
                             width: 300,
                             child: TextFormField( // Input box
                               style: TextStyle(fontSize: 14),
@@ -160,17 +160,17 @@ class _LoginState extends State<Login> {
                               },
                             ),
                           ),
-                          SizedBox(height: screenHeight > 700 ? 15 : 10),
+                          SizedBox(height: screenHeight > 370 ? 15 : 10),
                           // Password
                           Container(child: Text(
                             'Password',
                             style: TextStyle(
-                                fontSize: screenHeight > 700 ? 14 : 12
+                                fontSize: screenHeight > 370 ? 14 : 12
                             ),
                           ),),
                           SizedBox(height: 5,),
                           SizedBox(
-                            height: screenHeight > 700 ? 55 : 48,
+                            height: screenHeight > 370 ? 55 : 48,
                             width: 300,
                             child: TextFormField( // Input box
                               style: TextStyle(fontSize: 14),
@@ -272,7 +272,7 @@ class _LoginState extends State<Login> {
                               final studentNo = _studentNoController.text;
                               final password = _passwordController.text;
                               Navigator.of(context).pushReplacement(
-                                MaterialPageRoute(builder: (_) => const Mainshell()),
+                                MaterialPageRoute(builder: (_) => Mainshell()),
                               );
                             }
                           },

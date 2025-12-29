@@ -116,7 +116,6 @@ class _SettingsState extends State<Settings> {
               ),
             ),
 
-            // ✅ SCROLLABLE CONTENT
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(vertical: 20),
@@ -134,7 +133,9 @@ class _SettingsState extends State<Settings> {
                           backgroundColor: Colors.white,
                           side: BorderSide.none,
                         ),
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/account_information');
+                        },
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -248,7 +249,9 @@ class _SettingsState extends State<Settings> {
                           ),
                           SizedBox(height: 10),
                           OutlinedButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              Navigator.pushNamed(context, '/change_password');
+                            },
                             style: OutlinedButton.styleFrom(
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadiusGeometry.circular(8),

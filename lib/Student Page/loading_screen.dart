@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_project_1/Student%20Page/mainshell.dart';
 import 'dashboard.dart';
 
 class DashboardLoading extends StatefulWidget {
@@ -16,7 +17,7 @@ class _DashboardLoadingState extends State<DashboardLoading> {
     Future.delayed(const Duration(seconds: 2), () {
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const Dashboard()),
+        MaterialPageRoute(builder: (_) => const Mainshell()),
       );
     });
   }

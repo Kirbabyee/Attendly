@@ -5,6 +5,7 @@ import 'package:flutter_project_1/Student%20Page/mainshell.dart';
 import '../Student Page/dashboard.dart';
 
 class AttendlyBlueHeader extends StatelessWidget {
+
   final bool onBack;
 
   final IconData icon;
@@ -29,8 +30,9 @@ class AttendlyBlueHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.width;
     return Container(
-      height: height,
+      height: screenHeight > 370 && onBack ? height : screenHeight > 370 && !onBack ? 180 : onBack ? 180 : 130,
       decoration: const BoxDecoration(
         color: Color(0xFF004280),
         borderRadius: BorderRadius.vertical(
@@ -38,7 +40,7 @@ class AttendlyBlueHeader extends StatelessWidget {
           bottom: Radius.circular(20),
         ),
       ),
-      padding: const EdgeInsets.all(10),
+      padding: EdgeInsets.all(screenHeight > 370 ? 10 : 5),
       child: Column(
         children: [
           onBack ? Row(
@@ -59,7 +61,7 @@ class AttendlyBlueHeader extends StatelessWidget {
                 style: const TextStyle(color: Colors.white),
               )
             ],
-          ) : SizedBox(height: 30,),
+          ) : SizedBox(height: onBack ? 30 : 10,),
           const SizedBox(height: 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -70,9 +72,9 @@ class AttendlyBlueHeader extends StatelessWidget {
                   color: const Color(0x30FFFFFF),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(icon, size: 80, color: iconColor),
+                child: Icon(icon, size: screenHeight > 370 ? 80 : 65, color: iconColor),
               ),
-              const SizedBox(width: 15),
+              SizedBox(width: screenHeight > 370 ? 15 : 10),
 
               // Course details
               DefaultTextStyle(
@@ -89,16 +91,26 @@ class AttendlyBlueHeader extends StatelessWidget {
                       child: Text(
                         courseTitle,
                         softWrap: true,
-                        style: const TextStyle(
-                          fontSize: 14,
+                        style: TextStyle(
+                          fontSize: screenHeight > 370 ? 14 : 13,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
                     const SizedBox(height: 3),
-                    Text(courseCode),
-                    const SizedBox(height: 20),
-                    Text(professor),
+                    Text(
+                      courseCode,
+                      style: TextStyle(
+                        fontSize: screenHeight > 370 ? 14 : 13
+                      ),
+                    ),
+                    SizedBox(height: screenHeight > 370 ? 20 : 15),
+                    Text(
+                      professor,
+                      style: TextStyle(
+                        fontSize: screenHeight > 370 ? 13 : 12
+                      ),
+                    ),
                   ],
                 ),
               )
@@ -127,8 +139,9 @@ class StudentInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.width;
     return Container(
-      width: width,
+      width: screenHeight > 370 ? width : 320,
       height: height,
       decoration: BoxDecoration(
         boxShadow: const [
