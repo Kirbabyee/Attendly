@@ -4,6 +4,7 @@ import 'package:flutter_project_1/Student Page/login.dart';
 import 'package:flutter_project_1/Student Page/face_registration.dart';
 import 'package:flutter_project_1/Student%20Page/Settings/account_information.dart';
 import 'package:flutter_project_1/Student%20Page/Settings/change_password.dart';
+import 'package:flutter_project_1/Student%20Page/archives.dart';
 import 'package:flutter_project_1/Student%20Page/attendance/face_verification.dart';
 import 'package:flutter_project_1/Student%20Page/attendance/face_verified.dart';
 import 'package:flutter_project_1/Student%20Page/dashboard.dart';
@@ -39,10 +40,7 @@ class LandingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     final screenHeight = MediaQuery.of(context).size.height;
-    print(screenHeight);
-
     return Scaffold(
       backgroundColor: Color(0xFFEAF5FB),
       body: Column(

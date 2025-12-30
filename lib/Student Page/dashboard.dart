@@ -1,15 +1,78 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import 'archives.dart';
+
 class Dashboard extends StatefulWidget {
   const Dashboard({super.key});
 
   @override
   State<Dashboard> createState() => _DashboardState();
-
 }
 
+class ClassItem {
+  final String course;
+  final String classCode;
+  final String professor;
+  final String room;
+  final String sched;
+  final bool session;
+
+  ClassItem({
+    required this.course,
+    required this.classCode,
+    required this.professor,
+    required this.room,
+    required this.sched,
+    required this.session,
+  });
+}
+
+
 class _DashboardState extends State<Dashboard> {
+
+  final List<ClassItem> _classes = [
+    ClassItem(
+      course: 'Introduction to Human Computer Interaction',
+      classCode: 'CCS101',
+      professor: 'Mr. Leviticio Dowell',
+      room: 'Room 301',
+      sched: 'Monday: 9:00 - 11:00 AM',
+      session: true,
+    ),
+    ClassItem(
+      course: 'Information Assurance and Security 2',
+      classCode: 'IT 108',
+      professor: 'Mrs. Mary Grace R. Pelagio',
+      room: 'CSD COMLAB 1-N',
+      sched: 'Thursday: 4:30 - 7:30 PM',
+      session: false,
+    ),
+    ClassItem(
+      course: 'Software Engineering 1',
+      classCode: 'IT 10',
+      professor: 'Mr. Jayson P. Joble',
+      room: 'Room 405-N',
+      sched: 'Wednesday: 2:00 - 5:00 PM',
+      session: false,
+    ),
+  ];
+
+  final List<ClassItem> _archivedClasses = [];
+
+  void _sortClasses() {
+    _classes.sort((a, b) {
+      if (a.session == b.session) return 0;
+      return a.session ? -1 : 1;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _sortClasses();
+  }
+
   Widget textBold(tag, name, double screenHeight) {
     return Text.rich(
       TextSpan(
@@ -26,8 +89,16 @@ class _DashboardState extends State<Dashboard> {
   }
 
   // Classcard Template
-  Widget classCard(String course, String classCode, String professor, String room,
-      String sched, bool session, double screenHeight) {
+  Widget classCard(String course,
+      String classCode,
+      String professor,
+      String room,
+      String sched,
+      bool session,
+      double screenHeight,
+      VoidCallback onArchive,
+    ) {
+    final screenWidth = MediaQuery.of(context).size.width;
     return Container(
       margin: EdgeInsets.symmetric(vertical: screenHeight > 700 ? 20 : 12),
       padding: EdgeInsets.all(10),
@@ -57,9 +128,12 @@ class _DashboardState extends State<Dashboard> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      course,
-                      style: TextStyle(fontWeight: FontWeight.w500),
+                    Container(
+                      width: 280,
+                      child: Text(
+                        course,
+                        style: TextStyle(fontWeight: FontWeight.w500),
+                      ),
                     ),
                     SizedBox(height: 5,),
                     Text(classCode),
@@ -86,7 +160,7 @@ class _DashboardState extends State<Dashboard> {
                       children: [
                         Icon(CupertinoIcons.person, size: screenHeight > 700 ? 20 : 18),
                         SizedBox(width: 5),
-                        Text(professor),
+                        Container(width: 145,child: Text(professor,softWrap: true,)),
                       ],
                     ),
                     SizedBox(height: 5),
@@ -102,13 +176,13 @@ class _DashboardState extends State<Dashboard> {
                       children: [
                         Icon(CupertinoIcons.clock, size: screenHeight > 700 ? 20 : 18),
                         SizedBox(width: 5),
-                        Text(sched),
+                        Container(width: 140,child: Text(sched)),
                       ],
                     ),
                   ],
                 ),
                 Container(
-                  margin: EdgeInsets.fromLTRB(30, 0, 0, 0),
+                  margin: EdgeInsets.fromLTRB(screenWidth > 400 ? 37 : screenWidth < 370 ? 9 : 10, 0, 0, screenWidth < 370 ? 3 : 10),
                   padding: EdgeInsets.symmetric(vertical: 2),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadiusGeometry.circular(75),
@@ -120,19 +194,43 @@ class _DashboardState extends State<Dashboard> {
                     color:
                     session ? Color(0xFFDBFCE7) : Color(0x90DBEAFE),
                   ),
-                  width: screenHeight > 700 ? 120 : 100,
-                  height: 20,
+                  width: screenHeight > 700 ? 100 : 100,
+                  height: screenWidth < 370 ? 18 : 20,
                   child: Text(
                     session ? 'Session Started' : 'Upcoming',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: screenHeight > 700 ? 11 : 10,
+                      fontSize: screenHeight > 700 ? 11 : screenWidth < 370 ? 9 : 10,
                       color: session
                           ? Color(0xFF016224)
                           : Color(0x90004280),
                     ),
                   ),
-                )
+                ),
+                PopupMenuButton<String>(
+                  color: Colors.white,
+                  icon: const Icon(Icons.more_vert_outlined),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  itemBuilder: (context) => [
+                    const PopupMenuItem<String>(
+                      value: 'archive',
+                      child: Row(
+                        children: [
+                          Icon(Icons.archive_outlined, size: 18),
+                          SizedBox(width: 8),
+                          Text('Archive'),
+                        ],
+                      ),
+                    ),
+                  ],
+                  onSelected: (value) {
+                    if (value == 'archive') {
+                      onArchive();
+                    }
+                  },
+                ),
               ],
             )
           ],
@@ -141,9 +239,96 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
+  void _showJoinClassDialog() {
+    final TextEditingController classCodeController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          title: const Text(
+            'Enter Class Code',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold
+            ),
+          ),
+          content: Form(
+            key: formKey,
+            child: SizedBox(
+              width: 280,
+              child: TextFormField(
+                controller: classCodeController,
+                decoration: InputDecoration(
+                  hintText: 'Classcode',
+                  hintStyle: TextStyle(
+                    fontSize: 12,
+                  ),
+                  contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(
+                      color: Color(0x50000000),
+                      width: 1
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(6),
+                    borderSide:
+                    const BorderSide(color: Colors.black, width: .8),
+                  ),
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Class code is required';
+                  }
+                  return null;
+                },
+              ),
+            ),
+          ),
+          actionsAlignment: MainAxisAlignment.center,
+          actions: [
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF16A34A),
+                padding:
+                const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
+              ),
+              onPressed: () {
+                if (formKey.currentState!.validate()) {
+                  Navigator.pop(context);
+
+                }
+              },
+              icon: const Icon(Icons.check_circle_outline, size: 16, color: Colors.white),
+              label: const Text(
+                'Join Class',
+                style: TextStyle(color: Colors.white, fontSize: 12),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    print(screenWidth);
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -192,7 +377,9 @@ class _DashboardState extends State<Dashboard> {
                             backgroundColor: Color(0xFFFFF8D2),
                             side: BorderSide(color: Color(0xFFE6C402)),
                           ),
-                          onPressed: () {},
+                          onPressed: () {
+                            _showJoinClassDialog();
+                          },
                           child: Text(
                             'Join a class',
                             style: TextStyle(
@@ -245,7 +432,22 @@ class _DashboardState extends State<Dashboard> {
                             fontWeight: FontWeight.bold, fontSize: screenHeight > 700 ? 16 : 14),
                       ),
                       IconButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => Archives(
+                                archivedClasses: _archivedClasses,
+                                onRestore: (item) {
+                                  setState(() {
+                                    _classes.add(item);
+                                    _sortClasses();
+                                  });
+                                },
+                              ),
+                            ),
+                          );
+                        },
                         icon: Icon(
                           CupertinoIcons.archivebox,
                           size: screenHeight > 700 ? 25 : 20,
@@ -253,33 +455,27 @@ class _DashboardState extends State<Dashboard> {
                       ),
                     ],
                   ),
-                  classCard(
-                    'Introduction to Human Computer Interaction',
-                    'CCS101',
-                    'Mr. Leviticio Dowell',
-                    'Room 301',
-                    'Monday: 9:00 - 11:00 AM',
-                    true,
-                    screenHeight
-                  ),
-                  classCard(
-                    'Introduction to Human Computer Interaction',
-                    'CCS101',
-                    'Mr. Leviticio Dowell',
-                    'Room 301',
-                    'Monday: 9:00 - 11:00 AM',
-                    false,
-                    screenHeight
-                  ),
-                  classCard(
-                    'Introduction to Human Computer Interaction',
-                    'CCS101',
-                    'Mr. Leviticio Dowell',
-                    'Room 301',
-                    'Monday: 9:00 - 11:00 AM',
-                    false,
-                    screenHeight
-                  ),
+                  ..._classes.asMap().entries.map((entry) {
+                    final i = entry.key;
+                    final c = entry.value;
+
+                    return classCard(
+                      c.course,
+                      c.classCode,
+                      c.professor,
+                      c.room,
+                      c.sched,
+                      c.session,
+                      screenHeight,
+                        () {
+                          setState(() {
+                            _archivedClasses.add(_classes[i]);
+                            _classes.removeAt(i);
+                            _sortClasses();
+                          });
+                        },
+                    );
+                  }).toList(),
                 ],
               ),
             ),

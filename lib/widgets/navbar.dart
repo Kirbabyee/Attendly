@@ -19,7 +19,6 @@ class AttendlyNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print(screenHeight);
     final items = const [
       _NavItem(icon: CupertinoIcons.home, label: 'Home'),
       _NavItem(icon: CupertinoIcons.clock, label: 'History'),

@@ -29,7 +29,6 @@ class _LoginState extends State<Login> {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.width;
-    print(screenHeight);
     final isKeyboard = MediaQuery.of(context).viewInsets.bottom != 0;
     return Scaffold(
         resizeToAvoidBottomInset: false,
