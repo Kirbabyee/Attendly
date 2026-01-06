@@ -338,15 +338,14 @@ class _SettingsState extends State<Settings> {
                       ),
                     ),
 
-                    SizedBox(height: 10),
+                    SizedBox(height: 10,),
 
-                    // Terms and Privacy Policy
                     // Terms and Privacy Policy
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         SizedBox(
-                          height: 35,
+                          height: 18,
                           child: InkWell(
                             onTap: () {
                               showDialog(
@@ -355,13 +354,13 @@ class _SettingsState extends State<Settings> {
                                 builder: (context) {
                                   return AlertDialog(
                                     shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadiusGeometry.circular(8)
+                                      borderRadius: BorderRadiusGeometry.circular(8)
                                     ),
                                     backgroundColor: Colors.white,
                                     title: const Text(
                                       'Terms of Service',
                                       style: TextStyle(
-                                          fontWeight: FontWeight.w500
+                                        fontWeight: FontWeight.w500
                                       ),
                                     ),
                                     content: SingleChildScrollView( // 👈 makes it scrollable
@@ -385,7 +384,7 @@ class _SettingsState extends State<Settings> {
                         ),
                         SizedBox(width: 20,),
                         SizedBox(
-                          height: 35,
+                          height: 18,
                           child: InkWell(
                             onTap: () {
                               showDialog(
@@ -458,7 +457,7 @@ class _SettingsState extends State<Settings> {
                       ],
                     ),
 
-                    SizedBox(height: 10),
+                    SizedBox(height: 20),
 
                     // Logout Button
                     OutlinedButton.icon(
@@ -466,13 +465,95 @@ class _SettingsState extends State<Settings> {
                         backgroundColor: Color(0xFFFDDCDC),
                         side: BorderSide.none,
                       ),
-                      onPressed: () {
+                      onPressed: () async {
+                        final bool? confirm = await showDialog<bool>(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (context) {
+                            return AlertDialog(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              backgroundColor: Colors.white,
+                              title: const Text(
+                                'Sign Out',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                              content: const Text(
+                                'Are you sure you want to sign out?',
+                                textAlign: TextAlign.center,
+                              ),
+                              actionsAlignment: MainAxisAlignment.center,
+                              actions: [
+                                OutlinedButton(
+                                  style: OutlinedButton.styleFrom(
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                  onPressed: () => Navigator.pop(context, false),
+                                  child: const Text('Cancel', style: TextStyle(color: Colors.black)),
+                                ),
+                                ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFFB60202),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                  onPressed: () => Navigator.pop(context, true),
+                                  child: const Text('Sign Out', style: TextStyle(color: Colors.white)),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+
+                        if (confirm != true) return;
+
+                        // Loading dialog
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false, // user can't close it
+                          builder: (_) {
+                            return Dialog(
+                              backgroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              child: Padding(
+                                padding: const EdgeInsets.all(18),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: const [
+                                    SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    ),
+                                    SizedBox(width: 12),
+                                    Text('Signing out...',),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        );
+
+                        // ✅ Do your logout logic here (Firebase signOut, etc.)
+                        await Future.delayed(const Duration(milliseconds: 2000)); // Load for 2 seconds
+
+                        if (!mounted) return;
+
+                        Navigator.pop(context); // close loading dialog
+
                         Navigator.of(context).pushReplacement(
                           MaterialPageRoute(builder: (_) => const Login()),
                         );
                       },
+
                       icon: Icon(Icons.logout_outlined, color: Colors.red),
-                      label: Text('Logout', style: TextStyle(color: Colors.red)),
+                      label: Text('Sign Out', style: TextStyle(color: Colors.red)),
                     ),
 
                     SizedBox(height: 20),

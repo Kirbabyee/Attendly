@@ -17,8 +17,6 @@ class Archives extends StatefulWidget {
   State<Archives> createState() => _ArchivesState();
 }
 
-
-
 class _ArchivesState extends State<Archives> {
 
   Widget classCard(String course,
@@ -87,9 +85,10 @@ class _ArchivesState extends State<Archives> {
                       ),
                     ),
                   ],
-                  onSelected: (value) {
+                  onSelected: (value) async {
                     if (value == 'restore') {
-                      onArchive(); // we’ll use this as restore action
+                      final ok = await _confirmArchive();
+                      if (ok) onArchive();
                     }
                   },
                 ),
@@ -158,6 +157,37 @@ class _ArchivesState extends State<Archives> {
         ),
       ),
     );
+  }
+
+  Future<bool> _confirmArchive() async { // Archive confirmation modal
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          title: const Text('Restore this class?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('No'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text(
+                'Yes',
+                style: TextStyle(color: Colors.red),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    return result ?? false;
   }
 
   @override

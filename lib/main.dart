@@ -11,6 +11,8 @@ import 'package:flutter_project_1/Student%20Page/dashboard.dart';
 import 'package:flutter_project_1/Student%20Page/Help/help.dart';
 import 'package:flutter_project_1/Student%20Page/History/history.dart';
 import 'package:flutter_project_1/Student%20Page/Settings/settings.dart';
+import 'package:flutter_project_1/Student%20Page/forgot_password.dart';
+import 'package:flutter_project_1/Student%20Page/new_password.dart';
 
 void main() {
   runApp(MaterialApp(
@@ -31,6 +33,8 @@ void main() {
       '/face_verified': (context) => Face_Verified(),
       '/account_information': (context) => AccountInformation(),
       '/change_password': (context) => ChangePassword(),
+      '/forgot_password': (context) => ForgotPassword(),
+      '/new_password': (context) => NewPassword(),
     },
   )); // MaterialApp
 }

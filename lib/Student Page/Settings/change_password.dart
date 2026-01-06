@@ -307,6 +307,7 @@ class _ChangePasswordState extends State<ChangePassword> {
                       ),
                     ),
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         SizedBox(width: 30,),
                         Transform.scale(
@@ -323,31 +324,36 @@ class _ChangePasswordState extends State<ChangePassword> {
                             ),
                           ),
                         ),
-                        Text('Show Password'),
+                        Text(
+                          'Show Password',
+                          style: TextStyle(
+                            fontSize: 12
+                          ),
+                        ),
                       ],
-                    )
+                    ),
+                    SizedBox(height: 10,),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFF043B6F),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadiusGeometry.circular(8)
+                          )
+                      ),
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          // All inputs valid
+                          print('Passwords valid');
+                        }
+                      },
+                      child: const Text(
+                        'Change Password',
+                        style: TextStyle(
+                            color: Colors.white
+                        ),
+                      ),
+                    ),
                   ],
-                ),
-              ),
-            ),
-            SizedBox(height: 30,),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF043B6F),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadiusGeometry.circular(8)
-                )
-              ),
-              onPressed: () {
-                if (_formKey.currentState!.validate()) {
-                  // All inputs valid
-                  print('Passwords valid');
-                }
-              },
-              child: const Text(
-                'Change Password',
-                style: TextStyle(
-                  color: Colors.white
                 ),
               ),
             ),

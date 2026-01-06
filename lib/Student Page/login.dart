@@ -28,7 +28,8 @@ class _LoginState extends State<Login> {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
     final isKeyboard = MediaQuery.of(context).viewInsets.bottom != 0;
     return Scaffold(
         resizeToAvoidBottomInset: false,
@@ -66,9 +67,9 @@ class _LoginState extends State<Login> {
               child: Center(
                 child: Column(
                   children: [
-                    SizedBox(height: !isKeyboard && screenHeight > 370 ? 210 : 130,),
+                    SizedBox(height: !isKeyboard ? screenHeight * .25 : 55,),
                     Image.asset(
-                      width: screenHeight > 370 ? 400 : 300,
+                      width: screenWidth * 4,
                       'assets/logo.png'
                     ), // Logo
                     SizedBox(height: 10,),
@@ -80,7 +81,7 @@ class _LoginState extends State<Login> {
                         ),
                       ),
                     ),
-                    SizedBox(height: screenHeight > 370 ? 45 : 30,),
+                    SizedBox(height: screenHeight * .045,),
                     // Input Boxes
                     Form( // Put to form to add validations
                       key: _formKey,
@@ -92,20 +93,17 @@ class _LoginState extends State<Login> {
                             child: Text(
                               'Student No.',
                               style: TextStyle(
-                                fontSize: screenHeight > 370 ? 14 : 12
+                                fontSize: screenHeight * .017
                               ),
                             ),
                           ),
                           SizedBox(height: 5,),
                           SizedBox(
-                            height: screenHeight > 370 ? 55 : 48,
-                            width: 300,
+                            height: screenHeight * .07,
+                            width: screenWidth * .76,
                             child: TextFormField( // Input box
-                              style: TextStyle(fontSize: 14),
+                              style: TextStyle(fontSize: screenHeight * .016),
                               keyboardType: TextInputType.emailAddress,
-                              inputFormatters: [
-                                FilteringTextInputFormatter.digitsOnly,
-                              ],
                               decoration: InputDecoration(
                                 errorMaxLines: 1,
                                 errorStyle: TextStyle(
@@ -120,6 +118,7 @@ class _LoginState extends State<Login> {
                                 prefixIcon: Icon(
                                   Icons.person_2_outlined, // Add icon to the placeholder
                                   color: Colors.grey, // Change the color of the icon
+                                  size: screenHeight * .035,
                                 ),
                                 contentPadding: const EdgeInsets.symmetric( // Add padding
                                   horizontal: 10,
@@ -159,20 +158,23 @@ class _LoginState extends State<Login> {
                               },
                             ),
                           ),
-                          SizedBox(height: screenHeight > 370 ? 15 : 10),
+
+                          SizedBox(height: screenHeight * .02,),
                           // Password
-                          Container(child: Text(
-                            'Password',
-                            style: TextStyle(
-                                fontSize: screenHeight > 370 ? 14 : 12
+                          Container(
+                            child: Text(
+                              'Password',
+                              style: TextStyle(
+                                  fontSize: screenHeight * .017
+                              ),
                             ),
-                          ),),
+                          ),
                           SizedBox(height: 5,),
                           SizedBox(
-                            height: screenHeight > 370 ? 55 : 48,
-                            width: 300,
+                            height: screenHeight * .07,
+                            width: screenWidth * .76,
                             child: TextFormField( // Input box
-                              style: TextStyle(fontSize: 14),
+                              style: TextStyle(fontSize: screenHeight * .016),
                               obscureText: (showPassword ? true : false),
                               decoration: InputDecoration(
                                 errorMaxLines: 1,
@@ -237,11 +239,10 @@ class _LoginState extends State<Login> {
                             ),
                           ),
                           Container(
-                            height: 40,
-                            margin: EdgeInsets.fromLTRB(165,0,0,0),
-                            child: TextButton(
-                              onPressed: () {
-                                print('forgot password');
+                            margin: EdgeInsets.fromLTRB(screenWidth * .47,0,0,0),
+                            child: InkWell(
+                              onTap: () {
+                                Navigator.pushNamed(context, '/forgot_password');
                               },
                               child: Text(
                                 'Forgot Password?',
@@ -255,32 +256,64 @@ class _LoginState extends State<Login> {
                         ],
                       ),
                     ),
-                    SizedBox(height: 70,),
+                    SizedBox(height: screenHeight * .08,),
                     !isKeyboard ? Container(
                       child: OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                              minimumSize: Size(150, 40),
-                              backgroundColor: Color(0xFF004280),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadiusGeometry.circular(6)
-                              )
-                          ),
-                          onPressed: () {
-                            if (_formKey.currentState!.validate()) {
-                              // All inputs are valid
-                              final studentNo = _studentNoController.text;
-                              final password = _passwordController.text;
-                              Navigator.of(context).pushReplacement(
-                                MaterialPageRoute(builder: (_) => Face_Registration()),
-                              );
-                            }
-                          },
-                          child: Text(
-                            'Sign In',
-                            style: TextStyle(
-                              color: Colors.white,
-                            ),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: Size(150, 40),
+                          backgroundColor: Color(0xFF004280),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadiusGeometry.circular(6)
                           )
+                        ),
+                          onPressed: () async {
+                            if (!_formKey.currentState!.validate()) return;
+
+                            // Show loading
+                            showDialog(
+                              context: context,
+                              barrierDismissible: false,
+                              builder: (_) {
+                                return Dialog(
+                                  backgroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(18),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: const [
+                                        SizedBox(
+                                          width: 18,
+                                          height: 18,
+                                          child: CircularProgressIndicator(strokeWidth: 2),
+                                        ),
+                                        SizedBox(width: 12),
+                                        Text('Signing in...'),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+
+                            // ✅ your real login goes here (Firebase signIn, etc.)
+                            await Future.delayed(const Duration(milliseconds: 3000));
+
+                            if (!mounted) return;
+
+                            Navigator.pop(context); // close loading
+
+                            Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(builder: (_) => const Mainshell()),
+                            );
+                          },
+                        child: Text(
+                          'Sign In',
+                          style: TextStyle(
+                            color: Colors.white,
+                          ),
+                        )
                       ),
                     ) : Container(),
                   ],

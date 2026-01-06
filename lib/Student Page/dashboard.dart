@@ -77,11 +77,11 @@ class _DashboardState extends State<Dashboard> {
     return Text.rich(
       TextSpan(
         text: tag,
-        style: TextStyle(fontSize: screenHeight > 700 ? 14 : 13),
+        style: TextStyle(fontSize: screenHeight * .015),
         children: [
           TextSpan(
             text: name,
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: screenHeight > 700 ? 14 : 13),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: screenHeight * .015),
           ),
         ],
       ),
@@ -100,9 +100,8 @@ class _DashboardState extends State<Dashboard> {
     ) {
     final screenWidth = MediaQuery.of(context).size.width;
     return Container(
-      margin: EdgeInsets.symmetric(vertical: screenHeight > 700 ? 20 : 12),
+      margin: EdgeInsets.symmetric(vertical: screenHeight * .02),
       padding: EdgeInsets.all(10),
-      width: 350,
       decoration: BoxDecoration(
         color: session ? Colors.white : Colors.grey[300],
         borderRadius: BorderRadiusGeometry.circular(10),
@@ -116,7 +115,7 @@ class _DashboardState extends State<Dashboard> {
       ),
       child: DefaultTextStyle(
         style: TextStyle(
-          fontSize: screenHeight > 700 ? 12 : 11,
+          fontSize: screenHeight * .013,
           color: Colors.black,
           fontFamily: 'Montserrat',
         ),
@@ -129,7 +128,7 @@ class _DashboardState extends State<Dashboard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      width: 280,
+                      width: screenWidth * .67,
                       child: Text(
                         course,
                         style: TextStyle(fontWeight: FontWeight.w500),
@@ -145,7 +144,7 @@ class _DashboardState extends State<Dashboard> {
                   onPressed: () {
                     Navigator.pushNamed(context, '/face_verification');
                   },
-                  icon: Icon(CupertinoIcons.right_chevron, size: screenHeight > 700 ? 16 : 14),
+                  icon: Icon(CupertinoIcons.right_chevron, size: screenHeight * .016),
                 )
                     : SizedBox(),
               ],
@@ -158,7 +157,7 @@ class _DashboardState extends State<Dashboard> {
                   children: [
                     Row(
                       children: [
-                        Icon(CupertinoIcons.person, size: screenHeight > 700 ? 20 : 18),
+                        Icon(CupertinoIcons.person, size: screenHeight * .02),
                         SizedBox(width: 5),
                         Container(width: 145,child: Text(professor,softWrap: true,)),
                       ],
@@ -166,7 +165,7 @@ class _DashboardState extends State<Dashboard> {
                     SizedBox(height: 5),
                     Row(
                       children: [
-                        Icon(Icons.pin_drop_outlined, size: screenHeight > 700 ? 20 : 18),
+                        Icon(Icons.pin_drop_outlined, size: screenHeight * .02),
                         SizedBox(width: 5),
                         Text(room),
                       ],
@@ -174,7 +173,7 @@ class _DashboardState extends State<Dashboard> {
                     SizedBox(height: 5),
                     Row(
                       children: [
-                        Icon(CupertinoIcons.clock, size: screenHeight > 700 ? 20 : 18),
+                        Icon(CupertinoIcons.clock, size: screenHeight * .02),
                         SizedBox(width: 5),
                         Container(width: 140,child: Text(sched)),
                       ],
@@ -182,7 +181,7 @@ class _DashboardState extends State<Dashboard> {
                   ],
                 ),
                 Container(
-                  margin: EdgeInsets.fromLTRB(screenWidth > 400 ? 37 : screenWidth < 370 ? 9 : 10, 0, 0, screenWidth < 370 ? 3 : 10),
+                  margin: EdgeInsets.fromLTRB(screenWidth * .076, 0, 0, 12),
                   padding: EdgeInsets.symmetric(vertical: 2),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadiusGeometry.circular(75),
@@ -194,13 +193,13 @@ class _DashboardState extends State<Dashboard> {
                     color:
                     session ? Color(0xFFDBFCE7) : Color(0x90DBEAFE),
                   ),
-                  width: screenHeight > 700 ? 100 : 100,
-                  height: screenWidth < 370 ? 18 : 20,
+                  width: screenHeight * .11,
+                  height: screenWidth * .05,
                   child: Text(
                     session ? 'Session Started' : 'Upcoming',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: screenHeight > 700 ? 11 : screenWidth < 370 ? 9 : 10,
+                      fontSize: screenHeight * .012,
                       color: session
                           ? Color(0xFF016224)
                           : Color(0x90004280),
@@ -218,16 +217,17 @@ class _DashboardState extends State<Dashboard> {
                       value: 'archive',
                       child: Row(
                         children: [
-                          Icon(Icons.archive_outlined, size: 18),
+                          Icon(Icons.restore, size: 18),
                           SizedBox(width: 8),
                           Text('Archive'),
                         ],
                       ),
                     ),
                   ],
-                  onSelected: (value) {
+                  onSelected: (value) async {
                     if (value == 'archive') {
-                      onArchive();
+                      final ok = await _confirmArchive();
+                      if (ok) onArchive();
                     }
                   },
                 ),
@@ -248,6 +248,7 @@ class _DashboardState extends State<Dashboard> {
       barrierDismissible: true,
       builder: (context) {
         return AlertDialog(
+          backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
           ),
@@ -323,6 +324,36 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
+  Future<bool> _confirmArchive() async { // Archive confirmation modal
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          title: const Text('Archive this class?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('No'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text(
+                'Yes',
+                style: TextStyle(color: Colors.red),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    return result ?? false;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -334,7 +365,7 @@ class _DashboardState extends State<Dashboard> {
         child: Column(
           children: [
             Container(
-              height: screenHeight > 700 ? 250 : 230,
+              height: screenHeight * .27,
               decoration: BoxDecoration(
                 color: Color(0xFF004280),
                 borderRadius: BorderRadius.vertical(
@@ -394,15 +425,15 @@ class _DashboardState extends State<Dashboard> {
                   SizedBox(height: screenHeight > 700 ? 20 : 12),
                   Container(
                     margin: EdgeInsets.symmetric(horizontal: 10),
-                    padding: EdgeInsets.all(20),
+                    padding: EdgeInsets.all(screenHeight * .022),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadiusGeometry.circular(10),
                     ),
                     child: Row(
                       children: [
-                        Image.asset('assets/avatar.png', width: screenHeight > 700 ? 80 : 75),
-                        SizedBox(width: screenHeight > 700 ? 20 : 25),
+                        Image.asset('assets/avatar.png', width: screenWidth * .2),
+                        SizedBox(width: screenWidth * .035),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -421,7 +452,7 @@ class _DashboardState extends State<Dashboard> {
             SizedBox(height: 16),
             Expanded(
               child: ListView(
-                padding: EdgeInsets.symmetric(horizontal: screenHeight > 700 ? 20 : 15),
+                padding: EdgeInsets.symmetric(horizontal: screenWidth * .05),
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -429,7 +460,7 @@ class _DashboardState extends State<Dashboard> {
                       Text(
                         'My Classes',
                         style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: screenHeight > 700 ? 16 : 14),
+                            fontWeight: FontWeight.bold, fontSize: screenHeight * .017),
                       ),
                       IconButton(
                         onPressed: () {
@@ -450,7 +481,7 @@ class _DashboardState extends State<Dashboard> {
                         },
                         icon: Icon(
                           CupertinoIcons.archivebox,
-                          size: screenHeight > 700 ? 25 : 20,
+                          size: screenHeight * .025,
                         ),
                       ),
                     ],
