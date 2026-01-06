@@ -15,8 +15,6 @@ class AttendlyBlueHeader extends StatelessWidget {
   final String courseCode;
   final String professor;
 
-  final double height;
-
   const AttendlyBlueHeader({
     super.key,
     required this.onBack,
@@ -25,14 +23,14 @@ class AttendlyBlueHeader extends StatelessWidget {
     required this.courseTitle,
     required this.courseCode,
     required this.professor,
-    this.height = 200,
   });
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
     return Container(
-      height: screenHeight > 370 && onBack ? height : screenHeight > 370 && !onBack ? 180 : onBack ? 180 : 130,
+      height: onBack ? screenHeight * .23 : !onBack ? screenHeight * .21 : screenHeight * .16,
       decoration: const BoxDecoration(
         color: Color(0xFF004280),
         borderRadius: BorderRadius.vertical(
@@ -40,75 +38,80 @@ class AttendlyBlueHeader extends StatelessWidget {
           bottom: Radius.circular(20),
         ),
       ),
-      padding: EdgeInsets.all(screenHeight > 370 ? 10 : 5),
+      padding: EdgeInsets.all(screenHeight * .013),
       child: Column(
         children: [
-          onBack ? Row(
-            children: [
-              IconButton(
-                onPressed: () {
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (_) => const Mainshell())
-                  );
-                },
-                icon: const Icon(
-                  Icons.arrow_back,
-                  color: Colors.white
+          onBack ? Container(
+            padding: EdgeInsets.all(screenHeight * .013),
+            child: Row(
+              children: [
+                InkWell(
+                  onTap: () {
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(builder: (_) => const Mainshell())
+                    );
+                  },
+                  child: Icon(
+                    Icons.arrow_back,
+                    color: Colors.white,
+                    size: screenHeight * .023,
+                  ),
                 ),
-              ),
-              Text(
-                'Back',
-                style: const TextStyle(color: Colors.white),
-              )
-            ],
-          ) : SizedBox(height: onBack ? 30 : 10,),
-          const SizedBox(height: 10),
+                SizedBox(width: 10,),
+                Text(
+                  'Back',
+                  style: TextStyle(color: Colors.white, fontSize: screenHeight * .017),
+                )
+              ],
+            ),
+          ) : SizedBox(height: onBack ? screenHeight * .033 : screenHeight * .013,),
+          SizedBox(height: screenHeight * .013),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: EdgeInsets.all(screenHeight * .013),
                 decoration: BoxDecoration(
                   color: const Color(0x30FFFFFF),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(icon, size: screenHeight > 370 ? 80 : 65, color: iconColor),
+                child: Icon(icon, size: screenHeight * .083, color: iconColor),
               ),
-              SizedBox(width: screenHeight > 370 ? 15 : 10),
+              SizedBox(width: 15),
 
               // Course details
               DefaultTextStyle(
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white,
-                  fontSize: 14,
+                  fontSize: screenHeight * .017,
                   fontFamily: 'Montserrat',
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SizedBox(
-                      width: 250,
+                      width: screenWidth * .65,
                       child: Text(
                         courseTitle,
                         softWrap: true,
                         style: TextStyle(
-                          fontSize: screenHeight > 370 ? 14 : 13,
+                          fontSize: screenHeight * .017,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 3),
+                    SizedBox(height: screenHeight * .006),
                     Text(
                       courseCode,
                       style: TextStyle(
-                        fontSize: screenHeight > 370 ? 14 : 13
+                        fontSize: screenHeight * .017
                       ),
                     ),
-                    SizedBox(height: screenHeight > 370 ? 20 : 15),
+                    SizedBox(height: screenHeight * .023),
                     Text(
                       professor,
                       style: TextStyle(
-                        fontSize: screenHeight > 370 ? 13 : 12
+                        fontSize: screenHeight * .016
                       ),
                     ),
                   ],
@@ -126,23 +129,19 @@ class StudentInfoCard extends StatelessWidget {
   final String name;
   final String studentNo;
 
-  final double width;
-  final double height;
-
   const StudentInfoCard({
     super.key,
     required this.name,
     required this.studentNo,
-    this.width = 350,
-    this.height = 100,
   });
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
     return Container(
-      width: screenHeight > 370 ? width : 320,
-      height: height,
+      width: screenWidth * .9,
+      height: screenHeight * .13,
       decoration: BoxDecoration(
         boxShadow: const [
           BoxShadow(
@@ -160,27 +159,28 @@ class StudentInfoCard extends StatelessWidget {
         children: [
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 20),
-            child: const Text(
+            child: Text(
               'Student Information',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: Colors.black,
+                fontSize: screenHeight * .017
               ),
             ),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: screenHeight * .013),
 
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 30),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Name:', style: TextStyle(fontSize: 12)),
+                Text('Name:', style: TextStyle(fontSize: screenHeight * .015)),
                 Flexible(
                   child: Text(
                     name,
                     textAlign: TextAlign.right,
-                    style: const TextStyle(fontSize: 12),
+                    style: TextStyle(fontSize: screenHeight * .015),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -193,8 +193,8 @@ class StudentInfoCard extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Student No.', style: TextStyle(fontSize: 12)),
-                Text(studentNo, style: const TextStyle(fontSize: 12)),
+                Text('Student No.', style: TextStyle(fontSize: screenHeight * .015)),
+                Text(studentNo, style: TextStyle(fontSize: screenHeight * .015)),
               ],
             ),
           ),

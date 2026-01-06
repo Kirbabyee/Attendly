@@ -28,7 +28,8 @@ class _LoginState extends State<Login> {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
     final isKeyboard = MediaQuery.of(context).viewInsets.bottom != 0;
     return Scaffold(
         resizeToAvoidBottomInset: false,
@@ -40,7 +41,7 @@ class _LoginState extends State<Login> {
                 Visibility(
                   visible: (!isKeyboard ? true : false), // bool
                   child: Positioned(
-                    top: screenHeight > 370 ? 0 : -50,
+                    top: screenHeight > 640 ? 0 : -50,
                     left: 0,
                     right: 0,
                     child: Image.asset(
@@ -51,7 +52,7 @@ class _LoginState extends State<Login> {
                   ),
                 ),
                 Positioned(
-                  top: screenHeight > 370 ? 0 : -50,
+                  top: screenHeight > 640 ? 0 : -50,
                   left: 0,
                   right: 0,
                   child: Image.asset(
@@ -66,21 +67,22 @@ class _LoginState extends State<Login> {
               child: Center(
                 child: Column(
                   children: [
-                    SizedBox(height: !isKeyboard && screenHeight > 370 ? 210 : 130,),
+                    SizedBox(height: !isKeyboard ? screenHeight * .24 : screenHeight * .16,),
                     Image.asset(
-                      width: screenHeight > 370 ? 400 : 300,
-                      'assets/logo.png'
+                        width: screenWidth * .9,
+                        'assets/logo.png'
                     ), // Logo
-                    SizedBox(height: 10,),
+                    SizedBox(height: screenHeight * .013,),
                     Container(
                       child: Text(
                         'Log in to your Account',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
+                          fontSize: screenHeight * .017
                         ),
                       ),
                     ),
-                    SizedBox(height: screenHeight > 370 ? 45 : 30,),
+                    SizedBox(height: screenHeight * .048,),
                     // Input Boxes
                     Form( // Put to form to add validations
                       key: _formKey,
@@ -92,38 +94,36 @@ class _LoginState extends State<Login> {
                             child: Text(
                               'Student No.',
                               style: TextStyle(
-                                fontSize: screenHeight > 370 ? 14 : 12
+                                  fontSize: screenHeight * .017
                               ),
                             ),
                           ),
-                          SizedBox(height: 5,),
+                          SizedBox(height: screenHeight * .008,),
                           SizedBox(
-                            height: screenHeight > 370 ? 55 : 48,
-                            width: 300,
+                            height: screenHeight * .058,
+                            width: screenWidth * .83,
                             child: TextFormField( // Input box
-                              style: TextStyle(fontSize: 14),
+                              style: TextStyle(fontSize: screenHeight * .017),
                               keyboardType: TextInputType.emailAddress,
-                              inputFormatters: [
-                                FilteringTextInputFormatter.digitsOnly,
-                              ],
                               decoration: InputDecoration(
                                 errorMaxLines: 1,
                                 errorStyle: TextStyle(
-                                  fontSize: 10,
+                                  fontSize: screenHeight * .013,
                                   height: 1,
                                 ),
                                 hintText: 'Enter Student No.', // Placeholder
                                 hintStyle: TextStyle(
                                   color: Colors.grey, // Change placeholder color
-                                  fontSize: 14,
+                                  fontSize: screenHeight * .017,
                                 ),
                                 prefixIcon: Icon(
                                   Icons.person_2_outlined, // Add icon to the placeholder
                                   color: Colors.grey, // Change the color of the icon
+                                  size: screenHeight * .023,
                                 ),
-                                contentPadding: const EdgeInsets.symmetric( // Add padding
+                                contentPadding: EdgeInsets.symmetric( // Add padding
                                   horizontal: 10,
-                                  vertical: 10,
+                                  vertical: screenHeight * .013,
                                 ),
                                 // Add border to the input box
                                 enabledBorder: OutlineInputBorder(
@@ -159,67 +159,67 @@ class _LoginState extends State<Login> {
                               },
                             ),
                           ),
-                          SizedBox(height: screenHeight > 370 ? 15 : 10),
+                          SizedBox(height: screenHeight * .018),
                           // Password
                           Container(child: Text(
                             'Password',
                             style: TextStyle(
-                                fontSize: screenHeight > 370 ? 14 : 12
+                                fontSize: screenHeight * .017
                             ),
                           ),),
-                          SizedBox(height: 5,),
+                          SizedBox(height: screenHeight * .008,),
                           SizedBox(
-                            height: screenHeight > 370 ? 55 : 48,
-                            width: 300,
+                            height: screenHeight * .058,
+                            width: screenWidth * .83,
                             child: TextFormField( // Input box
-                              style: TextStyle(fontSize: 14),
+                              style: TextStyle(fontSize: screenHeight * .017),
                               obscureText: (showPassword ? true : false),
                               decoration: InputDecoration(
                                 errorMaxLines: 1,
                                 errorStyle: TextStyle(
-                                  fontSize: 10,
+                                  fontSize: screenHeight * .013,
                                   height: 1,
                                 ),
                                 hintText: 'Enter Password', // Placeholder
                                 hintStyle: TextStyle(
                                   color: Colors.grey, // Change placeholder color
-                                  fontSize: 14,
+                                  fontSize: screenHeight * .017,
                                 ),
                                 prefixIcon: Icon(
                                   Icons.lock_outline, // Add icon to the placeholder
                                   color: Colors.grey, // Change the color of the icon
-                                  size: 20,
+                                  size: screenHeight * .023,
                                 ),
                                 suffixIcon: IconButton(
-                                  icon: Icon(showPassword ? Icons.visibility_off : Icons.visibility),
+                                  icon: Icon((showPassword ? Icons.visibility_off : Icons.visibility), size: screenHeight * .023,),
                                   onPressed: () {
                                     setState(() {
                                       showPassword = !showPassword;
                                     });
                                   },
                                 ),
-                                contentPadding: const EdgeInsets.symmetric( // Add padding
+                                contentPadding: EdgeInsets.symmetric( // Add padding
                                   horizontal: 10,
-                                  vertical: 10,
+                                  vertical: screenHeight * .013,
                                 ),
                                 // Add border to the input box
                                 enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                  borderSide: const BorderSide(
-                                      color: Colors.grey
-                                  )
+                                    borderRadius: BorderRadius.circular(10),
+                                    borderSide: const BorderSide(
+                                        color: Colors.grey
+                                    )
                                 ),
                                 focusedBorder: OutlineInputBorder(  // Change color of the border when clicked
-                                  borderRadius: BorderRadius.circular(10),
-                                  borderSide: const BorderSide(
-                                      color: Colors.black
-                                  )
+                                    borderRadius: BorderRadius.circular(10),
+                                    borderSide: const BorderSide(
+                                        color: Colors.black
+                                    )
                                 ),
                                 errorBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                  borderSide: const BorderSide(
-                                      color: Colors.red
-                                  )
+                                    borderRadius: BorderRadius.circular(10),
+                                    borderSide: const BorderSide(
+                                        color: Colors.red
+                                    )
                                 ),
                                 focusedErrorBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(10),
@@ -237,17 +237,16 @@ class _LoginState extends State<Login> {
                             ),
                           ),
                           Container(
-                            height: 40,
-                            margin: EdgeInsets.fromLTRB(165,0,0,0),
-                            child: TextButton(
-                              onPressed: () {
-                                print('forgot password');
+                            margin: EdgeInsets.fromLTRB(screenWidth * .46,0,0,0),
+                            child: InkWell(
+                              onTap: () {
+                                Navigator.pushNamed(context, '/forgot_password');
                               },
                               child: Text(
                                 'Forgot Password?',
                                 style: TextStyle(
                                   color: Colors.black,
-                                  fontSize: 12,
+                                  fontSize: screenHeight * .015,
                                 ),
                               ),
                             ),
@@ -255,11 +254,11 @@ class _LoginState extends State<Login> {
                         ],
                       ),
                     ),
-                    SizedBox(height: 70,),
+                    SizedBox(height: screenHeight * .073,),
                     !isKeyboard ? Container(
                       child: OutlinedButton(
                           style: OutlinedButton.styleFrom(
-                              minimumSize: Size(150, 40),
+                              minimumSize: Size(screenHeight * .18, screenHeight * .043),
                               backgroundColor: Color(0xFF004280),
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadiusGeometry.circular(6)
@@ -271,7 +270,7 @@ class _LoginState extends State<Login> {
                               final studentNo = _studentNoController.text;
                               final password = _passwordController.text;
                               Navigator.of(context).pushReplacement(
-                                MaterialPageRoute(builder: (_) => Face_Registration()),
+                                MaterialPageRoute(builder: (_) => Mainshell()),
                               );
                             }
                           },
@@ -279,6 +278,7 @@ class _LoginState extends State<Login> {
                             'Sign In',
                             style: TextStyle(
                               color: Colors.white,
+                              fontSize: screenHeight * .017
                             ),
                           )
                       ),

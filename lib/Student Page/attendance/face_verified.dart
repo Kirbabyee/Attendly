@@ -14,6 +14,7 @@ class Face_Verified extends StatefulWidget {
 
 class _Face_VerifiedState extends State<Face_Verified> {
   void _showAttendanceSubmittedModal() {
+    final screenHeight = MediaQuery.of(context).size.height;
     Future.delayed(const Duration(seconds: 2), () {
       if (Navigator.of(context).canPop()) {
         Navigator.of(context).pop();
@@ -39,7 +40,7 @@ class _Face_VerifiedState extends State<Face_Verified> {
             title: Icon(
               Icons.check_circle,
               color: Colors.green,
-              size: 30,
+              size: screenHeight * .08,
             ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
@@ -47,14 +48,14 @@ class _Face_VerifiedState extends State<Face_Verified> {
                 Text(
                   'Attendance Submitted',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: screenHeight * .017,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 Text(
                   'You\'ve been mark present for CS101',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: screenHeight * .015,
                   ),
                 ),
               ],
@@ -67,7 +68,8 @@ class _Face_VerifiedState extends State<Face_Verified> {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
     print(screenHeight);
     return Scaffold(
       body: SafeArea(
@@ -84,17 +86,17 @@ class _Face_VerifiedState extends State<Face_Verified> {
                   icon: CupertinoIcons.book,
                   iconColor: const Color(0xFFFBD600),
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: screenHeight * .023),
                 const StudentInfoCard(
                   name: 'Alfred S. Valiente',
                   studentNo: '20231599',
                 ),
-                SizedBox(height: screenHeight > 370 ? 30 : 20),
+                SizedBox(height: screenHeight * .033),
               ],
             ),
             Container(
               padding: const EdgeInsets.all(15),
-              width: screenHeight > 370 ? 350 : 320,
+              width: screenWidth * .9,
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(8),
@@ -109,20 +111,20 @@ class _Face_VerifiedState extends State<Face_Verified> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Face Verification',
                     style: TextStyle(
                       color: Colors.black,
-                      fontSize: 15,
+                      fontSize: screenHeight * .018,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: screenHeight * .011),
                   // Grey camera box
                   Center(
                     child: Container(
-                      width: screenHeight > 370 ? 300 : 250,
-                      height: screenHeight > 370 ? 250 : 150,
+                      width: screenWidth * .9,
+                      height: screenHeight * .28,
                       margin: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(8),
@@ -135,13 +137,13 @@ class _Face_VerifiedState extends State<Face_Verified> {
                           Icon(
                             CupertinoIcons.check_mark_circled,
                             color: Colors.green,
-                            size: screenHeight > 370 ? 100 : 50,
+                            size: screenHeight * .13,
                           ),
                           Text(
                             'Face Verified Successfully',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontSize: screenHeight > 370 ? 12 : 11,
+                              fontSize: screenHeight * .015,
 
                             ),
                           ),
@@ -149,14 +151,14 @@ class _Face_VerifiedState extends State<Face_Verified> {
                             'You can now submit your attendance',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              fontSize: screenHeight > 370 ? 11 : 10
+                              fontSize: screenHeight * .014
                             ),
                           )
                         ],
                       ),
                     ),
                   ),
-                  SizedBox(height: screenHeight > 370 ? 15 : 10),
+                  SizedBox(height: screenHeight * .01),
                   Center(
                     child: OutlinedButton(
                       style: OutlinedButton.styleFrom(
@@ -186,14 +188,14 @@ class _Face_VerifiedState extends State<Face_Verified> {
                           Icon(
                             Icons.check_circle_outline,
                             color: Colors.white,
-                            size: screenHeight > 370 ? 18 : 16,
+                            size: screenHeight * .021,
                           ),
                           SizedBox(width: 10),
                           Text(
                             'Submit Attendance',
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: screenHeight > 370 ? 14 : 12
+                              fontSize: screenHeight * .017
                             ),
                           ),
                         ],

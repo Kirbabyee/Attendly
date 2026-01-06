@@ -34,6 +34,8 @@ class _Face_RegistrationState extends State<Face_Registration> {
 
   // Show the Success Modal
   void _showSuccessModal() {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -46,7 +48,7 @@ class _Face_RegistrationState extends State<Face_Registration> {
               Icon(
                 Icons.check_circle,
                 color: Colors.green,
-                size: 48,
+                size: screenHeight * .051,
               ),
             ],
           ),
@@ -55,7 +57,7 @@ class _Face_RegistrationState extends State<Face_Registration> {
             textAlign: TextAlign.center,
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              fontSize: 16
+              fontSize: screenHeight * .019
             ),
           ),
           actions: [
@@ -299,6 +301,8 @@ class _Face_RegistrationState extends State<Face_Registration> {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -306,29 +310,28 @@ class _Face_RegistrationState extends State<Face_Registration> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(height: 20),
-              Image.asset('assets/logo.png', width: 250),
-              const SizedBox(height: 20),
+              Image.asset('assets/logo.png', width: screenWidth * .7),
+              SizedBox(height: screenHeight * .023),
 
               Align(
                 alignment: Alignment.centerLeft,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
+                  children: [
                     Text(
                       'Face Recognition',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: screenHeight * .028),
                     ),
-                    SizedBox(height: 4),
+                    SizedBox(height: screenHeight * .007),
                     Text(
                       'Scan your face to register your identity',
-                      style: TextStyle(fontSize: 12),
+                      style: TextStyle(fontSize: screenHeight * .015),
                     ),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 20),
+              SizedBox(height: screenHeight * .023),
 
               // White card
               Container(
@@ -337,28 +340,28 @@ class _Face_RegistrationState extends State<Face_Registration> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                padding: const EdgeInsets.symmetric(vertical: 18),
+                padding: EdgeInsets.symmetric(vertical: screenHeight * .021),
                 child: Column(
                   children: [
                     // Grey camera area
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      padding: EdgeInsets.symmetric(horizontal: 20),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(20),
                         child: Container(
                           color: const Color(0xFFD9D9D9),
-                          height: 240,
+                          height: screenHeight * .28,
                           width: double.infinity,
                           child: _buildCameraArea(),
                         ),
                       ),
                     ),
 
-                    const SizedBox(height: 10),
+                    SizedBox(height: screenHeight * .013),
 
                     // Status text
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      padding: EdgeInsets.symmetric(horizontal: screenWidth * .06),
                       child: Align(
                         alignment: Alignment.centerLeft,
                         child: Text(_controller == null
@@ -367,7 +370,7 @@ class _Face_RegistrationState extends State<Face_Registration> {
                             ? 'Hold still…'
                             : 'Align your face to the guide'),
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: screenHeight * .015,
                             fontWeight: FontWeight.w500,
                             color: _controller == null
                                 ? Colors.black54
@@ -377,34 +380,34 @@ class _Face_RegistrationState extends State<Face_Registration> {
                       ),
                     ),
 
-                    const SizedBox(height: 16),
+                    SizedBox(height: screenHeight * .019),
 
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      padding: EdgeInsets.symmetric(horizontal: screenWidth * .06),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text(
+                        children: [
+                          const Text(
                             'Face Registration Instruction:',
                             style: TextStyle(fontWeight: FontWeight.w500),
                           ),
-                          SizedBox(height: 6),
+                          SizedBox(height: screenHeight * .009),
                           Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 10),
+                            padding: EdgeInsets.symmetric(horizontal: screenWidth * .05),
                             child: Text(
                               '• Make sure you are in a well-lit area.\n'
                               '• Keep your face clearly visible and remove any obstructions.\n'
                               '• Look directly at the camera and follow the on-screen instructions.\n'
                               '• Blink or move your head when needed.\n'
                               '• Wait for the confirmation message before closing the app.',
-                              style: TextStyle(fontSize: 12),
+                              style: TextStyle(fontSize: screenHeight * .015),
                             ),
                           ),
                         ],
                       ),
                     ),
 
-                    const SizedBox(height: 18),
+                    SizedBox(height: screenHeight * .021),
 
                     OutlinedButton(
                       style: OutlinedButton.styleFrom(
@@ -420,12 +423,12 @@ class _Face_RegistrationState extends State<Face_Registration> {
                       },
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
-                        children: const [
+                        children: [
                           Icon(Icons.camera_alt_outlined, color: Colors.white),
-                          SizedBox(width: 10),
+                          SizedBox(width: screenWidth * .05),
                           Text(
                             'Start Face Registration',
-                            style: TextStyle(color: Colors.white),
+                            style: TextStyle(color: Colors.white, fontSize: screenHeight * .019),
                           ),
                         ],
                       ),
@@ -433,7 +436,7 @@ class _Face_RegistrationState extends State<Face_Registration> {
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: screenHeight * .023),
             ],
           ),
         ),
@@ -442,10 +445,12 @@ class _Face_RegistrationState extends State<Face_Registration> {
   }
 
   Widget _buildCameraArea() {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
     // If camera not started yet: show placeholder
     if (_controller == null || _initFuture == null) {
       return Center(
-        child: Image.asset('assets/face-scan.png', width: 140),
+        child: Image.asset('assets/face-scan.png', width: screenWidth * .36),
       );
     }
 

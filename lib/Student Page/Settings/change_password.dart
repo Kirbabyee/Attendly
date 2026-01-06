@@ -22,15 +22,16 @@ class _ChangePasswordState extends State<ChangePassword> {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Column(
           children: [
             Container(
-              height: 100,
-              padding: EdgeInsets.symmetric(horizontal: 30),
+              height: screenHeight * .103,
+              padding: EdgeInsets.symmetric(horizontal: screenHeight * .033),
               decoration: BoxDecoration(
                 color: Color(0xFF004280),
                 borderRadius: BorderRadius.vertical(
@@ -50,12 +51,12 @@ class _ChangePasswordState extends State<ChangePassword> {
                     child: Icon(
                       Icons.settings,
                       color: Colors.white,
-                      size: 50,
+                      size: screenHeight * .053,
                     ),
                   ),
                   SizedBox(width: 15),
                   Container(
-                    height: 50,
+                    height: screenHeight * .06,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -64,14 +65,14 @@ class _ChangePasswordState extends State<ChangePassword> {
                           style: TextStyle(
                             fontWeight: FontWeight.w500,
                             color: Colors.white,
-                            fontSize: 15,
+                            fontSize: screenHeight * .018,
                           ),
                         ),
-                        SizedBox(height: screenHeight > 700 ? 10 : 5),
+                        SizedBox(height: screenHeight * .01),
                         Text(
                           'Manage your preferences',
                           style: TextStyle(
-                            fontSize: 11,
+                            fontSize: screenHeight * .014,
                             color: Colors.white,
                           ),
                         )
@@ -81,7 +82,7 @@ class _ChangePasswordState extends State<ChangePassword> {
                 ],
               ),
             ),
-            SizedBox(height: 20,),
+            SizedBox(height: screenHeight * .023,),
             Container(
               child: Row(
                 children: [
@@ -91,16 +92,16 @@ class _ChangePasswordState extends State<ChangePassword> {
                         MaterialPageRoute(builder: (_) => const Mainshell(initialIndex: 3,)),
                       );
                     },
-                    icon: Icon(CupertinoIcons.arrow_left)
+                    icon: Icon(CupertinoIcons.arrow_left, size: screenHeight * .023,)
                   ),
-                  Text('Back')
+                  Text('Back', style: TextStyle(fontSize: screenHeight * .017),)
                 ],
               ),
             ),
-            SizedBox(height: 20,),
+            SizedBox(height: screenHeight * .023,),
             Container(
-              width: 350,
-              padding: EdgeInsets.all(15),
+              width: screenWidth * .9,
+              padding: EdgeInsets.all(screenHeight * .018),
               decoration: BoxDecoration(
                 boxShadow: [
                   BoxShadow(
@@ -120,28 +121,28 @@ class _ChangePasswordState extends State<ChangePassword> {
                       children: [
                         Icon(
                           CupertinoIcons.lock,
-                          size: 20,
+                          size: screenHeight * .023,
                         ),
                         SizedBox(width: 10,),
                         Text(
                           'Change Password',
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: screenHeight * .015,
                             fontWeight: FontWeight.w600
                           ),
                         ),
                       ],
                     ),
-                    SizedBox(height: 20,),
+                    SizedBox(height: screenHeight * .023,),
                     Container(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Current password'),
-                          SizedBox(height: 5,),
+                          Text('Current password', style: TextStyle(fontSize: screenHeight * .015),),
+                          SizedBox(height: screenHeight * .008,),
                           SizedBox(
-                            width: 300,
-                            height: 58,
+                            width: screenWidth * .75,
+                            height: screenHeight * .061,
                             child: TextFormField(
                               controller: _currentPassword,
                               obscureText: showPassword ? false : true,
@@ -152,19 +153,19 @@ class _ChangePasswordState extends State<ChangePassword> {
                                 return null;
                               },
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: screenHeight * .015,
                               ),
                               decoration: InputDecoration(
                                 errorMaxLines: 1,
                                 errorStyle: TextStyle(
-                                  fontSize: 10,
+                                  fontSize: screenHeight * .013,
                                 ),
-                                contentPadding: EdgeInsets.all(10), // Padding inside the inputbar
+                                contentPadding: EdgeInsets.all(screenHeight * .013), // Padding inside the inputbar
                                 filled: true,
                                 fillColor: Color(0x50D9D9D9),
                                 hintText: 'Enter current password',
                                 hintStyle: TextStyle(
-                                  fontSize: 12,
+                                  fontSize: screenHeight * .015,
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
@@ -174,14 +175,14 @@ class _ChangePasswordState extends State<ChangePassword> {
                                   borderRadius: BorderRadius.circular(8),
                                   borderSide: BorderSide(
                                     color: Colors.black,
-                                    width: .5
+                                    width: 1
                                   ),
                                 ),
                                 errorBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
                                   borderSide: BorderSide(
                                       color: Colors.red,
-                                      width: .5
+                                      width: 1
                                   ),
                                 )
                               ),
@@ -190,16 +191,16 @@ class _ChangePasswordState extends State<ChangePassword> {
                         ],
                       ),
                     ),
-                    SizedBox(height: 20,),
+                    SizedBox(height: screenHeight * .023,),
                     Container(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('New password'),
-                          SizedBox(height: 5,),
+                          Text('New password', style: TextStyle(fontSize: screenHeight * .015),),
+                          SizedBox(height: screenHeight * .008),
                           SizedBox(
-                            width: 300,
-                            height: 58,
+                            width: screenWidth * .75,
+                            height: screenHeight * .061,
                             child: TextFormField(
                               controller: _newPassword,
                               obscureText: showPassword ? false : true,
@@ -210,19 +211,19 @@ class _ChangePasswordState extends State<ChangePassword> {
                                 return null;
                               },
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: screenHeight * .015,
                               ),
                               decoration: InputDecoration(
                                 errorMaxLines: 1,
                                 errorStyle: TextStyle(
-                                  fontSize: 10,
+                                  fontSize: screenHeight * .013,
                                 ),
-                                contentPadding: EdgeInsets.all(10), // Padding inside the inputbar
+                                contentPadding: EdgeInsets.all(screenHeight * .013), // Padding inside the inputbar
                                 filled: true,
                                 fillColor: Color(0x50D9D9D9),
                                 hintText: 'Enter new password',
                                 hintStyle: TextStyle(
-                                  fontSize: 12,
+                                  fontSize: screenHeight * .015,
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
@@ -232,14 +233,14 @@ class _ChangePasswordState extends State<ChangePassword> {
                                   borderRadius: BorderRadius.circular(8),
                                   borderSide: BorderSide(
                                       color: Colors.black,
-                                      width: .5
+                                      width: 1
                                   ),
                                 ),
                                 errorBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
                                   borderSide: BorderSide(
                                       color: Colors.red,
-                                      width: .5
+                                      width: 1
                                   ),
                                 )
                               ),
@@ -248,16 +249,16 @@ class _ChangePasswordState extends State<ChangePassword> {
                         ],
                       ),
                     ),
-                    SizedBox(height: 20,),
+                    SizedBox(height: screenHeight * .023,),
                     Container(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Confirm password'),
-                          SizedBox(height: 5,),
+                          Text('Confirm password', style: TextStyle(fontSize: screenHeight * .015),),
+                          SizedBox(height: screenHeight * .008,),
                           SizedBox(
-                            width: 300,
-                            height: 58,
+                            width: screenWidth * .75,
+                            height: screenHeight * .061,
                             child: TextFormField(
                               controller: _confirmPassword,
                               obscureText: showPassword ? false : true,
@@ -268,19 +269,19 @@ class _ChangePasswordState extends State<ChangePassword> {
                                 return null;
                               },
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: screenHeight * .015,
                               ),
                               decoration: InputDecoration(
                                 errorMaxLines: 1,
                                 errorStyle: TextStyle(
-                                  fontSize: 10,
+                                  fontSize: screenHeight * .013,
                                 ),
-                                contentPadding: EdgeInsets.all(10), // Padding inside the inputbar
+                                contentPadding: EdgeInsets.all(screenHeight * .013), // Padding inside the inputbar
                                 filled: true,
                                 fillColor: Color(0x50D9D9D9),
                                 hintText: 'Confirm new password',
                                 hintStyle: TextStyle(
-                                  fontSize: 12,
+                                  fontSize: screenHeight * .015,
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
@@ -290,14 +291,14 @@ class _ChangePasswordState extends State<ChangePassword> {
                                   borderRadius: BorderRadius.circular(8),
                                   borderSide: BorderSide(
                                       color: Colors.black,
-                                      width: .5
+                                      width: 1
                                   ),
                                 ),
                                 errorBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
                                   borderSide: BorderSide(
                                       color: Colors.red,
-                                      width: .5
+                                      width: 1
                                   ),
                                 )
                               ),
@@ -307,6 +308,7 @@ class _ChangePasswordState extends State<ChangePassword> {
                       ),
                     ),
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         SizedBox(width: 30,),
                         Transform.scale(
@@ -323,31 +325,37 @@ class _ChangePasswordState extends State<ChangePassword> {
                             ),
                           ),
                         ),
-                        Text('Show Password'),
+                        Text(
+                          'Show Password',
+                          style: TextStyle(
+                            fontSize: screenHeight * .015
+                          ),
+                        ),
                       ],
-                    )
+                    ),
+                    SizedBox(height: screenHeight * .013,),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFF043B6F),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadiusGeometry.circular(8)
+                          )
+                      ),
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          // All inputs valid
+                          print('Passwords valid');
+                        }
+                      },
+                      child: Text(
+                        'Change Password',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: screenHeight * .017
+                        ),
+                      ),
+                    ),
                   ],
-                ),
-              ),
-            ),
-            SizedBox(height: 30,),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF043B6F),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadiusGeometry.circular(8)
-                )
-              ),
-              onPressed: () {
-                if (_formKey.currentState!.validate()) {
-                  // All inputs valid
-                  print('Passwords valid');
-                }
-              },
-              child: const Text(
-                'Change Password',
-                style: TextStyle(
-                  color: Colors.white
                 ),
               ),
             ),

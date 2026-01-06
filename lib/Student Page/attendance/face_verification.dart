@@ -267,7 +267,9 @@ class _Face_VerificationState extends State<Face_Verification> {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -294,11 +296,11 @@ class _Face_VerificationState extends State<Face_Verification> {
                   const SizedBox(height: 30),
                 ],
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: screenHeight * .013),
               // Face Verification card
               Container(
                 padding: const EdgeInsets.all(15),
-                width: screenHeight > 370 ? 350 : 320,
+                width: screenWidth * .9,
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(8),
@@ -313,22 +315,22 @@ class _Face_VerificationState extends State<Face_Verification> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Face Verification',
                       style: TextStyle(
                         color: Colors.black,
-                        fontSize: 15,
+                        fontSize: screenHeight * .018,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
 
-                    const SizedBox(height: 8),
+                    SizedBox(height: screenHeight * .011),
 
                     // Grey camera box
                     Container(
-                      width: 300,
-                      height: 250,
-                      margin: const EdgeInsets.all(10),
+                      width: screenWidth * .9,
+                      height: screenHeight * .28,
+                      margin: EdgeInsets.all(screenHeight * .013),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(color: Colors.black, width: 1),
@@ -342,13 +344,13 @@ class _Face_VerificationState extends State<Face_Verification> {
 
                     // Status
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      padding: EdgeInsets.symmetric(horizontal: screenHeight * .013),
                       child: Text(
                         _controller == null
                             ? 'Tap start to open camera'
                             : (_faceAligned ? 'Hold still...' : 'Align your face to the guide'),
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: screenHeight * .015,
                           fontWeight: FontWeight.w500,
                           color: _controller == null
                               ? Colors.black54
@@ -357,7 +359,7 @@ class _Face_VerificationState extends State<Face_Verification> {
                       ),
                     ),
 
-                    const SizedBox(height: 15),
+                    SizedBox(height: screenHeight * .018),
 
                     Center(
                       child: OutlinedButton(
@@ -374,12 +376,12 @@ class _Face_VerificationState extends State<Face_Verification> {
                         },
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
-                          children: const [
+                          children: [
                             Icon(Icons.camera_alt_outlined, color: Colors.white),
                             SizedBox(width: 10),
                             Text(
                               'Start Face Verification',
-                              style: TextStyle(color: Colors.white),
+                              style: TextStyle(color: Colors.white, fontSize: screenHeight * .017),
                             ),
                           ],
                         ),

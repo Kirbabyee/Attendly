@@ -11,6 +11,8 @@ import 'package:flutter_project_1/Student%20Page/dashboard.dart';
 import 'package:flutter_project_1/Student%20Page/Help/help.dart';
 import 'package:flutter_project_1/Student%20Page/History/history.dart';
 import 'package:flutter_project_1/Student%20Page/Settings/settings.dart';
+import 'package:flutter_project_1/Student%20Page/forgot_password.dart';
+import 'package:flutter_project_1/Student%20Page/new_password.dart';
 
 void main() {
   runApp(MaterialApp(
@@ -31,6 +33,8 @@ void main() {
       '/face_verified': (context) => Face_Verified(),
       '/account_information': (context) => AccountInformation(),
       '/change_password': (context) => ChangePassword(),
+      '/forgot_password': (context) => ForgotPassword(),
+      '/new_password': (context) => NewPassword(),
     },
   )); // MaterialApp
 }
@@ -41,6 +45,7 @@ class LandingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       backgroundColor: Color(0xFFEAF5FB),
       body: Column(
@@ -48,9 +53,9 @@ class LandingPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center, // To align the whole page in vertically centered
         children: [
           Container( // Logo
-            margin: EdgeInsets.fromLTRB(0,screenHeight > 700 ? 150 : 80,0,0),
+            margin: EdgeInsets.fromLTRB(0,screenHeight * .153,0,0),
             child: Image(
-              width: screenHeight > 700 ? 400 : 350,
+              width: screenWidth * 1,
               image: AssetImage('assets/logo.png')
             ),
           ),
@@ -59,16 +64,16 @@ class LandingPage extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'Montserrat',
               fontWeight: FontWeight.bold,
-              fontSize: screenHeight > 700 ? 16 : 14,
+              fontSize: screenHeight * .019,
             ),
           ),
           Container( // Subheader
-            margin: EdgeInsetsGeometry.symmetric(vertical: screenHeight > 700 ? 60 : 50),
+            margin: EdgeInsetsGeometry.symmetric(vertical: screenHeight * .063, horizontal: 10),
             child: Text(
               'Secure, Fast, and Reliable class attendance monitoring with face verification and network-based authentication',
               textAlign: TextAlign.center,
               style: TextStyle( // Text Style
-                fontSize: screenHeight > 700 ? 18 : 16,
+                fontSize: screenHeight * .021,
                 fontFamily: 'Montserrat',
                 fontWeight: FontWeight.bold,
               ),
@@ -84,7 +89,7 @@ class LandingPage extends StatelessWidget {
               shape: RoundedRectangleBorder( // To achieved a round rectangle border radius
                 borderRadius: BorderRadius.circular(50)
               ),
-              padding: EdgeInsets.symmetric(vertical: 5, horizontal: 5), // Button padding
+              padding: EdgeInsets.symmetric(vertical: screenHeight * .008, horizontal: 5), // Button padding
               backgroundColor: Color(0xFF004280), // Button BG color
             ),
             child: Row( // To arrange in row the widgets inside the button
@@ -95,17 +100,18 @@ class LandingPage extends StatelessWidget {
                   backgroundColor: Colors.white,
                   child: Icon( // Icon
                     Icons.arrow_forward,
-                    size: 18, // Icon size
+                    size: screenHeight * .021, // Icon size
                     color: Color(0xFF004280),
                   ),
                 ),
                 Container(
-                  padding: EdgeInsets.fromLTRB(10,0,15,0),
+                  padding: EdgeInsets.fromLTRB(screenHeight * .013,0,screenHeight * .018,0),
                   child: Text(
                     'Get Started',
                     style: TextStyle(
                       color: Colors.white,
                       fontFamily: 'Montserrat',
+                      fontSize: screenHeight * .017
                     ),
                   ),
                 )
@@ -113,11 +119,12 @@ class LandingPage extends StatelessWidget {
             )
           ),
           Container( // Footer
-            margin: EdgeInsets.fromLTRB(0, screenHeight > 700 ? 150 : 90,0,0),
+            margin: EdgeInsets.fromLTRB(0, screenHeight * .153,0,0),
             child: Text(
               '© 2025 Attendly. All rights reserved.',
               style: TextStyle(
                 fontFamily: 'Montserrat',
+                fontSize: screenHeight * .017
               ),
             ),
           ),

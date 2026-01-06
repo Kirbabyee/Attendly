@@ -29,9 +29,9 @@ class AttendlyNavBar extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Padding(
-        padding: EdgeInsets.fromLTRB(screenHeight > 370 ? 16 : 12, 0, screenHeight > 370 ? 16 : 12, screenHeight > 370 ? 12 : 8),
+        padding: EdgeInsets.fromLTRB(screenHeight * .018, 0, screenHeight * .018, screenHeight * .014),
         child: SizedBox(
-          height: screenHeight > 370 ? 72 : 62,
+          height: screenHeight * .2,
           child: LayoutBuilder(
             builder: (context, constraints) {
               final w = constraints.maxWidth;
@@ -48,7 +48,7 @@ class AttendlyNavBar extends StatelessWidget {
                     child: Container(
                       decoration: BoxDecoration(
                         color: _bg,
-                        borderRadius: BorderRadius.circular(screenHeight > 370 ? 22 : 20),
+                        borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -56,23 +56,23 @@ class AttendlyNavBar extends StatelessWidget {
                           final selected = i == currentIndex;
                           return Expanded(
                             child: InkWell(
-                              borderRadius: BorderRadius.circular(screenHeight > 370 ? 22 : 20),
+                              borderRadius: BorderRadius.circular(20),
                               onTap: () => onTap(i),
                               child: Padding(
-                                padding: EdgeInsets.symmetric(vertical: screenHeight > 370 ? 10 : 8),
+                                padding: EdgeInsets.symmetric(vertical: screenHeight * .012),
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Icon(
                                       items[i].icon,
-                                      size: screenHeight > 370 ? 22 : 20,
+                                      size: screenHeight * .05,
                                       color: selected ? Colors.transparent : _inactive,
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
                                       items[i].label,
                                       style: TextStyle(
-                                        fontSize: screenHeight > 370 ? 11 : 10,
+                                        fontSize: screenHeight * .03,
                                         fontWeight: FontWeight.w600,
                                         color: selected ? Colors.transparent : _inactive,
                                       ),
@@ -95,7 +95,7 @@ class AttendlyNavBar extends StatelessWidget {
                     top: -10,
                     child: Container(
                       width: 64,
-                      height: screenHeight > 370 ? 72 : 70,
+                      height: screenHeight * .192,
                       decoration: BoxDecoration(
                         color: _active,
                         borderRadius: BorderRadius.circular(16),
@@ -113,13 +113,13 @@ class AttendlyNavBar extends StatelessWidget {
                           Icon(
                             items[currentIndex].icon,
                             color: _bg,
-                            size: screenHeight > 370 ? 24 : 20,
+                            size: screenHeight * .05,
                           ),
                           const SizedBox(height: 4),
                           Text(
                             items[currentIndex].label,
                             style: TextStyle(
-                              fontSize: screenHeight > 370 ? 11 : 10,
+                              fontSize: screenHeight * .031,
                               fontWeight: FontWeight.bold,
                               color: _bg,
                             ),

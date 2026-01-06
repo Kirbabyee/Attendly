@@ -152,7 +152,7 @@ class _DataFilterState extends State<DataFilter> {
       label: Text(
         label,
         style: TextStyle(
-          fontSize: screenHeight > 700 ? 11 : 10,
+          fontSize: screenHeight * .013,
           color: selectedStatus == label
               ? Colors.white
               : Colors.black,
@@ -196,13 +196,13 @@ class _DataFilterState extends State<DataFilter> {
     }
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: screenHeight > 700 ? 20 : 16, vertical: 5),
+      padding: EdgeInsets.symmetric(horizontal: screenHeight * .022, vertical: 5),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: borderColor),
         color: bgColor,
       ),
-      child: Text(status, style: TextStyle(fontSize: screenHeight > 700 ? 10 : 8, color: textColor)),
+      child: Text(status, style: TextStyle(fontSize: screenHeight * .012, color: textColor)),
     );
   }
 
@@ -215,31 +215,35 @@ class _DataFilterState extends State<DataFilter> {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       body: SafeArea(
         child: Center(
           child: SizedBox(
-            width: screenHeight > 700 ? 350 : 320,
+            width: screenWidth * .9,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 // Search
                 Center(
                   child: SizedBox(
-                    height: screenHeight > 700 ? 40 : 35,
+                    height: screenHeight * .042,
                     child: TextField(
                       style: TextStyle(
-                        fontSize: screenHeight > 700 ? 16 : 14
+                        fontSize: screenHeight * .018
                       ),
                       controller: searchController,
                       onChanged: (_) => applyFilters(),
                       decoration: InputDecoration(
                         hintStyle: TextStyle(
-                          fontSize: screenHeight > 700 ? 16 : 14
+                          fontSize: screenHeight * .018
                         ),
                         hintText: 'Search course',
-                        prefixIcon: const Icon(Icons.search),
-                        contentPadding: EdgeInsets.symmetric(vertical: 10),
+                        prefixIcon: Icon(
+                          Icons.search,
+                          size: screenHeight * .022,
+                        ),
+                        contentPadding: EdgeInsets.symmetric(vertical: screenHeight * .012),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                           borderSide: const BorderSide(color: Colors.grey),
@@ -253,7 +257,7 @@ class _DataFilterState extends State<DataFilter> {
                   ),
                 ),
 
-                SizedBox(height: 10,),
+                SizedBox(height: screenHeight * .012,),
 
                 Container(
                   child: Row(
@@ -262,7 +266,7 @@ class _DataFilterState extends State<DataFilter> {
                       Align(
                         alignment: Alignment.centerRight,
                         child: SizedBox(
-                          width: MediaQuery.of(context).size.width * 0.35,
+                          width: screenWidth * 0.30,
                           child: OutlinedButton(
                             style: OutlinedButton.styleFrom(
                               backgroundColor: const Color(0xFFEAEAEA),
@@ -279,7 +283,7 @@ class _DataFilterState extends State<DataFilter> {
                                   selectedDate == null
                                       ? 'Select date'
                                       : _fmt(selectedDate!),
-                                  style: const TextStyle(fontSize: 12, color: Colors.black),
+                                  style: TextStyle(fontSize: screenHeight * .014, color: Colors.black),
                                 ),
                                 if (selectedDate != null)
                                   GestureDetector(
@@ -295,7 +299,7 @@ class _DataFilterState extends State<DataFilter> {
                         ),
                       ),
 
-                      SizedBox(width: screenHeight * .09),
+                      SizedBox(width: screenHeight * 0.135),
 
                       // Dropdown
                       Align(
@@ -305,7 +309,7 @@ class _DataFilterState extends State<DataFilter> {
                           child: DropdownButton<String>(
                             isExpanded: true, // important so it uses the SizedBox width
                             dropdownColor: Colors.white,
-                            style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                            style: TextStyle(fontSize: screenHeight * .014, color: Colors.grey[700]),
                             value: selectedClass,
                             items: classOptions.map((c) {
                               return DropdownMenuItem(
@@ -329,7 +333,7 @@ class _DataFilterState extends State<DataFilter> {
                   ),
                 ),
 
-                SizedBox(height: 10,),
+                SizedBox(height: screenHeight * .012,),
 
                 // Title + Chips
                 Align(
@@ -338,9 +342,9 @@ class _DataFilterState extends State<DataFilter> {
                     children: [
                       Text(
                         'Record Details',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: screenHeight > 700 ? 15 : 14),
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: screenHeight * .017),
                       ),
-                      screenHeight > 700 ? SizedBox(height: 5) : SizedBox(),
+                      SizedBox(height: screenHeight * .007),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
@@ -369,7 +373,7 @@ class _DataFilterState extends State<DataFilter> {
                           : Colors.grey[300];
 
                       return Container(
-                        height: 100,
+                        height: screenHeight * .12,
                         decoration: BoxDecoration(
                           color: bg,
                           boxShadow: const [
@@ -386,13 +390,13 @@ class _DataFilterState extends State<DataFilter> {
                               record.courseName,
                               style: TextStyle(
                                 fontWeight: FontWeight.w500,
-                                fontSize: screenHeight > 700 ? 12 : 11
+                                fontSize: screenHeight * .014
                               ),
                             ),
                             subtitle: Text(
                               '${record.className} • ${record.date.toIso8601String().split("T")[0]}',
                               style: TextStyle(
-                                fontSize: screenHeight > 700 ? 11 : 10
+                                fontSize: screenHeight * .013
                               ),
                             ),
                             trailing: _statusBadge(record.status),
