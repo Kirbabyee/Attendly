@@ -346,53 +346,48 @@ class _SettingsState extends State<Settings> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         SizedBox(
-                            height: 35,
-                            child: TextButton(
-                                style: TextButton.styleFrom(
-                                    shape: RoundedRectangleBorder()
-                                ),
-                                onPressed: () {
-                                  showDialog(
-                                    context: context,
-                                    barrierDismissible: true,
-                                    builder: (context) {
-                                      return AlertDialog(
-                                        shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadiusGeometry.circular(8)
-                                        ),
-                                        backgroundColor: Colors.white,
-                                        title: const Text(
-                                          'Terms of Service',
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.w500
-                                          ),
-                                        ),
-                                        content: SingleChildScrollView( // 👈 makes it scrollable
-                                          child: Text(
-                                            termOfService,
-                                            textAlign: TextAlign.justify,
-                                          ),
-                                        ),
-                                      );
-                                    },
+                          height: 35,
+                          child: InkWell(
+                            onTap: () {
+                              showDialog(
+                                context: context,
+                                barrierDismissible: true,
+                                builder: (context) {
+                                  return AlertDialog(
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadiusGeometry.circular(8)
+                                    ),
+                                    backgroundColor: Colors.white,
+                                    title: const Text(
+                                      'Terms of Service',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w500
+                                      ),
+                                    ),
+                                    content: SingleChildScrollView( // 👈 makes it scrollable
+                                      child: Text(
+                                        termOfService,
+                                        textAlign: TextAlign.justify,
+                                      ),
+                                    ),
                                   );
                                 },
-                                child: Text(
-                                  'Terms of Service',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.black
-                                  ),
-                                )
+                              );
+                            },
+                            child: Text(
+                              'Terms of Service',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.black
+                              ),
                             )
+                          )
                         ),
+                        SizedBox(width: 20,),
                         SizedBox(
                           height: 35,
-                          child: TextButton(
-                            style: TextButton.styleFrom(
-                                shape: RoundedRectangleBorder()
-                            ),
-                            onPressed: () {
+                          child: InkWell(
+                            onTap: () {
                               showDialog(
                                 context: context,
                                 barrierDismissible: true,

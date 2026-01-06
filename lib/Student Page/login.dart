@@ -271,7 +271,7 @@ class _LoginState extends State<Login> {
                               final studentNo = _studentNoController.text;
                               final password = _passwordController.text;
                               Navigator.of(context).pushReplacement(
-                                MaterialPageRoute(builder: (_) => Mainshell()),
+                                MaterialPageRoute(builder: (_) => Face_Registration()),
                               );
                             }
                           },
