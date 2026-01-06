@@ -376,7 +376,11 @@ class _SettingsState extends State<Settings> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         SizedBox(
+<<<<<<< HEAD
                           height: screenHeight * .021,
+=======
+                          height: 18,
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                           child: InkWell(
                             onTap: () {
                               showDialog(
@@ -391,8 +395,12 @@ class _SettingsState extends State<Settings> {
                                     title: Text(
                                       'Terms of Service',
                                       style: TextStyle(
+<<<<<<< HEAD
                                         fontWeight: FontWeight.w500,
                                         fontSize: screenHeight * .027
+=======
+                                        fontWeight: FontWeight.w500
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                                       ),
                                     ),
                                     content: SingleChildScrollView( // 👈 makes it scrollable
@@ -419,7 +427,11 @@ class _SettingsState extends State<Settings> {
                         ),
                         SizedBox(width: screenHeight * .023,),
                         SizedBox(
+<<<<<<< HEAD
                           height: screenHeight * .021,
+=======
+                          height: 18,
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                           child: InkWell(
                             onTap: () {
                               showDialog(
@@ -493,7 +505,11 @@ class _SettingsState extends State<Settings> {
                       ],
                     ),
 
+<<<<<<< HEAD
                     SizedBox(height: screenHeight * .023),
+=======
+                    SizedBox(height: 20),
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
 
                     // Logout Button
                     OutlinedButton.icon(
@@ -511,6 +527,7 @@ class _SettingsState extends State<Settings> {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               backgroundColor: Colors.white,
+<<<<<<< HEAD
                               title: Text(
                                 'Sign Out',
                                 textAlign: TextAlign.center,
@@ -522,6 +539,16 @@ class _SettingsState extends State<Settings> {
                                 style: TextStyle(
                                   fontSize: screenHeight * .017
                                 ),
+=======
+                              title: const Text(
+                                'Sign Out',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                              content: const Text(
+                                'Are you sure you want to sign out?',
+                                textAlign: TextAlign.center,
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                               ),
                               actionsAlignment: MainAxisAlignment.center,
                               actions: [
@@ -532,7 +559,11 @@ class _SettingsState extends State<Settings> {
                                     ),
                                   ),
                                   onPressed: () => Navigator.pop(context, false),
+<<<<<<< HEAD
                                   child: Text('Cancel', style: TextStyle(color: Colors.black, fontSize: screenHeight * .017)),
+=======
+                                  child: const Text('Cancel', style: TextStyle(color: Colors.black)),
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                                 ),
                                 ElevatedButton(
                                   style: ElevatedButton.styleFrom(
@@ -542,7 +573,11 @@ class _SettingsState extends State<Settings> {
                                     ),
                                   ),
                                   onPressed: () => Navigator.pop(context, true),
+<<<<<<< HEAD
                                   child: Text('Sign Out', style: TextStyle(color: Colors.white, fontSize: screenHeight * .017)),
+=======
+                                  child: const Text('Sign Out', style: TextStyle(color: Colors.white)),
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                                 ),
                               ],
                             );
@@ -560,6 +595,7 @@ class _SettingsState extends State<Settings> {
                               backgroundColor: Colors.white,
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               child: Padding(
+<<<<<<< HEAD
                                 padding: EdgeInsets.all(screenHeight * .021),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -572,6 +608,20 @@ class _SettingsState extends State<Settings> {
                                     ),
                                     SizedBox(width: 12),
                                     Text('Signing out...', style: TextStyle(fontSize: screenHeight * .017),),
+=======
+                                padding: const EdgeInsets.all(18),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: const [
+                                    SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    ),
+                                    SizedBox(width: 12),
+                                    Text('Signing out...',),
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                                   ],
                                 ),
                               ),
@@ -591,8 +641,13 @@ class _SettingsState extends State<Settings> {
                         );
                       },
 
+<<<<<<< HEAD
                       icon: Icon(Icons.logout_outlined, color: Colors.red, size: screenHeight * .023,),
                       label: Text('Sign Out', style: TextStyle(color: Colors.red, fontSize: screenHeight * .017)),
+=======
+                      icon: Icon(Icons.logout_outlined, color: Colors.red),
+                      label: Text('Sign Out', style: TextStyle(color: Colors.red)),
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                     ),
 
                     SizedBox(height: screenHeight * .023),

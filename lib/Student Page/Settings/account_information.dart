@@ -145,7 +145,12 @@ class _AccountInformationState extends State<AccountInformation> {
                       child: Column(
                         children: [
                           SizedBox(
+<<<<<<< HEAD
                             height: screenHeight * .21,
+=======
+                            width: 180,
+                            height: 180,
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(90),
                               child: _profileImage == null

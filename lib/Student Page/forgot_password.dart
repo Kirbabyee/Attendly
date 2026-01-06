@@ -37,8 +37,12 @@ class _ForgotPasswordState extends State<ForgotPassword> {
 
   @override
   Widget build(BuildContext context) {
+<<<<<<< HEAD
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
+=======
+    final screenHeight = MediaQuery.of(context).size.width;
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
     final isKeyboard = MediaQuery.of(context).viewInsets.bottom != 0;
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -50,7 +54,11 @@ class _ForgotPasswordState extends State<ForgotPassword> {
               Visibility(
                 visible: (!isKeyboard ? true : false), // bool
                 child: Positioned(
+<<<<<<< HEAD
                   top: screenHeight > 640 ? 0 : -50,
+=======
+                  top: screenHeight > 370 ? 0 : -50,
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                   left: 0,
                   right: 0,
                   child: Image.asset(
@@ -61,7 +69,11 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                 ),
               ),
               Positioned(
+<<<<<<< HEAD
                 top: screenHeight > 640 ? 0 : -50,
+=======
+                top: screenHeight > 370 ? 0 : -50,
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                 left: 0,
                 right: 0,
                 child: Image.asset(
@@ -76,22 +88,38 @@ class _ForgotPasswordState extends State<ForgotPassword> {
             child: Center(
               child: Column(
                 children: [
+<<<<<<< HEAD
                   SizedBox(height: !isKeyboard ? screenHeight * .24 : screenHeight * .16,),
                   Image.asset(
                     width: screenWidth * .9,
                     'assets/logo.png'
                   ), // Logo
                   SizedBox(height: screenHeight * .013,),
+=======
+                  SizedBox(height: !isKeyboard && screenHeight > 370 ? 210 : 130,),
+                  Image.asset(
+                    width: screenHeight > 370 ? 400 : 300,
+                    'assets/logo.png'
+                  ), // Logo
+                  SizedBox(height: 10,),
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                   Container(
                     child: Text(
                       'Forgot Password',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
+<<<<<<< HEAD
                         fontSize: screenHeight * .017
                       ),
                     ),
                   ),
                   SizedBox(height: screenHeight * .048,),
+=======
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: screenHeight > 370 ? 45 : 30,),
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                   // Input Boxes
                   Form( // Put to form to add validations
                     key: _formKey,
@@ -103,6 +131,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                           child: Text(
                             'Student Number',
                             style: TextStyle(
+<<<<<<< HEAD
                               fontSize: screenHeight * .017
                             ),
                           ),
@@ -114,26 +143,54 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                           child: TextFormField( // Input box
                             controller: _studentNoController,
                             style: TextStyle(fontSize: screenHeight * .017),
+=======
+                              fontSize: screenHeight > 370 ? 14 : 12
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 5,),
+                        SizedBox(
+                          height: screenHeight > 370 ? 55 : 48,
+                          width: 300,
+                          child: TextFormField( // Input box
+                            controller: _studentNoController,
+                            style: TextStyle(fontSize: 14),
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                             keyboardType: TextInputType.emailAddress,
                             decoration: InputDecoration(
                               errorMaxLines: 1,
                               errorStyle: TextStyle(
+<<<<<<< HEAD
                                 fontSize: screenHeight * .013,
+=======
+                                fontSize: 10,
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                                 height: 1,
                               ),
                               hintText: 'Enter Student No.', // Placeholder
                               hintStyle: TextStyle(
                                 color: Colors.grey, // Change placeholder color
+<<<<<<< HEAD
                                 fontSize: screenHeight * .017,
+=======
+                                fontSize: 14,
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                               ),
                               prefixIcon: Icon(
                                 Icons.person_outline, // Add icon to the placeholder
                                 color: Colors.grey, // Change the color of the icon
+<<<<<<< HEAD
                                 size: screenHeight * .023,
                               ),
                               contentPadding: EdgeInsets.symmetric( // Add padding
                                 horizontal: screenHeight * .013,
                                 vertical: screenHeight * .013,
+=======
+                              ),
+                              contentPadding: const EdgeInsets.symmetric( // Add padding
+                                horizontal: 10,
+                                vertical: 10,
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                               ),
                               // Add border to the input box
                               enabledBorder: OutlineInputBorder(
@@ -169,13 +226,18 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                             },
                           ),
                         ),
+<<<<<<< HEAD
                         SizedBox(height: screenHeight * .018),
+=======
+                        SizedBox(height: screenHeight > 370 ? 15 : 10),
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
 
                         // Email
                         Container(
                           child: Text(
                             'Email',
                             style: TextStyle(
+<<<<<<< HEAD
                                 fontSize: screenHeight * .017
                             ),
                           ),
@@ -187,26 +249,54 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                           child: TextFormField( // Input box
                             controller: _emailController,
                             style: TextStyle(fontSize: screenHeight * .017),
+=======
+                                fontSize: screenHeight > 370 ? 14 : 12
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 5,),
+                        SizedBox(
+                          height: screenHeight > 370 ? 55 : 48,
+                          width: 300,
+                          child: TextFormField( // Input box
+                            controller: _emailController,
+                            style: TextStyle(fontSize: 14),
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                             keyboardType: TextInputType.emailAddress,
                             decoration: InputDecoration(
                               errorMaxLines: 1,
                               errorStyle: TextStyle(
+<<<<<<< HEAD
                                 fontSize: screenHeight * .013,
+=======
+                                fontSize: 10,
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                                 height: 1,
                               ),
                               hintText: 'Enter Email', // Placeholder
                               hintStyle: TextStyle(
                                 color: Colors.grey, // Change placeholder color
+<<<<<<< HEAD
                                 fontSize: screenHeight * .017,
+=======
+                                fontSize: 14,
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                               ),
                               prefixIcon: Icon(
                                 Icons.email_outlined, // Add icon to the placeholder
                                 color: Colors.grey, // Change the color of the icon
+<<<<<<< HEAD
                                 size: screenHeight * .023,
                               ),
                               contentPadding: EdgeInsets.symmetric( // Add padding
                                 horizontal: screenHeight * .013,
                                 vertical: screenHeight * .013,
+=======
+                              ),
+                              contentPadding: const EdgeInsets.symmetric( // Add padding
+                                horizontal: 10,
+                                vertical: 10,
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                               ),
                               // Add border to the input box
                               enabledBorder: OutlineInputBorder(
@@ -240,11 +330,19 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                       ],
                     ),
                   ),
+<<<<<<< HEAD
                   SizedBox(height: screenHeight * .073,),
                   !isKeyboard ? Container(
                     child: OutlinedButton(
                       style: OutlinedButton.styleFrom(
                         minimumSize: Size(screenHeight * .18, screenHeight * .043),
+=======
+                  SizedBox(height: 70,),
+                  !isKeyboard ? Container(
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: Size(150, 40),
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                         backgroundColor: Color(0xFF004280),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadiusGeometry.circular(6)
@@ -259,7 +357,10 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                         'Email Me',
                         style: TextStyle(
                           color: Colors.white,
+<<<<<<< HEAD
                           fontSize: screenHeight * .017
+=======
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                         ),
                       )
                     ),

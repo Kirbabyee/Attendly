@@ -183,7 +183,11 @@ class _DashboardState extends State<Dashboard> {
                   ],
                 ),
                 Container(
+<<<<<<< HEAD
                   margin: EdgeInsets.fromLTRB(screenWidth * .011, 0, 0, 10),
+=======
+                  margin: EdgeInsets.fromLTRB(screenWidth * .076, 0, 0, 12),
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                   padding: EdgeInsets.symmetric(vertical: 2),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadiusGeometry.circular(75),
@@ -195,8 +199,13 @@ class _DashboardState extends State<Dashboard> {
                     color:
                     session ? Color(0xFFDBFCE7) : Color(0x90DBEAFE),
                   ),
+<<<<<<< HEAD
                   width: screenWidth * .25,
                   height: screenHeight * .025,
+=======
+                  width: screenHeight * .11,
+                  height: screenWidth * .05,
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                   child: Text(
                     session ? 'Session Started' : 'Upcoming',
                     textAlign: TextAlign.center,
@@ -222,9 +231,15 @@ class _DashboardState extends State<Dashboard> {
                       value: 'archive',
                       child: Row(
                         children: [
+<<<<<<< HEAD
                           Icon(Icons.archive_outlined, size: screenHeight * .021),
                           SizedBox(width: screenHeight * .011),
                           Text('Archive', style: TextStyle(fontSize: screenHeight * .017),),
+=======
+                          Icon(Icons.restore, size: 18),
+                          SizedBox(width: 8),
+                          Text('Archive'),
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                         ],
                       ),
                     ),
@@ -370,7 +385,11 @@ class _DashboardState extends State<Dashboard> {
         child: Column(
           children: [
             Container(
+<<<<<<< HEAD
               height: screenHeight * .29,
+=======
+              height: screenHeight * .27,
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
               decoration: BoxDecoration(
                 color: Color(0xFF004280),
                 borderRadius: BorderRadius.vertical(
@@ -437,7 +456,11 @@ class _DashboardState extends State<Dashboard> {
                     ),
                     child: Row(
                       children: [
+<<<<<<< HEAD
                         Image.asset('assets/avatar.png', width: screenWidth * .18),
+=======
+                        Image.asset('assets/avatar.png', width: screenWidth * .2),
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                         SizedBox(width: screenWidth * .035),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,

@@ -41,8 +41,11 @@ class _NewPasswordState extends State<NewPassword> {
   }
 
   Future<void> _handlePasswordChange() async {
+<<<<<<< HEAD
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
+=======
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
     // 1. Show loading
     await _showLoading();
 
@@ -60,11 +63,18 @@ class _NewPasswordState extends State<NewPassword> {
         return AlertDialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+<<<<<<< HEAD
           title: Icon(Icons.check_circle_outline, color: Colors.green, size: screenHeight * .053,),
           content: Text(
             'Your password has been changed successfully.',
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: screenHeight * .017),
+=======
+          title: Icon(Icons.check_circle_outline, color: Colors.green, size: 50,),
+          content: const Text(
+            'Your password has been changed successfully.',
+            textAlign: TextAlign.center,
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
           ),
         );
       },
@@ -82,9 +92,13 @@ class _NewPasswordState extends State<NewPassword> {
 
   @override
   Widget build(BuildContext context) {
+<<<<<<< HEAD
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
 
+=======
+    final screenHeight = MediaQuery.of(context).size.width;
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
     final isKeyboard = MediaQuery.of(context).viewInsets.bottom != 0;
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -96,7 +110,11 @@ class _NewPasswordState extends State<NewPassword> {
               Visibility(
                 visible: (!isKeyboard ? true : false), // bool
                 child: Positioned(
+<<<<<<< HEAD
                   top: screenHeight > 640 ? 0 : -50,
+=======
+                  top: screenHeight > 370 ? 0 : -50,
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                   left: 0,
                   right: 0,
                   child: Image.asset(
@@ -107,7 +125,11 @@ class _NewPasswordState extends State<NewPassword> {
                 ),
               ),
               Positioned(
+<<<<<<< HEAD
                 top: screenHeight > 640 ? 0 : -50,
+=======
+                top: screenHeight > 370 ? 0 : -50,
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                 left: 0,
                 right: 0,
                 child: Image.asset(
@@ -122,6 +144,7 @@ class _NewPasswordState extends State<NewPassword> {
             child: Center(
               child: Column(
                 children: [
+<<<<<<< HEAD
                   SizedBox(height: !isKeyboard ? screenHeight * .24 : screenHeight * .16,),
                   Image.asset(
                       width: screenWidth * .9,
@@ -129,17 +152,33 @@ class _NewPasswordState extends State<NewPassword> {
                   ), // Logo
 
                   SizedBox(height: screenHeight * .013,),
+=======
+                  SizedBox(height: !isKeyboard && screenHeight > 370 ? 210 : 130,),
+                  Image.asset(
+                      width: screenHeight > 370 ? 400 : 300,
+                      'assets/logo.png'
+                  ), // Logo
+
+                  SizedBox(height: 10,),
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
 
                   Container(
                     child: Text(
                       'Change Password',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
+<<<<<<< HEAD
                         fontSize: screenHeight * .017
                       ),
                     ),
                   ),
                   SizedBox(height: screenHeight * .048,),
+=======
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: screenHeight > 370 ? 45 : 30,),
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
 
                   // Input Boxes
                   Form( // Put to form to add validations
@@ -152,6 +191,7 @@ class _NewPasswordState extends State<NewPassword> {
                           child: Text(
                             'New Password',
                             style: TextStyle(
+<<<<<<< HEAD
                                 fontSize: screenHeight * .017
                             ),
                           ),
@@ -164,22 +204,47 @@ class _NewPasswordState extends State<NewPassword> {
                             obscureText: showPassword,
                             controller: _newPasswordController,
                             style: TextStyle(fontSize: screenHeight * .017),
+=======
+                                fontSize: screenHeight > 370 ? 14 : 12
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 5,),
+                        SizedBox(
+                          height: screenHeight > 370 ? 55 : 48,
+                          width: 300,
+                          child: TextFormField( // Input box
+                            obscureText: showPassword,
+                            controller: _newPasswordController,
+                            style: TextStyle(fontSize: 14),
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                             keyboardType: TextInputType.emailAddress,
                             decoration: InputDecoration(
                               errorMaxLines: 1,
                               errorStyle: TextStyle(
+<<<<<<< HEAD
                                 fontSize: screenHeight * .013,
+=======
+                                fontSize: 10,
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                                 height: 1,
                               ),
                               hintText: 'Enter new password', // Placeholder
                               hintStyle: TextStyle(
                                 color: Colors.grey, // Change placeholder color
+<<<<<<< HEAD
                                 fontSize: screenHeight * .017,
+=======
+                                fontSize: 14,
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                               ),
                               prefixIcon: Icon(
                                 Icons.lock_outline, // Add icon to the placeholder
                                 color: Colors.grey, // Change the color of the icon
+<<<<<<< HEAD
                                 size: screenHeight * .023,
+=======
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                               ),
                               suffixIcon: IconButton(
                                 onPressed: () {
@@ -187,11 +252,19 @@ class _NewPasswordState extends State<NewPassword> {
                                     showPassword = !showPassword;
                                   });
                                 },
+<<<<<<< HEAD
                                 icon: Icon((!showPassword ? Icons.visibility : Icons.visibility_off), size: screenHeight * .023,)
                               ),
                               contentPadding: EdgeInsets.symmetric( // Add padding
                                 horizontal: screenHeight * .013,
                                 vertical: screenHeight * .013,
+=======
+                                icon: Icon(!showPassword ? Icons.visibility : Icons.visibility_off)
+                              ),
+                              contentPadding: const EdgeInsets.symmetric( // Add padding
+                                horizontal: 10,
+                                vertical: 10,
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                               ),
                               // Add border to the input box
                               enabledBorder: OutlineInputBorder(
@@ -228,40 +301,68 @@ class _NewPasswordState extends State<NewPassword> {
                           ),
                         ),
 
+<<<<<<< HEAD
                         SizedBox(height: screenHeight * .018),
+=======
+                        SizedBox(height: screenHeight > 370 ? 15 : 10),
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
 
                         Container(
                           child: Text(
                             'Confirm Password',
                             style: TextStyle(
+<<<<<<< HEAD
                                 fontSize: screenHeight * .017
+=======
+                                fontSize: screenHeight > 370 ? 14 : 12
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                             ),
                           ),
                         ),
                         SizedBox(height: 5,),
                         SizedBox(
+<<<<<<< HEAD
                           height: screenHeight * .058,
                           width: screenWidth * .83,
                           child: TextFormField( // Input box
                             obscureText: showPassword,
                             controller: _confirmPasswordController,
                             style: TextStyle(fontSize: screenHeight * .017),
+=======
+                          height: screenHeight > 370 ? 55 : 48,
+                          width: 300,
+                          child: TextFormField( // Input box
+                            obscureText: showPassword,
+                            controller: _confirmPasswordController,
+                            style: TextStyle(fontSize: 14),
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                             keyboardType: TextInputType.emailAddress,
                             decoration: InputDecoration(
                               errorMaxLines: 1,
                               errorStyle: TextStyle(
+<<<<<<< HEAD
                                 fontSize: screenHeight * .013,
+=======
+                                fontSize: 10,
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                                 height: 1,
                               ),
                               hintText: 'Confirm your password', // Placeholder
                               hintStyle: TextStyle(
                                 color: Colors.grey, // Change placeholder color
+<<<<<<< HEAD
                                 fontSize: screenHeight * .017,
+=======
+                                fontSize: 14,
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                               ),
                               prefixIcon: Icon(
                                 Icons.lock_outline, // Add icon to the placeholder
                                 color: Colors.grey, // Change the color of the icon
+<<<<<<< HEAD
                                 size: screenHeight * .023,
+=======
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                               ),
                               suffixIcon: IconButton(
                                 onPressed: () {
@@ -269,11 +370,19 @@ class _NewPasswordState extends State<NewPassword> {
                                     showPassword = !showPassword;
                                   });
                                 },
+<<<<<<< HEAD
                                 icon: Icon((!showPassword ? Icons.visibility : Icons.visibility_off), size: screenHeight * .023,)
                               ),
                               contentPadding: EdgeInsets.symmetric( // Add padding
                                 horizontal: screenHeight * .013,
                                 vertical: screenHeight * .013,
+=======
+                                icon: Icon(!showPassword ? Icons.visibility : Icons.visibility_off)
+                              ),
+                              contentPadding: const EdgeInsets.symmetric( // Add padding
+                                horizontal: 10,
+                                vertical: 10,
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                               ),
                               // Add border to the input box
                               enabledBorder: OutlineInputBorder(
@@ -313,11 +422,19 @@ class _NewPasswordState extends State<NewPassword> {
                       ],
                     ),
                   ),
+<<<<<<< HEAD
                   SizedBox(height: screenHeight * .073,),
                   !isKeyboard ? Container(
                     child: OutlinedButton(
                       style: OutlinedButton.styleFrom(
                         minimumSize: Size(screenHeight * .18, screenHeight * .043),
+=======
+                  SizedBox(height: 70,),
+                  !isKeyboard ? Container(
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: Size(150, 40),
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                         backgroundColor: Color(0xFF004280),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadiusGeometry.circular(6)
@@ -333,7 +450,10 @@ class _NewPasswordState extends State<NewPassword> {
                         'Email Me',
                         style: TextStyle(
                           color: Colors.white,
+<<<<<<< HEAD
                           fontSize: screenHeight * .017
+=======
+>>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                         ),
                       )
                     ),
