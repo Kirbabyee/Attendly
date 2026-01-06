@@ -328,20 +328,12 @@ class _ChangePasswordState extends State<ChangePassword> {
                         Text(
                           'Show Password',
                           style: TextStyle(
-<<<<<<< HEAD
                             fontSize: screenHeight * .015
-=======
-                            fontSize: 12
->>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                           ),
                         ),
                       ],
                     ),
-<<<<<<< HEAD
                     SizedBox(height: screenHeight * .013,),
-=======
-                    SizedBox(height: 10,),
->>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                           backgroundColor: Color(0xFF043B6F),
@@ -355,18 +347,11 @@ class _ChangePasswordState extends State<ChangePassword> {
                           print('Passwords valid');
                         }
                       },
-<<<<<<< HEAD
                       child: Text(
                         'Change Password',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: screenHeight * .017
-=======
-                      child: const Text(
-                        'Change Password',
-                        style: TextStyle(
-                            color: Colors.white
->>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                         ),
                       ),
                     ),

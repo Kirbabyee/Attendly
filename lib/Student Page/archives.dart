@@ -164,10 +164,7 @@ class _ArchivesState extends State<Archives> {
   }
 
   Future<bool> _confirmArchive() async { // Archive confirmation modal
-<<<<<<< HEAD
     final screenHeight = MediaQuery.of(context).size.height;
-=======
->>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
     final result = await showDialog<bool>(
       context: context,
       barrierDismissible: true,
@@ -177,7 +174,6 @@ class _ArchivesState extends State<Archives> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-<<<<<<< HEAD
           title: Text('Restore this class?', style: TextStyle(fontSize: screenHeight * .025),),
           actions: [
             TextButton(
@@ -192,19 +188,6 @@ class _ArchivesState extends State<Archives> {
                   color: Colors.red,
                   fontSize: screenHeight * .017
                 ),
-=======
-          title: const Text('Restore this class?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('No'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text(
-                'Yes',
-                style: TextStyle(color: Colors.red),
->>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
               ),
             ),
           ],

@@ -67,17 +67,10 @@ class _LoginState extends State<Login> {
               child: Center(
                 child: Column(
                   children: [
-<<<<<<< HEAD
                     SizedBox(height: !isKeyboard ? screenHeight * .24 : screenHeight * .16,),
                     Image.asset(
                         width: screenWidth * .9,
                         'assets/logo.png'
-=======
-                    SizedBox(height: !isKeyboard ? screenHeight * .25 : 55,),
-                    Image.asset(
-                      width: screenWidth * 4,
-                      'assets/logo.png'
->>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                     ), // Logo
                     SizedBox(height: screenHeight * .013,),
                     Container(
@@ -89,11 +82,7 @@ class _LoginState extends State<Login> {
                         ),
                       ),
                     ),
-<<<<<<< HEAD
                     SizedBox(height: screenHeight * .048,),
-=======
-                    SizedBox(height: screenHeight * .045,),
->>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                     // Input Boxes
                     Form( // Put to form to add validations
                       key: _formKey,
@@ -105,27 +94,16 @@ class _LoginState extends State<Login> {
                             child: Text(
                               'Student No.',
                               style: TextStyle(
-<<<<<<< HEAD
                                   fontSize: screenHeight * .017
-=======
-                                fontSize: screenHeight * .017
->>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                               ),
                             ),
                           ),
                           SizedBox(height: screenHeight * .008,),
                           SizedBox(
-<<<<<<< HEAD
                             height: screenHeight * .058,
                             width: screenWidth * .83,
                             child: TextFormField( // Input box
                               style: TextStyle(fontSize: screenHeight * .017),
-=======
-                            height: screenHeight * .07,
-                            width: screenWidth * .76,
-                            child: TextFormField( // Input box
-                              style: TextStyle(fontSize: screenHeight * .016),
->>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                               keyboardType: TextInputType.emailAddress,
                               decoration: InputDecoration(
                                 errorMaxLines: 1,
@@ -141,11 +119,7 @@ class _LoginState extends State<Login> {
                                 prefixIcon: Icon(
                                   Icons.person_2_outlined, // Add icon to the placeholder
                                   color: Colors.grey, // Change the color of the icon
-<<<<<<< HEAD
                                   size: screenHeight * .023,
-=======
-                                  size: screenHeight * .035,
->>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                                 ),
                                 contentPadding: EdgeInsets.symmetric( // Add padding
                                   horizontal: 10,
@@ -185,7 +159,6 @@ class _LoginState extends State<Login> {
                               },
                             ),
                           ),
-<<<<<<< HEAD
                           SizedBox(height: screenHeight * .018),
                           // Password
                           Container(child: Text(
@@ -200,25 +173,6 @@ class _LoginState extends State<Login> {
                             width: screenWidth * .83,
                             child: TextFormField( // Input box
                               style: TextStyle(fontSize: screenHeight * .017),
-=======
-
-                          SizedBox(height: screenHeight * .02,),
-                          // Password
-                          Container(
-                            child: Text(
-                              'Password',
-                              style: TextStyle(
-                                  fontSize: screenHeight * .017
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 5,),
-                          SizedBox(
-                            height: screenHeight * .07,
-                            width: screenWidth * .76,
-                            child: TextFormField( // Input box
-                              style: TextStyle(fontSize: screenHeight * .016),
->>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                               obscureText: (showPassword ? true : false),
                               decoration: InputDecoration(
                                 errorMaxLines: 1,
@@ -283,11 +237,7 @@ class _LoginState extends State<Login> {
                             ),
                           ),
                           Container(
-<<<<<<< HEAD
                             margin: EdgeInsets.fromLTRB(screenWidth * .46,0,0,0),
-=======
-                            margin: EdgeInsets.fromLTRB(screenWidth * .47,0,0,0),
->>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                             child: InkWell(
                               onTap: () {
                                 Navigator.pushNamed(context, '/forgot_password');
@@ -304,7 +254,6 @@ class _LoginState extends State<Login> {
                         ],
                       ),
                     ),
-<<<<<<< HEAD
                     SizedBox(height: screenHeight * .073,),
                     !isKeyboard ? Container(
                       child: OutlinedButton(
@@ -331,66 +280,7 @@ class _LoginState extends State<Login> {
                               color: Colors.white,
                               fontSize: screenHeight * .017
                             ),
-=======
-                    SizedBox(height: screenHeight * .08,),
-                    !isKeyboard ? Container(
-                      child: OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                          minimumSize: Size(150, 40),
-                          backgroundColor: Color(0xFF004280),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadiusGeometry.circular(6)
->>>>>>> 72a0865b73b61d9c2b884cb77667079fedd39f77
                           )
-                        ),
-                          onPressed: () async {
-                            if (!_formKey.currentState!.validate()) return;
-
-                            // Show loading
-                            showDialog(
-                              context: context,
-                              barrierDismissible: false,
-                              builder: (_) {
-                                return Dialog(
-                                  backgroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(18),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: const [
-                                        SizedBox(
-                                          width: 18,
-                                          height: 18,
-                                          child: CircularProgressIndicator(strokeWidth: 2),
-                                        ),
-                                        SizedBox(width: 12),
-                                        Text('Signing in...'),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              },
-                            );
-
-                            // ✅ your real login goes here (Firebase signIn, etc.)
-                            await Future.delayed(const Duration(milliseconds: 3000));
-
-                            if (!mounted) return;
-
-                            Navigator.pop(context); // close loading
-
-                            Navigator.of(context).pushReplacement(
-                              MaterialPageRoute(builder: (_) => const Mainshell()),
-                            );
-                          },
-                        child: Text(
-                          'Sign In',
-                          style: TextStyle(
-                            color: Colors.white,
-                          ),
-                        )
                       ),
                     ) : Container(),
                   ],
