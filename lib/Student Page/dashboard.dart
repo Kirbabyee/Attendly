@@ -101,144 +101,148 @@ class _DashboardState extends State<Dashboard> {
     final size = MediaQuery.of(context).size;
     final screenWidth = size.width;
     final screenHeight = size.height;
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: screenHeight * .02),
-      padding: EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: session ? Colors.white : Colors.grey[300],
-        borderRadius: BorderRadiusGeometry.circular(10),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black26,
-            blurRadius: 2,
-            offset: Offset(0, 5),
-          ),
-        ],
-      ),
-      child: DefaultTextStyle(
-        style: TextStyle(
-          fontSize: screenHeight * .013,
-          color: Colors.black,
-          fontFamily: 'Montserrat',
-        ),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: screenWidth * .67,
-                      child: Text(
-                        course,
-                        style: TextStyle(fontWeight: FontWeight.w500),
-                      ),
-                    ),
-                    SizedBox(height: 5,),
-                    Text(classCode),
-                    SizedBox(height: 10,),
-                  ],
-                ),
-                session
-                    ? IconButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/face_verification');
-                  },
-                  icon: Icon(CupertinoIcons.right_chevron, size: screenHeight * .016),
-                )
-                    : SizedBox(),
-              ],
+    final isUpcoming = session == 'Upcoming' || session == 'Ended';
+    return Opacity(
+      opacity: isUpcoming ? 0.5 : 1.0,
+      child: Container(
+        margin: EdgeInsets.symmetric(vertical: screenHeight * .02),
+        padding: EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: session ? Colors.white : Colors.grey[300],
+          borderRadius: BorderRadiusGeometry.circular(10),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black26,
+              blurRadius: 2,
+              offset: Offset(0, 5),
             ),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(CupertinoIcons.person, size: screenHeight * .02),
-                        SizedBox(width: 5),
-                        Container(width: screenWidth * .4,child: Text(professor,softWrap: true,)),
-                      ],
-                    ),
-                    SizedBox(height: 5),
-                    Row(
-                      children: [
-                        Icon(Icons.pin_drop_outlined, size: screenHeight * .02),
-                        SizedBox(width: 5),
-                        Text(room),
-                      ],
-                    ),
-                    SizedBox(height: 5),
-                    Row(
-                      children: [
-                        Icon(CupertinoIcons.clock, size: screenHeight * .02),
-                        SizedBox(width: 5),
-                        Container(width: screenWidth * .40, child: Text(sched)),
-                      ],
-                    ),
-                  ],
-                ),
-                Container(
-                  margin: EdgeInsets.fromLTRB(screenWidth * .011, 0, 0, 10),
-                  padding: EdgeInsets.symmetric(vertical: 2),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadiusGeometry.circular(75),
-                    border: Border.all(
-                      color: session
-                          ? Color(0xFFBBE6CB)
-                          : Color(0x90A9CBF9),
-                    ),
-                    color:
-                    session ? Color(0xFFDBFCE7) : Color(0x90DBEAFE),
+          ],
+        ),
+        child: DefaultTextStyle(
+          style: TextStyle(
+            fontSize: screenHeight * .013,
+            color: Colors.black,
+            fontFamily: 'Montserrat',
+          ),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: screenWidth * .67,
+                        child: Text(
+                          course,
+                          style: TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                      SizedBox(height: 5,),
+                      Text(classCode),
+                      SizedBox(height: 10,),
+                    ],
                   ),
-                  width: screenWidth * .25,
-                  height: screenHeight * .025,
-                  child: Text(
-                    session ? 'Session Started' : 'Upcoming',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: screenHeight * .012,
-                      color: session
-                          ? Color(0xFF016224)
-                          : Color(0x90004280),
-                    ),
-                  ),
-                ),
-                PopupMenuButton<String>(
-                  color: Colors.white,
-                  icon: Icon(
-                    Icons.more_vert_outlined,
-                    size: screenHeight * .023,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  itemBuilder: (context) => [
-                    PopupMenuItem<String>(
-                      value: 'archive',
-                      child: Row(
+                  session
+                      ? IconButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/face_verification');
+                    },
+                    icon: Icon(CupertinoIcons.right_chevron, size: screenHeight * .016),
+                  )
+                      : SizedBox(),
+                ],
+              ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         children: [
-                          Icon(Icons.archive_outlined, size: screenHeight * .021),
-                          SizedBox(width: screenHeight * .011),
-                          Text('Archive', style: TextStyle(fontSize: screenHeight * .017),),
+                          Icon(CupertinoIcons.person, size: screenHeight * .02),
+                          SizedBox(width: 5),
+                          Container(width: screenWidth * .4,child: Text(professor,softWrap: true,)),
                         ],
                       ),
+                      SizedBox(height: 5),
+                      Row(
+                        children: [
+                          Icon(Icons.pin_drop_outlined, size: screenHeight * .02),
+                          SizedBox(width: 5),
+                          Text(room),
+                        ],
+                      ),
+                      SizedBox(height: 5),
+                      Row(
+                        children: [
+                          Icon(CupertinoIcons.clock, size: screenHeight * .02),
+                          SizedBox(width: 5),
+                          Container(width: screenWidth * .40, child: Text(sched)),
+                        ],
+                      ),
+                    ],
+                  ),
+                  Container(
+                    margin: EdgeInsets.fromLTRB(screenWidth * .011, 0, 0, 10),
+                    padding: EdgeInsets.symmetric(vertical: 2),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadiusGeometry.circular(75),
+                      border: Border.all(
+                        color: session
+                            ? Color(0xFFBBE6CB)
+                            : Color(0x90A9CBF9),
+                      ),
+                      color:
+                      session ? Color(0xFFDBFCE7) : Color(0x90DBEAFE),
                     ),
-                  ],
-                  onSelected: (value) async {
-                    if (value == 'archive') {
-                      final ok = await _confirmArchive();
-                      if (ok) onArchive();
-                    }
-                  },
-                ),
-              ],
-            )
-          ],
+                    width: screenWidth * .25,
+                    height: screenHeight * .025,
+                    child: Text(
+                      session ? 'Session Started' : 'Upcoming',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: screenHeight * .012,
+                        color: session
+                            ? Color(0xFF016224)
+                            : Color(0x90004280),
+                      ),
+                    ),
+                  ),
+                  PopupMenuButton<String>(
+                    color: Colors.white,
+                    icon: Icon(
+                      Icons.more_vert_outlined,
+                      size: screenHeight * .023,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    itemBuilder: (context) => [
+                      PopupMenuItem<String>(
+                        value: 'archive',
+                        child: Row(
+                          children: [
+                            Icon(Icons.archive_outlined, size: screenHeight * .021),
+                            SizedBox(width: screenHeight * .011),
+                            Text('Archive', style: TextStyle(fontSize: screenHeight * .017),),
+                          ],
+                        ),
+                      ),
+                    ],
+                    onSelected: (value) async {
+                      if (value == 'archive') {
+                        final ok = await _confirmArchive();
+                        if (ok) onArchive();
+                      }
+                    },
+                  ),
+                ],
+              )
+            ],
+          ),
         ),
       ),
     );
@@ -329,27 +333,56 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
-  Future<bool> _confirmArchive() async { // Archive confirmation modal
+  Future<bool> _confirmArchive() async {
     final result = await showDialog<bool>(
       context: context,
       barrierDismissible: true,
       builder: (context) {
+        final w = MediaQuery.of(context).size.width;
+
         return AlertDialog(
           backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 40, vertical: 24), // smaller dialog width
+          contentPadding: const EdgeInsets.fromLTRB(20, 16, 20, 8), // tighter inside
+          titlePadding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+          actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+
+          title: const Text(
+            'Archive this class?',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
-          title: const Text('Archive this class?'),
+          content: const Text(
+            'This class will be moved to archive.',
+            style: TextStyle(fontSize: 13),
+          ),
+
+          actionsAlignment: MainAxisAlignment.end,
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('No'),
+            SizedBox(
+              height: 36,
+              child: TextButton(
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
             ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text(
-                'Yes',
-                style: TextStyle(color: Colors.red),
+            SizedBox(
+              height: 36,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  elevation: 0,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Archive', style: TextStyle(color: Colors.white)),
               ),
             ),
           ],

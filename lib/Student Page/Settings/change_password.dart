@@ -11,6 +11,49 @@ class ChangePassword extends StatefulWidget {
 }
 
 class _ChangePasswordState extends State<ChangePassword> {
+  Future<void> _showLoading() async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) {
+        return const Center(
+          child: CircularProgressIndicator(),
+        );
+      },
+    );
+  }
+
+  Future<void> _handlePasswordChange() async {
+    // 1. Show loading
+    await _showLoading();
+
+    // 2. Fake delay (replace with API call in real app)
+    await Future.delayed(const Duration(seconds: 2));
+
+    // 3. Close loading
+    Navigator.pop(context);
+
+    // 4. Show success dialog
+    await showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          title: Icon(Icons.check_circle_outline, color: Colors.green, size: 50,),
+          content: const Text(
+            'Your password has been changed successfully.',
+            textAlign: TextAlign.center,
+          ),
+        );
+      },
+    );
+
+    if (!mounted) return;
+
+    Navigator.pop(context);
+  }
 
   final _formKey = GlobalKey<FormState>();
 
@@ -266,6 +309,7 @@ class _ChangePasswordState extends State<ChangePassword> {
                                 if ((value == null || value.isEmpty) && !_newPassword.text.isEmpty) {
                                   return 'Please confirm your password';
                                 }
+                                if(value != _newPassword.text) return 'Password must match';
                                 return null;
                               },
                               style: TextStyle(
@@ -344,7 +388,7 @@ class _ChangePasswordState extends State<ChangePassword> {
                       onPressed: () {
                         if (_formKey.currentState!.validate()) {
                           // All inputs valid
-                          print('Passwords valid');
+                          _handlePasswordChange();
                         }
                       },
                       child: Text(

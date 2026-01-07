@@ -264,15 +264,47 @@ class _LoginState extends State<Login> {
                                   borderRadius: BorderRadiusGeometry.circular(6)
                               )
                           ),
-                          onPressed: () {
-                            if (_formKey.currentState!.validate()) {
-                              // All inputs are valid
-                              final studentNo = _studentNoController.text;
-                              final password = _passwordController.text;
-                              Navigator.of(context).pushReplacement(
-                                MaterialPageRoute(builder: (_) => Mainshell()),
-                              );
-                            }
+                          onPressed: () async {
+                            if (!_formKey.currentState!.validate()) return;
+
+                            // Show loading
+                            showDialog(
+                              context: context,
+                              barrierDismissible: false,
+                              builder: (_) {
+                                return Dialog(
+                                  backgroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(18),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: const [
+                                        SizedBox(
+                                          width: 18,
+                                          height: 18,
+                                          child: CircularProgressIndicator(strokeWidth: 2),
+                                        ),
+                                        SizedBox(width: 12),
+                                        Text('Signing in...'),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+
+                            // ✅ your real login goes here (Firebase signIn, etc.)
+                            await Future.delayed(const Duration(milliseconds: 3000));
+
+                            if (!mounted) return;
+
+                            Navigator.pop(context); // close loading
+
+                            Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(builder: (_) => const Face_Registration()),
+                            );
                           },
                           child: Text(
                             'Sign In',

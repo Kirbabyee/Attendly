@@ -214,7 +214,14 @@ class _HelpState extends State<Help> {
                       padding: EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadiusGeometry.circular(8)
+                        borderRadius: BorderRadiusGeometry.circular(8),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 4,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,

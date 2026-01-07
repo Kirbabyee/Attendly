@@ -30,164 +30,192 @@ class _ArchivesState extends State<Archives> {
       ) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: screenHeight * .023),
-      padding: EdgeInsets.all(10),
-      width: screenWidth * .9,
-      decoration: BoxDecoration(
-        color: session ? Colors.white : Colors.grey[300],
-        borderRadius: BorderRadiusGeometry.circular(10),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black26,
-            blurRadius: 2,
-            offset: Offset(0, 5),
-          ),
-        ],
-      ),
-      child: DefaultTextStyle(
-        style: TextStyle(
-          fontSize: screenHeight * .015,
-          color: Colors.black,
-          fontFamily: 'Montserrat',
+    return Center(
+      child: Container(
+        margin: EdgeInsets.symmetric(vertical: screenHeight * .023),
+        padding: EdgeInsets.all(10),
+        width: screenWidth * .9,
+        decoration: BoxDecoration(
+          color: session ? Colors.white : Colors.grey[300],
+          borderRadius: BorderRadiusGeometry.circular(10),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black26,
+              blurRadius: 2,
+              offset: Offset(0, 5),
+            ),
+          ],
         ),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: screenWidth * .7,
-                      child: Text(
-                        course,
-                        style: TextStyle(fontWeight: FontWeight.w500),
+        child: DefaultTextStyle(
+          style: TextStyle(
+            fontSize: screenHeight * .015,
+            color: Colors.black,
+            fontFamily: 'Montserrat',
+          ),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: screenWidth * .7,
+                        child: Text(
+                          course,
+                          style: TextStyle(fontWeight: FontWeight.w500),
+                        ),
                       ),
-                    ),
-                    SizedBox(height: screenHeight * .008,),
-                    Text(classCode, style: TextStyle(fontSize: screenHeight * .015),),
-                    SizedBox(height: screenHeight * .013,),
-                  ],
-                ),
-                PopupMenuButton<String>(
-                  color: Colors.white,
-                  icon: Icon(Icons.more_vert_outlined, size: screenHeight * .023,),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                      SizedBox(height: screenHeight * .008,),
+                      Text(classCode, style: TextStyle(fontSize: screenHeight * .015),),
+                      SizedBox(height: screenHeight * .013,),
+                    ],
                   ),
-                  itemBuilder: (context) => [
-                    PopupMenuItem<String>(
-                      value: 'restore',
-                      child: Row(
+                  PopupMenuButton<String>(
+                    color: Colors.white,
+                    icon: Icon(Icons.more_vert_outlined, size: screenHeight * .023,),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    itemBuilder: (context) => [
+                      PopupMenuItem<String>(
+                        value: 'restore',
+                        child: Row(
+                          children: [
+                            Icon(Icons.restore, size: screenHeight * .021),
+                            SizedBox(width: 8),
+                            Text('Restore', style: TextStyle(fontSize: screenHeight * .017),),
+                          ],
+                        ),
+                      ),
+                    ],
+                    onSelected: (value) async {
+                      if (value == 'restore') {
+                        final ok = await _confirmArchive();
+                        if (ok) onArchive();
+                      }
+                    },
+                  ),
+                ],
+              ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         children: [
-                          Icon(Icons.restore, size: screenHeight * .021),
-                          SizedBox(width: 8),
-                          Text('Restore', style: TextStyle(fontSize: screenHeight * .017),),
+                          Icon(CupertinoIcons.person, size: screenHeight * .023),
+                          SizedBox(width: 5),
+                          Text(professor),
                         ],
                       ),
-                    ),
-                  ],
-                  onSelected: (value) async {
-                    if (value == 'restore') {
-                      final ok = await _confirmArchive();
-                      if (ok) onArchive();
-                    }
-                  },
-                ),
-              ],
-            ),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(CupertinoIcons.person, size: screenHeight * .023),
-                        SizedBox(width: 5),
-                        Text(professor),
-                      ],
-                    ),
-                    SizedBox(height: 5),
-                    Row(
-                      children: [
-                        Icon(Icons.pin_drop_outlined, size: screenHeight * .023),
-                        SizedBox(width: 5),
-                        Text(room),
-                      ],
-                    ),
-                    SizedBox(height: 5),
-                    Row(
-                      children: [
-                        Icon(CupertinoIcons.clock, size: screenHeight * .023),
-                        SizedBox(width: 5),
-                        Text(sched),
-                      ],
-                    ),
-                  ],
-                ),
-                Container(
-                  margin: EdgeInsets.fromLTRB(screenWidth * .1, 0, 0, screenWidth < 370 ? 3 : 5),
-                  padding: EdgeInsets.symmetric(vertical: 2),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadiusGeometry.circular(75),
-                    border: Border.all(
-                      color: session
-                          ? Color(0xFFBBE6CB)
-                          : Color(0x90A9CBF9),
-                    ),
-                    color:
-                    session ? Color(0xFFDBFCE7) : Color(0x90DBEAFE),
+                      SizedBox(height: 5),
+                      Row(
+                        children: [
+                          Icon(Icons.pin_drop_outlined, size: screenHeight * .023),
+                          SizedBox(width: 5),
+                          Text(room),
+                        ],
+                      ),
+                      SizedBox(height: 5),
+                      Row(
+                        children: [
+                          Icon(CupertinoIcons.clock, size: screenHeight * .023),
+                          SizedBox(width: 5),
+                          Text(sched),
+                        ],
+                      ),
+                    ],
                   ),
-                  width: screenWidth * .28,
-                  height: screenHeight * .028,
-                  child: Text(
-                    session ? 'Session Started' : 'Upcoming',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: screenHeight * .014,
-                      color: session
-                          ? Color(0xFF016224)
-                          : Color(0x90004280),
+                  Container(
+                    margin: EdgeInsets.fromLTRB(screenWidth * .1, 0, 0, screenWidth < 370 ? 3 : 5),
+                    padding: EdgeInsets.symmetric(vertical: 2),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadiusGeometry.circular(75),
+                      border: Border.all(
+                        color: session
+                            ? Color(0xFFBBE6CB)
+                            : Color(0x90A9CBF9),
+                      ),
+                      color:
+                      session ? Color(0xFFDBFCE7) : Color(0x90DBEAFE),
+                    ),
+                    width: screenWidth * .28,
+                    height: screenHeight * .028,
+                    child: Text(
+                      session ? 'Session Started' : 'Upcoming',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: screenHeight * .014,
+                        color: session
+                            ? Color(0xFF016224)
+                            : Color(0x90004280),
+                      ),
                     ),
                   ),
-                ),
-              ],
-            )
-          ],
+                ],
+              )
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Future<bool> _confirmArchive() async { // Archive confirmation modal
-    final screenHeight = MediaQuery.of(context).size.height;
+  Future<bool> _confirmArchive() async {
     final result = await showDialog<bool>(
       context: context,
       barrierDismissible: true,
       builder: (context) {
+        final w = MediaQuery.of(context).size.width;
+        final screenHeight = MediaQuery.of(context).size.height;
+
         return AlertDialog(
           backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 40, vertical: 24), // smaller dialog width
+          contentPadding: const EdgeInsets.fromLTRB(20, 16, 20, 8), // tighter inside
+          titlePadding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+          actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+
+          title: Text(
+            'Restore this class?',
+            style: TextStyle(fontSize: screenHeight * 0.019, fontWeight: FontWeight.w600),
           ),
-          title: Text('Restore this class?', style: TextStyle(fontSize: screenHeight * .025),),
+          content: Text(
+            'This class will be moved back to the classes.',
+            style: TextStyle(fontSize: screenHeight * 0.016),
+          ),
+
+          actionsAlignment: MainAxisAlignment.end,
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text('No', style: TextStyle(fontSize: screenHeight * .017, color: Colors.black),),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: Text(
-                'Yes',
-                style: TextStyle(
-                  color: Colors.red,
-                  fontSize: screenHeight * .017
+            SizedBox(
+              height: screenHeight * 0.039,
+              child: TextButton(
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.black,
+                  padding: EdgeInsets.symmetric(horizontal: screenHeight * 0.015),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
+                onPressed: () => Navigator.pop(context, false),
+                child: Text('Cancel'),
+              ),
+            ),
+            SizedBox(
+              height: screenHeight * 0.039,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFF004280),
+                  padding: EdgeInsets.symmetric(horizontal: screenHeight * 0.015),
+                  elevation: 0,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Restore', style: TextStyle(color: Colors.white)),
               ),
             ),
           ],
