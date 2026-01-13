@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_project_1/Student%20Page/login.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../student_session.dart';
 import 'privacy_policy.dart';
 
 class Settings extends StatefulWidget {
@@ -554,7 +556,7 @@ class _SettingsState extends State<Settings> {
                         // Loading dialog
                         showDialog(
                           context: context,
-                          barrierDismissible: false, // user can't close it
+                          barrierDismissible: false,
                           builder: (_) {
                             return Dialog(
                               backgroundColor: Colors.white,
@@ -568,10 +570,10 @@ class _SettingsState extends State<Settings> {
                                     SizedBox(
                                       width: 18,
                                       height: screenHeight * .021,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                      child: const CircularProgressIndicator(strokeWidth: 2),
                                     ),
-                                    SizedBox(width: 12),
-                                    Text('Signing out...', style: TextStyle(fontSize: screenHeight * .017),),
+                                    const SizedBox(width: 12),
+                                    Text('Signing out...', style: TextStyle(fontSize: screenHeight * .017)),
                                   ],
                                 ),
                               ),
@@ -579,18 +581,25 @@ class _SettingsState extends State<Settings> {
                           },
                         );
 
-                        // ✅ Do your logout logic here (Firebase signOut, etc.)
-                        await Future.delayed(const Duration(milliseconds: 2000)); // Load for 2 seconds
+                        try {
+                          // ✅ ito na yung tunay na “delay”
+                          await Supabase.instance.client.auth.signOut();
+                          StudentSession.clear();
 
-                        if (!mounted) return;
+                          if (!mounted) return;
+                          Navigator.pop(context); // close loading dialog
 
-                        Navigator.pop(context); // close loading dialog
+                          // ✅ clear stack, go to login
+                          Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+                        } catch (e) {
+                          if (!mounted) return;
+                          Navigator.pop(context); // close loading dialog
 
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(builder: (_) => const Login()),
-                        );
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Logout failed: $e')),
+                          );
+                        }
                       },
-
                       icon: Icon(Icons.logout_outlined, color: Colors.red, size: screenHeight * .023,),
                       label: Text('Sign Out', style: TextStyle(color: Colors.red, fontSize: screenHeight * .017)),
                     ),

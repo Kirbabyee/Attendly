@@ -13,6 +13,8 @@ import '../../widgets/student_information_card.dart';
 
 import 'package:flutter_project_1/Student%20Page/dashboard.dart';
 
+import '../student_session.dart';
+
 class Face_Verification extends StatefulWidget {
   const Face_Verification({super.key});
 
@@ -73,6 +75,7 @@ class _Face_VerificationState extends State<Face_Verification> {
   @override
   void initState() {
     super.initState();
+
     _faceDetector = FaceDetector(
       options: FaceDetectorOptions(
         performanceMode: FaceDetectorMode.fast,
@@ -81,6 +84,25 @@ class _Face_VerificationState extends State<Face_Verification> {
         enableClassification: false,
       ),
     );
+
+    _loadStudent();
+  }
+
+  Future<void> _loadStudent() async {
+    try {
+      final s = await StudentSession.get(); // cached
+      if (!mounted) return;
+      setState(() {
+        _student = s;
+        _loadingStudent = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _studentError = e.toString();
+        _loadingStudent = false;
+      });
+    }
   }
 
   @override
@@ -265,6 +287,45 @@ class _Face_VerificationState extends State<Face_Verification> {
     return coverage > 0.55 && sizeOk;
   }
 
+  Map<String, dynamic>? _student;
+  bool _loadingStudent = true;
+  String? _studentError;
+
+  Widget _buildStudentInfoCard() {
+    if (_loadingStudent) {
+      return const SizedBox(
+        height: 60,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_studentError != null) {
+      return Text('Error: $_studentError');
+    }
+
+    final firstName = _student?['first_name']?.toString().trim();
+    final middleName = _student?['middle_name']?.toString().trim();
+    final lastName = _student?['last_name']?.toString().trim();
+
+    final middleInitial =
+    (middleName != null && middleName.isNotEmpty)
+        ? '${middleName[0].toUpperCase()}.'
+        : null;
+
+    final name = [
+      firstName,
+      middleInitial,
+      lastName,
+    ].where((e) => e != null && e!.isNotEmpty).join(' ');
+
+    final studentNo = '${_student?['student_number'] ?? '-'}';
+
+    return StudentInfoCard(
+      name: name.isEmpty ? '-' : name,
+      studentNo: studentNo,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
@@ -289,10 +350,7 @@ class _Face_VerificationState extends State<Face_Verification> {
                     iconColor: const Color(0xFFFBD600),
                   ),
                   const SizedBox(height: 20),
-                  const StudentInfoCard(
-                    name: 'Alfred S. Valiente',
-                    studentNo: '20231599',
-                  ),
+                  _buildStudentInfoCard(),
                   const SizedBox(height: 30),
                 ],
               ),

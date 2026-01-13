@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'student_session.dart'; // adjust path kung iba
 
 import 'archives.dart';
 
@@ -30,6 +32,81 @@ class ClassItem {
 
 
 class _DashboardState extends State<Dashboard> {
+
+  final supabase = Supabase.instance.client;
+
+  Map<String, dynamic>? _student;
+  bool _loadingStudent = true;
+  String? _studentError;
+
+  Future<void> _loadStudent({bool force = false}) async {
+    setState(() {
+      _studentError = null;
+      if (_student == null) _loadingStudent = true; // spinner only on first load
+    });
+
+    try {
+      final s = await StudentSession.get();
+      if (!mounted) return;
+      setState(() {
+        _student = s;
+        _loadingStudent = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _studentError = e.toString();
+        _loadingStudent = false;
+      });
+    }
+  }
+
+  Widget _studentCard(double screenHeight, double screenWidth) {
+    if (_loadingStudent) {
+      return const SizedBox(
+        height: 40,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_studentError != null) {
+      return Text(
+        'Error: $_studentError',
+        style: TextStyle(fontSize: screenHeight * .013, color: Colors.red),
+      );
+    }
+
+    if (_student == null) {
+      return Text(
+        'No student record found',
+        style: TextStyle(
+          fontSize: screenHeight * .013
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        textBold('Name: ', '${_student?['first_name']  ?? '-'} ${_student?['last_name']  ?? '-'}', screenHeight),
+        textBold('Student No.: ', '${_student?['student_number'] ?? '-'}', screenHeight),
+        textBold(
+        'Year Level: ',
+        _student?['year_level'] == 1
+        ? 'First Year'
+            : _student?['year_level'] == 2
+        ? 'Second Year'
+            : _student?['year_level'] == 3
+        ? 'Third Year'
+            : _student?['year_level'] == 4
+        ? 'Fourth Year'
+            : '-',
+        screenHeight,
+        ),
+    textBold('Section: ', '${_student?['section'] ?? '-'}', screenHeight),
+      ],
+    );
+  }
 
   final List<ClassItem> _classes = [
     ClassItem(
@@ -71,6 +148,7 @@ class _DashboardState extends State<Dashboard> {
   void initState() {
     super.initState();
     _sortClasses();
+    _loadStudent();
   }
 
   Widget textBold(tag, name, double screenHeight) {
@@ -89,7 +167,8 @@ class _DashboardState extends State<Dashboard> {
   }
 
   // Classcard Template
-  Widget classCard(String course,
+  Widget classCard(
+      String course,
       String classCode,
       String professor,
       String room,
@@ -97,20 +176,22 @@ class _DashboardState extends State<Dashboard> {
       bool session,
       double screenHeight,
       VoidCallback onArchive,
-    ) {
+      ) {
     final size = MediaQuery.of(context).size;
     final screenWidth = size.width;
-    final screenHeight = size.height;
-    final isUpcoming = session == 'Upcoming' || session == 'Ended';
+
+    // ✅ bool logic
+    final isUpcoming = !session; // false = upcoming
+
     return Opacity(
       opacity: isUpcoming ? 0.5 : 1.0,
       child: Container(
         margin: EdgeInsets.symmetric(vertical: screenHeight * .02),
-        padding: EdgeInsets.all(10),
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: session ? Colors.white : Colors.grey[300],
-          borderRadius: BorderRadiusGeometry.circular(10),
-          boxShadow: [
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: const [
             BoxShadow(
               color: Colors.black26,
               blurRadius: 2,
@@ -132,28 +213,29 @@ class _DashboardState extends State<Dashboard> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
+                      SizedBox(
                         width: screenWidth * .67,
-                        child: Text(
-                          course,
-                          style: TextStyle(fontWeight: FontWeight.w500),
-                        ),
+                        child: Text(course, style: const TextStyle(fontWeight: FontWeight.w500)),
                       ),
-                      SizedBox(height: 5,),
+                      const SizedBox(height: 5),
                       Text(classCode),
-                      SizedBox(height: 10,),
+                      const SizedBox(height: 10),
                     ],
                   ),
+
+                  // only allow open if session started
                   session
                       ? IconButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/face_verification');
+                    onPressed: () async {
+                      await Navigator.pushNamed(context, '/face_verification');
+                      _loadStudent(force: true);
                     },
                     icon: Icon(CupertinoIcons.right_chevron, size: screenHeight * .016),
                   )
-                      : SizedBox(),
+                      : const SizedBox(),
                 ],
               ),
+
               Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -163,40 +245,44 @@ class _DashboardState extends State<Dashboard> {
                       Row(
                         children: [
                           Icon(CupertinoIcons.person, size: screenHeight * .02),
-                          SizedBox(width: 5),
-                          Container(width: screenWidth * .4,child: Text(professor,softWrap: true,)),
+                          const SizedBox(width: 5),
+                          SizedBox(
+                            width: screenWidth * .4,
+                            child: Text(professor, softWrap: true),
+                          ),
                         ],
                       ),
-                      SizedBox(height: 5),
+                      const SizedBox(height: 5),
                       Row(
                         children: [
                           Icon(Icons.pin_drop_outlined, size: screenHeight * .02),
-                          SizedBox(width: 5),
+                          const SizedBox(width: 5),
                           Text(room),
                         ],
                       ),
-                      SizedBox(height: 5),
+                      const SizedBox(height: 5),
                       Row(
                         children: [
                           Icon(CupertinoIcons.clock, size: screenHeight * .02),
-                          SizedBox(width: 5),
-                          Container(width: screenWidth * .40, child: Text(sched)),
+                          const SizedBox(width: 5),
+                          SizedBox(
+                            width: screenWidth * .40,
+                            child: Text(sched),
+                          ),
                         ],
                       ),
                     ],
                   ),
+
                   Container(
                     margin: EdgeInsets.fromLTRB(screenWidth * .011, 0, 0, 10),
-                    padding: EdgeInsets.symmetric(vertical: 2),
+                    padding: const EdgeInsets.symmetric(vertical: 2),
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadiusGeometry.circular(75),
+                      borderRadius: BorderRadius.circular(75),
                       border: Border.all(
-                        color: session
-                            ? Color(0xFFBBE6CB)
-                            : Color(0x90A9CBF9),
+                        color: session ? const Color(0xFFBBE6CB) : const Color(0x90A9CBF9),
                       ),
-                      color:
-                      session ? Color(0xFFDBFCE7) : Color(0x90DBEAFE),
+                      color: session ? const Color(0xFFDBFCE7) : const Color(0x90DBEAFE),
                     ),
                     width: screenWidth * .25,
                     height: screenHeight * .025,
@@ -205,29 +291,23 @@ class _DashboardState extends State<Dashboard> {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: screenHeight * .012,
-                        color: session
-                            ? Color(0xFF016224)
-                            : Color(0x90004280),
+                        color: session ? const Color(0xFF016224) : const Color(0x90004280),
                       ),
                     ),
                   ),
+
                   PopupMenuButton<String>(
                     color: Colors.white,
-                    icon: Icon(
-                      Icons.more_vert_outlined,
-                      size: screenHeight * .023,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    itemBuilder: (context) => [
+                    icon: Icon(Icons.more_vert_outlined, size: screenHeight * .023),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    itemBuilder: (_) => [
                       PopupMenuItem<String>(
                         value: 'archive',
                         child: Row(
                           children: [
                             Icon(Icons.archive_outlined, size: screenHeight * .021),
                             SizedBox(width: screenHeight * .011),
-                            Text('Archive', style: TextStyle(fontSize: screenHeight * .017),),
+                            Text('Archive', style: TextStyle(fontSize: screenHeight * .017)),
                           ],
                         ),
                       ),
@@ -240,13 +320,14 @@ class _DashboardState extends State<Dashboard> {
                     },
                   ),
                 ],
-              )
+              ),
             ],
           ),
         ),
       ),
     );
   }
+
 
   void _showJoinClassDialog() {
     final TextEditingController classCodeController = TextEditingController();
@@ -397,7 +478,6 @@ class _DashboardState extends State<Dashboard> {
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
-    print(screenWidth);
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -431,10 +511,11 @@ class _DashboardState extends State<Dashboard> {
                               )
                             ),
                             Text(
-                              'Alfred!',
+                              '${_student?['first_name'] ?? '-'}!',
+                              textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                fontSize: screenHeight * .034,
+                                fontSize: screenHeight * .025,
                                 color: Colors.white,
                               ),
                             ),
@@ -472,18 +553,10 @@ class _DashboardState extends State<Dashboard> {
                       children: [
                         Image.asset('assets/avatar.png', width: screenWidth * .18),
                         SizedBox(width: screenWidth * .035),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            textBold('Name: ', 'Alfred Valiente', screenHeight),
-                            textBold('Student No.: ', '20231599', screenHeight),
-                            textBold('Year Level: ', 'Third Year', screenHeight),
-                            textBold('Section: ', 'A', screenHeight),
-                          ],
-                        )
+                        _studentCard(screenHeight, screenWidth),
                       ],
                     ),
-                  )
+                  ),
                 ],
               ),
             ),

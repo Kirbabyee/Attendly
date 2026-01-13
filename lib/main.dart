@@ -1,5 +1,7 @@
-
 import 'package:flutter/material.dart';
+import 'package:flutter_project_1/Student%20Page/mainshell.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import 'package:flutter_project_1/Student Page/login.dart';
 import 'package:flutter_project_1/Student Page/face_registration.dart';
 import 'package:flutter_project_1/Student%20Page/Settings/account_information.dart';
@@ -14,29 +16,50 @@ import 'package:flutter_project_1/Student%20Page/Settings/settings.dart';
 import 'package:flutter_project_1/Student%20Page/forgot_password.dart';
 import 'package:flutter_project_1/Student%20Page/new_password.dart';
 
-void main() {
-  runApp(MaterialApp(
-    theme: ThemeData(
-      fontFamily: 'Montserrat',
-      scaffoldBackgroundColor: const Color(0xFFEAF5FB),
-    ),
-    initialRoute: '/home',
-    routes: { // Pages routing
-      '/home': (context) => LandingPage(),
-      '/login': (context) => Login(),
-      '/dashboard' : (context) => Dashboard(),
-      '/face_registration': (context) => Face_Registration(),
-      '/face_verification': (context) => Face_Verification(),
-      '/history': (context) => History(),
-      '/settings': (context) => Settings(),
-      '/help': (context) => Help(),
-      '/face_verified': (context) => Face_Verified(),
-      '/account_information': (context) => AccountInformation(),
-      '/change_password': (context) => ChangePassword(),
-      '/forgot_password': (context) => ForgotPassword(),
-      '/new_password': (context) => NewPassword(),
-    },
-  )); // MaterialApp
+import 'Student Page/auth_gate.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Supabase.initialize(
+    url: 'https://ucfundmbawljngzowzgd.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVjZnVuZG1iYXdsam5nem93emdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1OTY5NDQsImV4cCI6MjA4MzE3Mjk0NH0.rPcB5ZIHZ77hR2DzXHKwJp8nF-IJH-bmICzioCma5Bk',
+  );
+
+  runApp(const MyApp());
+}
+
+// optional shortcut access anywhere
+final supabase = Supabase.instance.client;
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      theme: ThemeData(
+        fontFamily: 'Montserrat',
+        scaffoldBackgroundColor: const Color(0xFFEAF5FB),
+      ),
+      home: const AuthGate(), // ✅ ito na root
+      routes: {
+        '/login': (context) => Login(),
+        '/dashboard': (context) => Dashboard(),
+        '/face_registration': (context) => Face_Registration(),
+        '/face_verification': (context) => Face_Verification(),
+        '/history': (context) => History(),
+        '/settings': (context) => Settings(),
+        '/help': (context) => Help(),
+        '/face_verified': (context) => Face_Verified(),
+        '/mainshell': (context) => Mainshell(),
+        '/account_information': (context) => AccountInformation(),
+        '/change_password': (context) => ChangePassword(),
+        '/forgot_password': (context) => ForgotPassword(),
+        '/new_password': (context) => NewPassword(),
+      },
+    );
+  }
 }
 
 class LandingPage extends StatelessWidget {
@@ -81,9 +104,7 @@ class LandingPage extends StatelessWidget {
           ),
           OutlinedButton( // Get started button
             onPressed: () {
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (_) => const Login()),
-              );
+              Navigator.pushReplacementNamed(context, '/login');
             },
             style: ElevatedButton.styleFrom( // Button style
               shape: RoundedRectangleBorder( // To achieved a round rectangle border radius
