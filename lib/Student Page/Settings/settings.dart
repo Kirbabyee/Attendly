@@ -13,6 +13,38 @@ class Settings extends StatefulWidget {
 }
 
 class _SettingsState extends State<Settings> {
+  @override
+  void initState() {
+    super.initState();
+    _loadStudent();
+  }
+
+  Map<String, dynamic>? _student;
+  bool _loadingStudent = true;
+  String? _studentError;
+
+  Future<void> _loadStudent({bool force = false}) async {
+    setState(() {
+      _studentError = null;
+      if (_student == null) _loadingStudent = true;
+    });
+
+    try {
+      final s = await StudentSession.get(force: force); // ✅ use force
+      if (!mounted) return;
+      setState(() {
+        _student = s;
+        _loadingStudent = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _studentError = e.toString();
+        _loadingStudent = false;
+      });
+    }
+  }
+
   bool isOn = false;
 
   String termOfService = 'Welcome to Attendly. By accessing or using the Attendly system, you agree to comply with and be bound by the following Terms of Service. If you do not agree with these terms, please refrain from using the system.\n'
@@ -140,8 +172,9 @@ class _SettingsState extends State<Settings> {
                           backgroundColor: Colors.white,
                           side: BorderSide.none,
                         ),
-                        onPressed: () {
-                          Navigator.pushNamed(context, '/account_information');
+                        onPressed: () async {
+                          await Navigator.pushNamed(context, '/account_information');
+                          await _loadStudent(force: true);
                         },
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,

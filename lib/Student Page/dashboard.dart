@@ -32,6 +32,7 @@ class ClassItem {
 
 
 class _DashboardState extends State<Dashboard> {
+  String? _avatarUrl;
 
   final supabase = Supabase.instance.client;
 
@@ -50,6 +51,7 @@ class _DashboardState extends State<Dashboard> {
       if (!mounted) return;
       setState(() {
         _student = s;
+        _avatarUrl = s?['avatar_url'] as String?;
         _loadingStudent = false;
       });
     } catch (e) {
@@ -328,6 +330,33 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
+  Widget _avatarWidget(double size) {
+    final url = _avatarUrl;
+
+    if (url == null || url.trim().isEmpty) {
+      return Image.asset('assets/avatar.png', width: size, height: size);
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(size / 2),
+      child: Image.network(
+        url,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) =>
+            Image.asset('assets/avatar.png', width: size, height: size),
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return SizedBox(
+            width: size,
+            height: size,
+            child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          );
+        },
+      ),
+    );
+  }
 
   void _showJoinClassDialog() {
     final TextEditingController classCodeController = TextEditingController();
@@ -551,7 +580,7 @@ class _DashboardState extends State<Dashboard> {
                     ),
                     child: Row(
                       children: [
-                        Image.asset('assets/avatar.png', width: screenWidth * .18),
+                        _avatarWidget(screenWidth * .18),
                         SizedBox(width: screenWidth * .035),
                         _studentCard(screenHeight, screenWidth),
                       ],
