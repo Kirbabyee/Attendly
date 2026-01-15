@@ -318,23 +318,42 @@ class _LoginState extends State<Login> {
                           // example mapping: studentNo -> email
                           final email = '$studentNo@attendly.com';
 
-                          await supabase.auth.signInWithPassword(
+                          final res = await supabase.auth.signInWithPassword(
                             email: email,
                             password: password,
                           );
 
+                          final uid = res.user?.id;
+                          if (uid == null) {
+                            throw Exception("User has no data");
+                          }
+
+                          // To check if the account is for student
+                          final studentRow = await supabase
+                              .from('students')
+                              .select('id')
+                              .eq('id', uid)
+                              .maybeSingle();
+
+                          if (studentRow == null) {
+                            // Block login if no returns, means not a student account
+                            await supabase.auth.signOut();
+                            if (!mounted) return;
+                            Navigator.pop(context); // close loading
+
+                            setState(() {
+                              _loginError = 'This account is not allowed in the Student app.';
+                            });
+                            _formKey.currentState!.validate();
+                            return;
+                          }
+
                           StudentSession.clear();
-                          // preload student info BEFORE closing loading
                           await StudentSession.get(force: true);
 
-                          // optional: maliit na delay para smooth UI (pwede tanggalin)
-                          // await Future.delayed(const Duration(milliseconds: 200));
-
                           if (!mounted) return;
-                          Navigator.pop(context); // close loading ONLY kapag ready na
-
+                          Navigator.pop(context);
                           Navigator.of(context).pushNamedAndRemoveUntil('/mainshell', (route) => false);
-
                         } on AuthException catch (e) {
                           if (!mounted) return;
                           Navigator.pop(context);

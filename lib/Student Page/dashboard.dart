@@ -14,14 +14,16 @@ class Dashboard extends StatefulWidget {
 
 class ClassItem {
   final String course;
-  final String classCode;
+  final String courseCode;   // ✅ NEW
+  final String classCode;    // class_code (pang join)
   final String professor;
   final String room;
   final String sched;
-  final bool session;
+  final String session;
 
   ClassItem({
     required this.course,
+    required this.courseCode,
     required this.classCode,
     required this.professor,
     required this.room,
@@ -30,8 +32,145 @@ class ClassItem {
   });
 }
 
-
 class _DashboardState extends State<Dashboard> {
+  Future<void> _loadMyClasses() async {
+    final studentId = _student?['id'] as String?;
+    if (studentId == null) return;
+
+    // 1) get enrollments (class_id list)
+    final enrollRows = await supabase
+        .from('class_enrollments')
+        .select('class_id')
+        .eq('student_id', studentId);
+
+    final classIds = (enrollRows as List)
+        .map((r) => (r as Map<String, dynamic>)['class_id'] as String)
+        .toList();
+
+    if (classIds.isEmpty) {
+      if (!mounted) return;
+      setState(() {
+        _classes.clear();
+      });
+      return;
+    }
+
+    // 2) get classes
+    final classRows = await supabase
+        .from('classes')
+        .select('id, course, course_code, class_code, room, schedule, professor_id, archived')
+        .inFilter('id', classIds)
+        .eq('archived', false);
+
+    // 3) get professor names (batch)
+    final profIds = (classRows as List)
+        .map((r) => (r as Map<String, dynamic>)['professor_id'])
+        .where((x) => x != null)
+        .cast<String>()
+        .toSet()
+        .toList();
+
+    Map<String, String> profMap = {};
+    if (profIds.isNotEmpty) {
+      final profRows = await supabase
+          .from('professors')
+          .select('id, professor_name')
+          .inFilter('id', profIds);
+
+      profMap = {
+        for (final p in (profRows as List))
+          (p as Map<String, dynamic>)['id'] as String:
+          ((p)['professor_name'] as String?) ?? 'Professor'
+      };
+    }
+
+    // 4) build list with time logic
+    final list = (classRows as List).map((r) {
+      final m = r as Map<String, dynamic>;
+      final sched = (m['schedule'] ?? '') as String;
+      final sessionText = _sessionFromSched(sched);
+
+      final profId = m['professor_id'] as String?;
+      final profName = profId == null ? 'Professor' : (profMap[profId] ?? 'Professor');
+
+      return ClassItem(
+        course: (m['course'] ?? '-') as String,
+        courseCode: (m['course_code'] ?? '-') as String,
+        classCode: (m['class_code'] ?? '-') as String,
+        professor: profName,
+        room: (m['room'] ?? '-') as String,
+        sched: sched,
+        session: sessionText,
+      );
+    }).toList();
+
+    if (!mounted) return;
+    setState(() {
+      _classes
+        ..clear()
+        ..addAll(list);
+      _sortClasses();
+    });
+  }
+
+  Future<void> _joinClassByCode(String code) async {
+    final authUid = supabase.auth.currentUser?.id;
+    if (authUid == null) throw 'Not logged in';
+
+    final studentId = _student?['id'] as String?;
+    if (studentId == null) throw 'Student record not found';
+
+    final cleanCode = code.trim();
+
+    // 1) get class row (include professor_id + course_code)
+    final classRow = await supabase
+        .from('classes')
+        .select('id, course, course_code, room, schedule, class_code, archived, professor_id')
+        .eq('class_code', cleanCode)
+        .maybeSingle();
+
+    if (classRow == null) throw 'Invalid class code';
+    if (classRow['archived'] == true) throw 'This class is archived';
+
+    final classId = classRow['id'] as String;
+
+    // 2) already enrolled?
+    final existing = await supabase
+        .from('class_enrollments')
+        .select('id')
+        .eq('class_id', classId)
+        .eq('student_id', studentId)
+        .maybeSingle();
+
+    if (existing != null) throw 'You are already enrolled in this class';
+
+    // 3) insert enrollment
+    await supabase.from('class_enrollments').insert({
+      'class_id': classId,
+      'student_id': studentId,
+      'joined_at': DateTime.now().toIso8601String(),
+    });
+
+    // 4) fetch professor name separately (since no FK relationship)
+    String profName = 'Professor';
+    final profId = classRow['professor_id'] as String?;
+    if (profId != null) {
+      final profRow = await supabase
+          .from('professors')
+          .select('professor_name')
+          .eq('id', profId)
+          .maybeSingle();
+
+      profName = (profRow?['professor_name'] as String?) ?? 'Professor';
+    }
+
+    final sched = (classRow['schedule'] ?? '') as String;
+    final sessionText = _sessionFromSched(sched);
+
+    // 5) update UI (local add)
+    await _loadMyClasses();
+  }
+
   String? _avatarUrl;
 
   final supabase = Supabase.instance.client;
@@ -110,47 +249,150 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
-  final List<ClassItem> _classes = [
-    ClassItem(
-      course: 'Introduction to Human Computer Interaction',
-      classCode: 'CCS101',
-      professor: 'Mr. Leviticio Dowell',
-      room: 'Room 301',
-      sched: 'Monday: 9:00 - 11:00 AM',
-      session: true,
-    ),
-    ClassItem(
-      course: 'Information Assurance and Security 2',
-      classCode: 'IT 108',
-      professor: 'Mrs. Mary Grace R. Pelagio',
-      room: 'CSD COMLAB 1-N',
-      sched: 'Thursday: 4:30 - 7:30 PM',
-      session: false,
-    ),
-    ClassItem(
-      course: 'Software Engineering 1',
-      classCode: 'IT 10',
-      professor: 'Mr. Jayson P. Joble',
-      room: 'Room 405-N',
-      sched: 'Wednesday: 2:00 - 5:00 PM',
-      session: false,
-    ),
-  ];
+  final List<ClassItem> _classes = [];
 
   final List<ClassItem> _archivedClasses = [];
 
   void _sortClasses() {
+    const sessionPriority = {
+      'Pending': 0,
+      'Upcoming': 1,
+      'Ended': 2,
+    };
+
     _classes.sort((a, b) {
-      if (a.session == b.session) return 0;
-      return a.session ? -1 : 1;
+      final aP = sessionPriority[a.session] ?? 99;
+      final bP = sessionPriority[b.session] ?? 99;
+      final bySession = aP.compareTo(bP);
+      if (bySession != 0) return bySession;
+
+      final aDay = _daysUntilFromSched(a.sched);
+      final bDay = _daysUntilFromSched(b.sched);
+      final byDay = aDay.compareTo(bDay);
+      if (byDay != 0) return byDay;
+
+      final aStart = _startMinutesFromSched(a.sched);
+      final bStart = _startMinutesFromSched(b.sched);
+      return aStart.compareTo(bStart);
     });
   }
+
+  int _daysUntilFromSched(String sched) {
+    final dayStr = sched.split(':').first.trim().toLowerCase();
+
+    const map = {
+      'sunday': DateTime.sunday,
+      'monday': DateTime.monday,
+      'tuesday': DateTime.tuesday,
+      'wednesday': DateTime.wednesday,
+      'thursday': DateTime.thursday,
+      'friday': DateTime.friday,
+      'saturday': DateTime.saturday,
+    };
+
+    final target = map[dayStr];
+    if (target == null) return 999;
+
+    final today = DateTime.now().weekday; // monday=1..sunday=7
+    return (target - today + 7) % 7; // 0..6
+  }
+
+  int _startMinutesFromSched(String sched) {
+    final parts = sched.split(':');
+    if (parts.length < 2) return 9999;
+
+    final timePart = parts.sublist(1).join(':').trim();
+    final range = timePart.split(RegExp(r'\s*[-–]\s*'));
+    if (range.length < 2) return 9999;
+
+    return _toMinutes(range.first.trim());
+  }
+
+  int _endMinutesFromSched(String sched) {
+    final parts = sched.split(':');
+    if (parts.length < 2) return 9999;
+
+    final timePart = parts.sublist(1).join(':').trim();
+    final range = timePart.split(RegExp(r'\s*[-–]\s*'));
+    if (range.length < 2) return 9999;
+
+    return _toMinutes(range.last.trim());
+  }
+
+  int _toMinutes(String time) {
+    final reg = RegExp(r'^(\d{1,2}):(\d{2})\s*(AM|PM)$', caseSensitive: false);
+    final m = reg.firstMatch(time.trim());
+    if (m == null) return 9999;
+
+    int hour = int.parse(m.group(1)!);
+    final minute = int.parse(m.group(2)!);
+    final ampm = m.group(3)!.toUpperCase();
+
+    if (ampm == 'AM') {
+      if (hour == 12) hour = 0;
+    } else {
+      if (hour != 12) hour += 12;
+    }
+
+    return hour * 60 + minute;
+  }
+
+  String _sessionFromSched(String sched) {
+    final now = DateTime.now();
+    final dayStr = sched.split(':').first.trim().toLowerCase();
+
+    final startMin = _startMinutesFromSched(sched);
+    final endMinRaw = _endMinutesFromSched(sched);
+    final nowMin = now.hour * 60 + now.minute;
+
+    if (startMin == 9999 || endMinRaw == 9999) return 'Upcoming';
+
+    const map = {
+      'sunday': DateTime.sunday,
+      'monday': DateTime.monday,
+      'tuesday': DateTime.tuesday,
+      'wednesday': DateTime.wednesday,
+      'thursday': DateTime.thursday,
+      'friday': DateTime.friday,
+      'saturday': DateTime.saturday,
+    };
+
+    final schedWeekday = map[dayStr];
+    if (schedWeekday == null) return 'Upcoming';
+
+    int prevDay(int d) => d == DateTime.monday ? DateTime.sunday : d - 1;
+    int nextDay(int d) => d == DateTime.sunday ? DateTime.monday : d + 1;
+
+    // overnight (ex: 11:30 PM - 12:59 AM)
+    final overnight = endMinRaw <= startMin;
+    final endMin = overnight ? endMinRaw + 1440 : endMinRaw;
+
+    // pending window = 2 hours before start
+    final pendingWindowStart = startMin - 120;
+
+    int? nowAdj;
+
+    if (now.weekday == schedWeekday) {
+      nowAdj = nowMin;
+    } else if (pendingWindowStart < 0 && now.weekday == prevDay(schedWeekday)) {
+      nowAdj = nowMin - 1440;
+    } else if (overnight && now.weekday == nextDay(schedWeekday)) {
+      nowAdj = nowMin + 1440;
+    } else {
+      return 'Upcoming';
+    }
+
+    if (nowAdj >= endMin) return 'Ended';
+    if (nowAdj >= pendingWindowStart) return 'Pending';
+    return 'Upcoming';
+  }
+
 
   @override
   void initState() {
     super.initState();
     _sortClasses();
-    _loadStudent();
+    _loadStudent().then((_) => _loadMyClasses());
   }
 
   Widget textBold(tag, name, double screenHeight) {
@@ -171,19 +413,37 @@ class _DashboardState extends State<Dashboard> {
   // Classcard Template
   Widget classCard(
       String course,
+      String courseCode,  // ✅ NEW
       String classCode,
       String professor,
       String room,
       String sched,
-      bool session,
+      String session,
       double screenHeight,
       VoidCallback onArchive,
       ) {
     final size = MediaQuery.of(context).size;
     final screenWidth = size.width;
 
-    // ✅ bool logic
-    final isUpcoming = !session; // false = upcoming
+    final isUpcoming = session == 'Upcoming' || session == 'Ended';
+
+    final borderColor = session == 'Pending'
+        ? const Color(0xFFB09602)
+        : session == 'Ended'
+        ? const Color(0xFFFB8C7A)
+        : const Color(0x90A9CBF9);
+
+    final bgColor = session == 'Pending'
+        ? const Color(0x25FBD600)
+        : session == 'Ended'
+        ? const Color(0xFFFDDCDC)
+        : const Color(0x90DBEAFE);
+
+    final textColor = session == 'Pending'
+        ? const Color(0xFFB09602)
+        : session == 'Ended'
+        ? const Color(0xFFFB8C7A)
+        : const Color(0x90004280);
 
     return Opacity(
       opacity: isUpcoming ? 0.5 : 1.0,
@@ -191,7 +451,7 @@ class _DashboardState extends State<Dashboard> {
         margin: EdgeInsets.symmetric(vertical: screenHeight * .02),
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: session ? Colors.white : Colors.grey[300],
+          color: session != 'Upcoming' ? Colors.white : Colors.grey[300],
           borderRadius: BorderRadius.circular(10),
           boxShadow: const [
             BoxShadow(
@@ -220,13 +480,13 @@ class _DashboardState extends State<Dashboard> {
                         child: Text(course, style: const TextStyle(fontWeight: FontWeight.w500)),
                       ),
                       const SizedBox(height: 5),
-                      Text(classCode),
+                      Text(courseCode),
                       const SizedBox(height: 10),
                     ],
                   ),
 
                   // only allow open if session started
-                  session
+                  session == 'Pending'
                       ? IconButton(
                     onPressed: () async {
                       await Navigator.pushNamed(context, '/face_verification');
@@ -282,18 +542,18 @@ class _DashboardState extends State<Dashboard> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(75),
                       border: Border.all(
-                        color: session ? const Color(0xFFBBE6CB) : const Color(0x90A9CBF9),
+                        color: borderColor,
                       ),
-                      color: session ? const Color(0xFFDBFCE7) : const Color(0x90DBEAFE),
+                      color: bgColor,
                     ),
                     width: screenWidth * .25,
                     height: screenHeight * .025,
                     child: Text(
-                      session ? 'Session Started' : 'Upcoming',
+                      session,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: screenHeight * .012,
-                        color: session ? const Color(0xFF016224) : const Color(0x90004280),
+                        color: textColor,
                       ),
                     ),
                   ),
@@ -359,85 +619,129 @@ class _DashboardState extends State<Dashboard> {
   }
 
   void _showJoinClassDialog() {
-    final TextEditingController classCodeController = TextEditingController();
+    final controller = TextEditingController();
     final formKey = GlobalKey<FormState>();
+
+    bool loading = false;
+    String? error;
 
     showDialog(
       context: context,
       barrierDismissible: true,
       builder: (context) {
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          title: const Text(
-            'Enter Class Code',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold
-            ),
-          ),
-          content: Form(
-            key: formKey,
-            child: SizedBox(
-              width: 280,
-              child: TextFormField(
-                controller: classCodeController,
-                decoration: InputDecoration(
-                  hintText: 'Classcode',
-                  hintStyle: TextStyle(
-                    fontSize: 12,
+        return StatefulBuilder(
+          builder: (context, setLocal) {
+            Future<void> submit() async {
+              if (!formKey.currentState!.validate()) return;
+
+              setLocal(() {
+                loading = true;
+                error = null;
+              });
+
+              try {
+                await _joinClassByCode(controller.text);
+
+                if (!mounted) return;
+
+                // ✅ success → close modal
+                Navigator.pop(context);
+              } catch (e) {
+                setLocal(() {
+                  error = e.toString().replaceFirst('Exception: ', '');
+                });
+              } finally {
+                setLocal(() => loading = false);
+              }
+            }
+
+            return AlertDialog(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              title: const Text(
+                'Enter Class Code',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+              ),
+              content: Form(
+                key: formKey,
+                child: SizedBox(
+                  width: 280,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextFormField(
+                        controller: controller,
+                        textInputAction: TextInputAction.done,
+                        onFieldSubmitted: (_) => submit(),
+                        decoration: InputDecoration(
+                          hintText: 'Class code',
+                          hintStyle: const TextStyle(fontSize: 12),
+                          contentPadding:
+                          const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide:
+                            const BorderSide(color: Color(0x50000000), width: 1),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
+                            borderSide:
+                            const BorderSide(color: Colors.black, width: .8),
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Class code is required';
+                          }
+                          return null;
+                        },
+                      ),
+
+                      if (error != null) ...[
+                        const SizedBox(height: 10),
+                        Text(
+                          error!,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.red,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
-                  contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(
-                      color: Color(0x50000000),
-                      width: 1
+                ),
+              ),
+              actionsAlignment: MainAxisAlignment.center,
+              actions: [
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF16A34A),
+                    padding:
+                    const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
                     ),
                   ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(6),
-                    borderSide:
-                    const BorderSide(color: Colors.black, width: .8),
+                  onPressed: loading ? null : submit,
+                  child: loading
+                      ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                      : const Text(
+                    'Join Class',
+                    style: TextStyle(color: Colors.white, fontSize: 12),
                   ),
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Class code is required';
-                  }
-                  return null;
-                },
-              ),
-            ),
-          ),
-          actionsAlignment: MainAxisAlignment.center,
-          actions: [
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF16A34A),
-                padding:
-                const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(6),
-                ),
-              ),
-              onPressed: () {
-                if (formKey.currentState!.validate()) {
-                  Navigator.pop(context);
-
-                }
-              },
-              icon: const Icon(Icons.check_circle_outline, size: 16, color: Colors.white),
-              label: const Text(
-                'Join Class',
-                style: TextStyle(color: Colors.white, fontSize: 12),
-              ),
-            ),
-          ],
+              ],
+            );
+          },
         );
       },
     );
@@ -631,6 +935,7 @@ class _DashboardState extends State<Dashboard> {
 
                     return classCard(
                       c.course,
+                      c.courseCode,
                       c.classCode,
                       c.professor,
                       c.room,

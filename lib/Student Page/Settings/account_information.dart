@@ -193,7 +193,7 @@ class _AccountInformationState extends State<AccountInformation> {
       backgroundColor: Colors.transparent,
       builder: (_) {
         // auto close after 2 seconds
-        Future.delayed(const Duration(seconds: 2), () {
+        Future.delayed(const Duration(seconds: 1), () {
           if (Navigator.of(context).canPop()) Navigator.of(context).pop();
         });
 

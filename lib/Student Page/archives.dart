@@ -24,19 +24,36 @@ class _ArchivesState extends State<Archives> {
       String professor,
       String room,
       String sched,
-      bool session,
+      String session,
       double screenHeight,
       VoidCallback onArchive,
       ) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
+    final borderColor = session == 'Pending'
+        ? const Color(0xFFB09602)
+        : session == 'Ended'
+        ? const Color(0xFFFB8C7A)
+        : const Color(0x90A9CBF9);
+
+    final bgColor = session == 'Pending'
+        ? const Color(0x25FBD600)
+        : session == 'Ended'
+        ? const Color(0xFFFDDCDC)
+        : const Color(0x90DBEAFE);
+
+    final textColor = session == 'Pending'
+        ? const Color(0xFFB09602)
+        : session == 'Ended'
+        ? const Color(0xFFFB8C7A)
+        : const Color(0x90004280);
     return Center(
       child: Container(
         margin: EdgeInsets.symmetric(vertical: screenHeight * .023),
         padding: EdgeInsets.all(10),
         width: screenWidth * .9,
         decoration: BoxDecoration(
-          color: session ? Colors.white : Colors.grey[300],
+          color: session != 'Upcoming' ? Colors.white : Colors.grey[300],
           borderRadius: BorderRadiusGeometry.circular(10),
           boxShadow: [
             BoxShadow(
@@ -136,23 +153,19 @@ class _ArchivesState extends State<Archives> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadiusGeometry.circular(75),
                       border: Border.all(
-                        color: session
-                            ? Color(0xFFBBE6CB)
-                            : Color(0x90A9CBF9),
+                        color: borderColor,
                       ),
                       color:
-                      session ? Color(0xFFDBFCE7) : Color(0x90DBEAFE),
+                      bgColor,
                     ),
                     width: screenWidth * .28,
                     height: screenHeight * .028,
                     child: Text(
-                      session ? 'Session Started' : 'Upcoming',
+                      session,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: screenHeight * .014,
-                        color: session
-                            ? Color(0xFF016224)
-                            : Color(0x90004280),
+                        color: textColor,
                       ),
                     ),
                   ),
