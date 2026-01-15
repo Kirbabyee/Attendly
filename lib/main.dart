@@ -47,7 +47,6 @@ class MyApp extends StatelessWidget {
         '/login': (context) => Login(),
         '/dashboard': (context) => Dashboard(),
         '/face_registration': (context) => Face_Registration(),
-        '/face_verification': (context) => Face_Verification(),
         '/history': (context) => History(),
         '/settings': (context) => Settings(),
         '/help': (context) => Help(),

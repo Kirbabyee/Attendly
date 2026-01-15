@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'attendance/face_verification.dart';
 import 'student_session.dart'; // adjust path kung iba
 
 import 'archives.dart';
@@ -13,15 +14,17 @@ class Dashboard extends StatefulWidget {
 }
 
 class ClassItem {
+  final String classId;
   final String course;
-  final String courseCode;   // ✅ NEW
-  final String classCode;    // class_code (pang join)
+  final String courseCode;
+  final String classCode;
   final String professor;
   final String room;
   final String sched;
   final String session;
 
   ClassItem({
+    required this.classId,
     required this.course,
     required this.courseCode,
     required this.classCode,
@@ -33,6 +36,18 @@ class ClassItem {
 }
 
 class _DashboardState extends State<Dashboard> {
+  Future<String?> _getActiveSessionId(String classId) async {
+    final row = await supabase
+        .from('class_sessions')
+        .select('id')
+        .eq('class_id', classId)
+        .eq('status', 'started')
+        .order('started_at', ascending: false)
+        .maybeSingle();
+
+    return row?['id'] as String?;
+  }
+
   Future<void> _loadMyClasses() async {
     final studentId = _student?['id'] as String?;
     if (studentId == null) return;
@@ -58,9 +73,25 @@ class _DashboardState extends State<Dashboard> {
     // 2) get classes
     final classRows = await supabase
         .from('classes')
-        .select('id, course, course_code, class_code, room, schedule, professor_id, archived')
+        .select('id, course, course_code, class_code, room, schedule, professor_id')
         .inFilter('id', classIds)
         .eq('archived', false);
+
+    // 2.5) get latest session status per class (started/ended)
+    final sessionRows = await supabase
+        .from('class_sessions')
+        .select('class_id, status')
+        .inFilter('class_id', classIds)
+        .inFilter('status', ['started', 'ended']);
+
+    final sessionMap = <String, String>{};
+    for (final r in (sessionRows as List)) {
+      final m = r as Map<String, dynamic>;
+      final classId = m['class_id'] as String;
+      final status = (m['status'] as String?) ?? '';
+      // if multiple rows exist, last write wins (ok na for now)
+      sessionMap[classId] = status;
+    }
 
     // 3) get professor names (batch)
     final profIds = (classRows as List)
@@ -87,20 +118,34 @@ class _DashboardState extends State<Dashboard> {
     // 4) build list with time logic
     final list = (classRows as List).map((r) {
       final m = r as Map<String, dynamic>;
+
+      final classId = m['id'] as String;
       final sched = (m['schedule'] ?? '') as String;
-      final sessionText = _sessionFromSched(sched);
+
+      // ✅ DB overrides time-based
+      String sessionText;
+      final dbStatus = sessionMap[classId];
+
+      if (dbStatus == 'started') {
+        sessionText = 'Session Started';
+      } else if (dbStatus == 'ended') {
+        sessionText = 'Ended';
+      } else {
+        sessionText = _sessionFromSched(sched); // fallback
+      }
 
       final profId = m['professor_id'] as String?;
       final profName = profId == null ? 'Professor' : (profMap[profId] ?? 'Professor');
 
       return ClassItem(
+        classId: classId,
         course: (m['course'] ?? '-') as String,
         courseCode: (m['course_code'] ?? '-') as String,
         classCode: (m['class_code'] ?? '-') as String,
         professor: profName,
         room: (m['room'] ?? '-') as String,
         sched: sched,
-        session: sessionText,
+        session: sessionText, // ✅ UPDATED
       );
     }).toList();
 
@@ -253,11 +298,17 @@ class _DashboardState extends State<Dashboard> {
 
   final List<ClassItem> _archivedClasses = [];
 
+  Future<void> _refresh() async {
+    await _loadStudent(force: true);
+    await _loadMyClasses();
+  }
+
   void _sortClasses() {
     const sessionPriority = {
-      'Pending': 0,
-      'Upcoming': 1,
-      'Ended': 2,
+      'Session Started': 0,
+      'Pending': 1,
+      'Upcoming': 2,
+      'Ended': 3,
     };
 
     _classes.sort((a, b) {
@@ -412,6 +463,7 @@ class _DashboardState extends State<Dashboard> {
 
   // Classcard Template
   Widget classCard(
+      String classId,
       String course,
       String courseCode,  // ✅ NEW
       String classCode,
@@ -431,18 +483,24 @@ class _DashboardState extends State<Dashboard> {
         ? const Color(0xFFB09602)
         : session == 'Ended'
         ? const Color(0xFFFB8C7A)
+        : session == 'Session Started'
+        ? const Color(0xFFBBE6CB)
         : const Color(0x90A9CBF9);
 
     final bgColor = session == 'Pending'
         ? const Color(0x25FBD600)
         : session == 'Ended'
         ? const Color(0xFFFDDCDC)
+        : session == 'Session Started'
+        ? const Color(0xFFDBFCE7)
         : const Color(0x90DBEAFE);
 
     final textColor = session == 'Pending'
         ? const Color(0xFFB09602)
         : session == 'Ended'
         ? const Color(0xFFFB8C7A)
+        : session == 'Session Started'
+        ? const Color(0xFF016224)
         : const Color(0x90004280);
 
     return Opacity(
@@ -486,11 +544,37 @@ class _DashboardState extends State<Dashboard> {
                   ),
 
                   // only allow open if session started
-                  session == 'Pending'
+                  session == 'Session Started'
                       ? IconButton(
                     onPressed: () async {
-                      await Navigator.pushNamed(context, '/face_verification');
-                      _loadStudent(force: true);
+                      final sessionId = await _getActiveSessionId(classId);
+
+                      if (sessionId == null) {
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('No active session found.')),
+                        );
+                        return;
+                      }
+
+                      if (!context.mounted) return;
+
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => Face_Verification(
+                            classSessionId: sessionId,
+                            courseTitle: course,
+                            courseCode: courseCode,
+                            professor: professor,
+                            room: room,
+                            sched: sched,
+                            classCode: classCode,
+                          ),
+                        ),
+                      );
+
+                      await _loadMyClasses();
                     },
                     icon: Icon(CupertinoIcons.right_chevron, size: screenHeight * .016),
                   )
@@ -894,64 +978,72 @@ class _DashboardState extends State<Dashboard> {
               ),
             ),
             Expanded(
-              child: ListView(
-                padding: EdgeInsets.symmetric(horizontal: screenWidth * .05),
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'My Classes',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: screenHeight * .017),
-                      ),
-                      IconButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => Archives(
-                                archivedClasses: _archivedClasses,
-                                onRestore: (item) {
-                                  setState(() {
-                                    _classes.add(item);
-                                    _sortClasses();
-                                  });
-                                },
-                              ),
-                            ),
-                          );
-                        },
-                        icon: Icon(
-                          CupertinoIcons.archivebox,
-                          size: screenHeight * .025,
+              child: RefreshIndicator(
+                onRefresh: _refresh,
+                child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(), // ✅ para gumana kahit konti lang items
+                  padding: EdgeInsets.symmetric(horizontal: screenWidth * .05),
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'My Classes',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: screenHeight * .017,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                  ..._classes.asMap().entries.map((entry) {
-                    final i = entry.key;
-                    final c = entry.value;
+                        IconButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => Archives(
+                                  archivedClasses: _archivedClasses,
+                                  onRestore: (item) {
+                                    setState(() {
+                                      _classes.add(item);
+                                      _sortClasses();
+                                    });
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+                          icon: Icon(
+                            CupertinoIcons.archivebox,
+                            size: screenHeight * .025,
+                          ),
+                        ),
+                      ],
+                    ),
 
-                    return classCard(
-                      c.course,
-                      c.courseCode,
-                      c.classCode,
-                      c.professor,
-                      c.room,
-                      c.sched,
-                      c.session,
-                      screenHeight,
-                        () {
+                    ..._classes.asMap().entries.map((entry) {
+                      final i = entry.key;
+                      final c = entry.value;
+
+                      return classCard(
+                        c.classId,
+                        c.course,
+                        c.courseCode,
+                        c.classCode,
+                        c.professor,
+                        c.room,
+                        c.sched,
+                        c.session,
+                        screenHeight,
+                            () {
                           setState(() {
                             _archivedClasses.add(_classes[i]);
                             _classes.removeAt(i);
                             _sortClasses();
                           });
                         },
-                    );
-                  }).toList(),
-                ],
+                      );
+                    }).toList(),
+                  ],
+                ),
               ),
             ),
           ],

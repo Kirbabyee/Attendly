@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter_project_1/Student Page/attendance/face_verified.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../widgets/student_information_card.dart';
 
@@ -16,7 +17,26 @@ import 'package:flutter_project_1/Student%20Page/dashboard.dart';
 import '../student_session.dart';
 
 class Face_Verification extends StatefulWidget {
-  const Face_Verification({super.key});
+  final String classSessionId;
+
+  // ✅ add these (for header display)
+  final String courseTitle;
+  final String courseCode;
+  final String professor;
+  final String room;
+  final String sched;
+  final String classCode;
+
+  const Face_Verification({
+    super.key,
+    required this.classSessionId,
+    required this.courseTitle,
+    required this.courseCode,
+    required this.professor,
+    required this.room,
+    required this.sched,
+    required this.classCode,
+  });
 
   @override
   State<Face_Verification> createState() => _Face_VerificationState();
@@ -36,27 +56,22 @@ class _Face_VerificationState extends State<Face_Verification> {
 
     if (!mounted) return;
 
-    // Show loading (same page)
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (_) => const Center(child: CircularProgressIndicator()),
     );
 
-    // Loading delay (you can change duration)
-    await Future.delayed(const Duration(seconds: 2));
+      await Future.delayed(const Duration(seconds: 2));
 
     if (!mounted) return;
 
-    // Close loading
-    Navigator.of(context).pop();
+    Navigator.of(context).pop(); // close loading
 
-    // Navigate to next page
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (_) => const Face_Verified()),
     );
   }
-
 
   CameraController? _controller;
   Future<void>? _initFuture;
@@ -343,9 +358,9 @@ class _Face_VerificationState extends State<Face_Verification> {
                 children: [
                   AttendlyBlueHeader(
                     onBack: true,
-                    courseTitle: 'Introduction to Human Computer Interaction',
-                    courseCode: 'CCS101',
-                    professor: 'Mr. Leviticio Dowell',
+                    courseTitle: widget.courseTitle,
+                    courseCode: widget.courseCode,
+                    professor: widget.professor,
                     icon: CupertinoIcons.book,
                     iconColor: const Color(0xFFFBD600),
                   ),
