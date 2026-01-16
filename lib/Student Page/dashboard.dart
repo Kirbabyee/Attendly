@@ -36,6 +36,9 @@ class ClassItem {
 }
 
 class _DashboardState extends State<Dashboard> {
+  bool _loadingClasses = false;
+  String? _classesError;
+
   Future<String?> _getActiveSessionId(String classId) async {
     final row = await supabase
         .from('class_sessions')
@@ -52,110 +55,123 @@ class _DashboardState extends State<Dashboard> {
     final studentId = _student?['id'] as String?;
     if (studentId == null) return;
 
-    // 1) get enrollments (class_id list)
-    final enrollRows = await supabase
-        .from('class_enrollments')
-        .select('class_id')
-        .eq('student_id', studentId);
-
-    final classIds = (enrollRows as List)
-        .map((r) => (r as Map<String, dynamic>)['class_id'] as String)
-        .toList();
-
-    if (classIds.isEmpty) {
-      if (!mounted) return;
-      setState(() {
-        _classes.clear();
-      });
-      return;
-    }
-
-    // 2) get classes
-    final classRows = await supabase
-        .from('classes')
-        .select('id, course, course_code, class_code, room, schedule, professor_id')
-        .inFilter('id', classIds)
-        .eq('archived', false);
-
-    // 2.5) get latest session status per class (started/ended)
-    final sessionRows = await supabase
-        .from('class_sessions')
-        .select('class_id, status')
-        .inFilter('class_id', classIds)
-        .inFilter('status', ['started', 'ended']);
-
-    final sessionMap = <String, String>{};
-    for (final r in (sessionRows as List)) {
-      final m = r as Map<String, dynamic>;
-      final classId = m['class_id'] as String;
-      final status = (m['status'] as String?) ?? '';
-      // if multiple rows exist, last write wins (ok na for now)
-      sessionMap[classId] = status;
-    }
-
-    // 3) get professor names (batch)
-    final profIds = (classRows as List)
-        .map((r) => (r as Map<String, dynamic>)['professor_id'])
-        .where((x) => x != null)
-        .cast<String>()
-        .toSet()
-        .toList();
-
-    Map<String, String> profMap = {};
-    if (profIds.isNotEmpty) {
-      final profRows = await supabase
-          .from('professors')
-          .select('id, professor_name')
-          .inFilter('id', profIds);
-
-      profMap = {
-        for (final p in (profRows as List))
-          (p as Map<String, dynamic>)['id'] as String:
-          ((p)['professor_name'] as String?) ?? 'Professor'
-      };
-    }
-
-    // 4) build list with time logic
-    final list = (classRows as List).map((r) {
-      final m = r as Map<String, dynamic>;
-
-      final classId = m['id'] as String;
-      final sched = (m['schedule'] ?? '') as String;
-
-      // ✅ DB overrides time-based
-      String sessionText;
-      final dbStatus = sessionMap[classId];
-
-      if (dbStatus == 'started') {
-        sessionText = 'Session Started';
-      } else if (dbStatus == 'ended') {
-        sessionText = 'Ended';
-      } else {
-        sessionText = _sessionFromSched(sched); // fallback
-      }
-
-      final profId = m['professor_id'] as String?;
-      final profName = profId == null ? 'Professor' : (profMap[profId] ?? 'Professor');
-
-      return ClassItem(
-        classId: classId,
-        course: (m['course'] ?? '-') as String,
-        courseCode: (m['course_code'] ?? '-') as String,
-        classCode: (m['class_code'] ?? '-') as String,
-        professor: profName,
-        room: (m['room'] ?? '-') as String,
-        sched: sched,
-        session: sessionText, // ✅ UPDATED
-      );
-    }).toList();
-
     if (!mounted) return;
     setState(() {
-      _classes
-        ..clear()
-        ..addAll(list);
-      _sortClasses();
+      _loadingClasses = true;
+      _classesError = null;
     });
+
+    try {
+      // 1) get enrollments (class_id list)
+      final enrollRows = await supabase
+          .from('class_enrollments')
+          .select('class_id')
+          .eq('student_id', studentId);
+
+      final classIds = (enrollRows as List)
+          .map((r) => (r as Map<String, dynamic>)['class_id'] as String)
+          .toList();
+
+      if (classIds.isEmpty) {
+        if (!mounted) return;
+        setState(() {
+          _classes.clear();
+        });
+        return;
+      }
+
+      // 2) get classes
+      final classRows = await supabase
+          .from('classes')
+          .select('id, course, course_code, class_code, room, schedule, professor_id')
+          .inFilter('id', classIds)
+          .eq('archived', false);
+
+      // 2.5) get latest session status per class (started/ended)
+      final sessionRows = await supabase
+          .from('class_sessions')
+          .select('class_id, status')
+          .inFilter('class_id', classIds)
+          .inFilter('status', ['started', 'ended']);
+
+      final sessionMap = <String, String>{};
+      for (final r in (sessionRows as List)) {
+        final m = r as Map<String, dynamic>;
+        final classId = m['class_id'] as String;
+        final status = (m['status'] as String?) ?? '';
+        sessionMap[classId] = status;
+      }
+
+      // 3) get professor names (batch)
+      final profIds = (classRows as List)
+          .map((r) => (r as Map<String, dynamic>)['professor_id'])
+          .where((x) => x != null)
+          .cast<String>()
+          .toSet()
+          .toList();
+
+      Map<String, String> profMap = {};
+      if (profIds.isNotEmpty) {
+        final profRows = await supabase
+            .from('professors')
+            .select('id, professor_name')
+            .inFilter('id', profIds);
+
+        profMap = {
+          for (final p in (profRows as List))
+            (p as Map<String, dynamic>)['id'] as String:
+            (p['professor_name'] as String?) ?? 'Professor'
+        };
+      }
+
+      final list = (classRows as List).map((r) {
+        final m = r as Map<String, dynamic>;
+        final classId = m['id'] as String;
+        final sched = (m['schedule'] ?? '') as String;
+
+        String sessionText;
+        final dbStatus = sessionMap[classId];
+        if (dbStatus == 'started') {
+          sessionText = 'Session Started';
+        } else if (dbStatus == 'ended') {
+          sessionText = 'Ended';
+        } else {
+          sessionText = _sessionFromSched(sched);
+        }
+
+        final profId = m['professor_id'] as String?;
+        final profName = profId == null ? 'Professor' : (profMap[profId] ?? 'Professor');
+
+        return ClassItem(
+          classId: classId,
+          course: (m['course'] ?? '-') as String,
+          courseCode: (m['course_code'] ?? '-') as String,
+          classCode: (m['class_code'] ?? '-') as String,
+          professor: profName,
+          room: (m['room'] ?? '-') as String,
+          sched: sched,
+          session: sessionText,
+        );
+      }).toList();
+
+      if (!mounted) return;
+      setState(() {
+        _classes
+          ..clear()
+          ..addAll(list);
+        _sortClasses();
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _classesError = e.toString();
+      });
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _loadingClasses = false;
+      });
+    }
   }
 
   Future<void> _joinClassByCode(String code) async {
@@ -1019,29 +1035,49 @@ class _DashboardState extends State<Dashboard> {
                       ],
                     ),
 
-                    ..._classes.asMap().entries.map((entry) {
-                      final i = entry.key;
-                      final c = entry.value;
+                    if (_loadingClasses) ...[
+                      const SizedBox(height: 16),
+                      const Center(child: CircularProgressIndicator()),
+                      const SizedBox(height: 16),
+                    ] else if (_classesError != null) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        'Failed to load classes: $_classesError',
+                        style: const TextStyle(color: Colors.red, fontSize: 12),
+                      ),
+                      const SizedBox(height: 12),
+                    ] else if (_classes.isEmpty) ...[
+                      const SizedBox(height: 12),
+                      const Text(
+                        'No classes yet. Join a class using the code.',
+                        style: TextStyle(fontSize: 12, color: Colors.black54),
+                      ),
+                      const SizedBox(height: 12),
+                    ] else ...[
+                      ..._classes.asMap().entries.map((entry) {
+                        final i = entry.key;
+                        final c = entry.value;
 
-                      return classCard(
-                        c.classId,
-                        c.course,
-                        c.courseCode,
-                        c.classCode,
-                        c.professor,
-                        c.room,
-                        c.sched,
-                        c.session,
-                        screenHeight,
-                            () {
-                          setState(() {
-                            _archivedClasses.add(_classes[i]);
-                            _classes.removeAt(i);
-                            _sortClasses();
-                          });
-                        },
-                      );
-                    }).toList(),
+                        return classCard(
+                          c.classId,
+                          c.course,
+                          c.courseCode,
+                          c.classCode,
+                          c.professor,
+                          c.room,
+                          c.sched,
+                          c.session,
+                          screenHeight,
+                              () {
+                            setState(() {
+                              _archivedClasses.add(_classes[i]);
+                              _classes.removeAt(i);
+                              _sortClasses();
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ],
                   ],
                 ),
               ),

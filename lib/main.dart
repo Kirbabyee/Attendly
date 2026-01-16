@@ -1,3 +1,5 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_project_1/Student%20Page/mainshell.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -16,10 +18,31 @@ import 'package:flutter_project_1/Student%20Page/Settings/settings.dart';
 import 'package:flutter_project_1/Student%20Page/forgot_password.dart';
 import 'package:flutter_project_1/Student%20Page/new_password.dart';
 
+import 'Notifications/notification_service.dart';
 import 'Student Page/auth_gate.dart';
+import 'firebase_options.dart';
+
+
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  // optional: local notif (Android usually shows system notif already if "notification" payload)
+  // but safe if you rely on data-only messages
+  await NotificationsService.init();
+  final title = message.notification?.title ?? 'Attendly';
+  final body = message.notification?.body ?? '';
+  await NotificationsService.show(title: title, body: body);
+}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  await NotificationsService.init();
+
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   await Supabase.initialize(
     url: 'https://ucfundmbawljngzowzgd.supabase.co',

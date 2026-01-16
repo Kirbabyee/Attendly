@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../Notifications/push_manager.dart';
 import 'student_session.dart';
 
 import '../main.dart'; // LandingPage
@@ -28,6 +29,7 @@ class _AuthGateState extends State<AuthGate> with SingleTickerProviderStateMixin
   @override
   void initState() {
     super.initState();
+    _initAfterLogin();
     _start = DateTime.now();
 
     _logoCtrl = AnimationController(
@@ -112,6 +114,17 @@ class _AuthGateState extends State<AuthGate> with SingleTickerProviderStateMixin
     _sub.cancel();
     _logoCtrl.dispose();
     super.dispose();
+  }
+
+  bool _pushReady = false;
+  Future<void> _initAfterLogin() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return;
+
+    if (_pushReady) return;
+
+    await PushManager.initListenersOnce();
+    _pushReady = true;
   }
 
   @override

@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:path/path.dart' as p;
 
 import '../student_session.dart';
+import 'change_email.dart';
 
 class AccountInformation extends StatefulWidget {
   const AccountInformation({super.key});
@@ -253,6 +254,7 @@ class _AccountInformationState extends State<AccountInformation> {
     final displayStudentNo = '${_student?['student_number'] ?? '-'}';
     final displayYear = _yearLevelLabel(_student?['year_level']);
     final displaySection = '${_student?['section'] ?? '-'}';
+    String displayEmail = '${_student?['email'] ?? '-'}';
 
     return Scaffold(
       body: SafeArea(
@@ -462,11 +464,41 @@ class _AccountInformationState extends State<AccountInformation> {
                     SizedBox(
                       width: screenWidth * .7,
                       child: Column(
+                        crossAxisAlignment: .end,
                         children: [
-                          _infoRow('Name', displayName, screenHeight),
-                          _infoRow('Student No.', displayStudentNo, screenHeight),
-                          _infoRow('Year Level', displayYear, screenHeight),
-                          _infoRow('Section', displaySection, screenHeight),
+                          _infoRow('Name:', displayName, screenHeight),
+                          _infoRow('Student No.:', displayStudentNo, screenHeight),
+                          _infoRow('Year Level:', displayYear, screenHeight),
+                          _infoRow('Section:', displaySection, screenHeight),
+                          _infoRow('Email:', displayEmail, screenHeight),
+                          SizedBox(height: 10,),
+                          Container(
+                            child: InkWell(
+                              onTap: () async {
+                                final newEmail = await Navigator.push<String>(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => ChangeEmail(currentEmail: displayEmail ?? ''),
+                                  ),
+                                );
+
+                                if (newEmail != null && newEmail.trim().isNotEmpty) {
+                                  setState(() {
+                                    displayEmail = newEmail.trim();
+                                  });
+                                }
+                              },
+                              child: Text(
+                                'Change Email?',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF105698)
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 15,),
                         ],
                       ),
                     ),

@@ -1,7 +1,9 @@
+  import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_project_1/Student%20Page/Settings/settings.dart';
 
+import '../Notifications/notification_service.dart';
 import '../widgets/navbar.dart';
 import 'dashboard.dart';
 import 'Help/help.dart';
@@ -34,6 +36,7 @@ class _MainshellState extends State<Mainshell> {
     super.initState();
     _index = widget.initialIndex;
   }
+
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.width;
     return Scaffold(

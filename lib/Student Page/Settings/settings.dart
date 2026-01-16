@@ -2,6 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_project_1/Student%20Page/login.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../Notifications/push_init.dart';
+import '../../Notifications/push_manager.dart';
+import '../../widgets/push_notification.dart';
 import '../student_session.dart';
 import 'privacy_policy.dart';
 
@@ -30,10 +33,15 @@ class _SettingsState extends State<Settings> {
     });
 
     try {
-      final s = await StudentSession.get(force: force); // ✅ use force
+      final s = await StudentSession.get(force: force);
       if (!mounted) return;
+
       setState(() {
         _student = s;
+
+        // ✅ SYNC switch with DB value
+        isOn = (s?['push_enabled'] as bool?) ?? false;
+
         _loadingStudent = false;
       });
     } catch (e) {
@@ -44,6 +52,7 @@ class _SettingsState extends State<Settings> {
       });
     }
   }
+
 
   bool isOn = false;
 
@@ -93,6 +102,8 @@ class _SettingsState extends State<Settings> {
 
   @override
   Widget build(BuildContext context) {
+    bool _notifBusy = false;
+
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
@@ -248,15 +259,55 @@ class _SettingsState extends State<Settings> {
                                   scale: screenHeight * .001,
                                   child: Switch(
                                     value: isOn,
-                                    onChanged: (value) {
-                                      setState(() {
-                                        isOn = value;
-                                      });
+                                    onChanged: (value) async {
+                                      // 1️⃣ confirm muna
+                                      final ok = await showDialog<bool>(
+                                        context: context,
+                                        barrierDismissible: true,
+                                        builder: (_) => AlertDialog(
+                                          backgroundColor: Colors.white,
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                          title: Text(
+                                            value ? 'Enable notifications?' : 'Disable notifications?',
+                                            style: const TextStyle(fontWeight: FontWeight.w600),
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () => Navigator.pop(context, false),
+                                              child: const Text('Cancel'),
+                                            ),
+                                            ElevatedButton(
+                                              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF004280)),
+                                              onPressed: () => Navigator.pop(context, true),
+                                              child: const Text('Confirm', style: TextStyle(color: Colors.white)),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                      if (ok != true) return;
+
+                                      final prev = isOn;
+                                      setState(() => isOn = value);
+
+                                      final studentId = _student?['id']?.toString();
+                                      if (studentId == null) return;
+
+                                      try {
+                                        await PushManager.enableAndRegisterToken(
+                                          userId: studentId,
+                                          enabled: value,
+                                        );
+                                      } catch (e) {
+                                        // revert if failed
+                                        if (!mounted) return;
+                                        setState(() => isOn = prev);
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Failed to update notifications: $e')),
+                                        );
+                                      }
                                     },
-                                    activeThumbColor: Colors.white,
-                                    activeTrackColor: Color(0xFF043B6F),
-                                    inactiveTrackColor: Colors.white,
-                                  ),
+                                  )
+
                                 )
                               ],
                             ),
