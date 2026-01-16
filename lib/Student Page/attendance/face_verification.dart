@@ -69,7 +69,14 @@ class _Face_VerificationState extends State<Face_Verification> {
     Navigator.of(context).pop(); // close loading
 
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const Face_Verified()),
+      MaterialPageRoute(
+        builder: (_) => Face_Verified(
+          classSessionId: widget.classSessionId,
+          courseTitle: widget.courseTitle,
+          courseCode: widget.courseCode,
+          professor: widget.professor,
+        ),
+      ),
     );
   }
 

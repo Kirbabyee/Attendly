@@ -1,18 +1,68 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_project_1/Student%20Page/mainshell.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../widgets/student_information_card.dart';
 import '../dashboard.dart';
+import '../student_session.dart';
 
 class Face_Verified extends StatefulWidget {
-  const Face_Verified({super.key});
+  final String classSessionId;
+
+  // pang header display
+  final String courseTitle;
+  final String courseCode;
+  final String professor;
+
+  const Face_Verified({
+    super.key,
+    required this.classSessionId,
+    required this.courseTitle,
+    required this.courseCode,
+    required this.professor,
+  });
 
   @override
   State<Face_Verified> createState() => _Face_VerifiedState();
 }
 
 class _Face_VerifiedState extends State<Face_Verified> {
+  Future<void> _submitAttendance() async {
+    final supabase = Supabase.instance.client;
+
+    final s = await StudentSession.get(); // cached student profile
+    final studentId = s?['id'] as String?;
+    if (studentId == null) throw 'Student not found';
+
+    // ✅ get session started_at
+    final session = await supabase
+        .from('class_sessions')
+        .select('started_at')
+        .eq('id', widget.classSessionId)
+        .maybeSingle();
+
+    final startedAtStr = session?['started_at'] as String?;
+    if (startedAtStr == null) throw 'Session start time not found';
+
+    final startedAt = DateTime.parse(startedAtStr);
+
+    // ✅ compute minutes late
+    final diffMins = DateTime.now().difference(startedAt).inMinutes;
+
+    final status = diffMins <= -15 ? 'late' : 'present';
+
+    print(diffMins);
+    print(status);
+
+    await supabase.from('attendance').upsert({
+      'session_id': widget.classSessionId,
+      'student_id': studentId,
+      'status': status, // ✅ present OR late
+      'time_in': DateTime.now().toIso8601String(),
+    }, onConflict: 'session_id,student_id');
+  }
+
   void _showAttendanceSubmittedModal() {
     final screenHeight = MediaQuery.of(context).size.height;
     Future.delayed(const Duration(seconds: 2), () {
@@ -53,7 +103,8 @@ class _Face_VerifiedState extends State<Face_Verified> {
                   ),
                 ),
                 Text(
-                  'You\'ve been mark present for CS101',
+                  'Attendance submitted for ${widget.courseTitle}',
+                  textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: screenHeight * .015,
                   ),
@@ -63,6 +114,69 @@ class _Face_VerifiedState extends State<Face_Verified> {
           ),
         );
       },
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStudent();
+  }
+
+  Future<void> _loadStudent() async {
+    try {
+      final s = await StudentSession.get(); // cached
+      if (!mounted) return;
+      setState(() {
+        _student = s;
+        _loadingStudent = false;
+        _studentError = null;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _studentError = e.toString();
+        _loadingStudent = false;
+      });
+    }
+  }
+
+  Map<String, dynamic>? _student;
+  bool _loadingStudent = true;
+  String? _studentError;
+
+  Widget _buildStudentInfoCard() {
+    if (_loadingStudent) {
+      return const SizedBox(
+        height: 60,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_studentError != null) {
+      return Text('Error: $_studentError');
+    }
+
+    final firstName = _student?['first_name']?.toString().trim();
+    final middleName = _student?['middle_name']?.toString().trim();
+    final lastName = _student?['last_name']?.toString().trim();
+
+    final middleInitial =
+    (middleName != null && middleName.isNotEmpty)
+        ? '${middleName[0].toUpperCase()}.'
+        : null;
+
+    final name = [
+      firstName,
+      middleInitial,
+      lastName,
+    ].where((e) => e != null && e!.isNotEmpty).join(' ');
+
+    final studentNo = '${_student?['student_number'] ?? '-'}';
+
+    return StudentInfoCard(
+      name: name.isEmpty ? '-' : name,
+      studentNo: studentNo,
     );
   }
 
@@ -80,17 +194,14 @@ class _Face_VerifiedState extends State<Face_Verified> {
               children: [
                 AttendlyBlueHeader(
                   onBack: false,
-                  courseTitle: 'Introduction to Human Computer Interaction',
-                  courseCode: 'CCS101',
-                  professor: 'Mr. Leviticio Dowell',
+                  courseTitle: widget.courseTitle,
+                  courseCode: widget.courseCode,
+                  professor: widget.professor,
                   icon: CupertinoIcons.book,
                   iconColor: const Color(0xFFFBD600),
                 ),
                 SizedBox(height: screenHeight * .023),
-                const StudentInfoCard(
-                  name: 'Alfred S. Valiente',
-                  studentNo: '20231599',
-                ),
+                _buildStudentInfoCard(),
                 SizedBox(height: screenHeight * .033),
               ],
             ),
@@ -175,12 +286,20 @@ class _Face_VerifiedState extends State<Face_Verified> {
                           builder: (_) => const Center(child: CircularProgressIndicator()),
                         );
 
-                        await Future.delayed(const Duration(seconds: 0)); // simulate API
+                        try {
+                          await _submitAttendance(); // ✅ DITO INSERT/UPSERT
+                          if (!mounted) return;
+                          Navigator.of(context).pop(); // close loading
 
-                        if (!mounted) return;
-                        Navigator.of(context).pop(); // close loading
+                          _showAttendanceSubmittedModal(); // show success
+                        } catch (e) {
+                          if (!mounted) return;
+                          Navigator.of(context).pop(); // close loading
 
-                        _showAttendanceSubmittedModal(); // show success
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Failed to submit attendance: $e')),
+                          );
+                        }
                       },
                       child: Row(
                         mainAxisSize: MainAxisSize.min,

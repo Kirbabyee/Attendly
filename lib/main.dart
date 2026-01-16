@@ -50,7 +50,6 @@ class MyApp extends StatelessWidget {
         '/history': (context) => History(),
         '/settings': (context) => Settings(),
         '/help': (context) => Help(),
-        '/face_verified': (context) => Face_Verified(),
         '/mainshell': (context) => Mainshell(),
         '/account_information': (context) => AccountInformation(),
         '/change_password': (context) => ChangePassword(),
