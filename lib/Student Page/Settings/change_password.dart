@@ -61,7 +61,9 @@ class _ChangePasswordState extends State<ChangePassword> {
   final TextEditingController _newPassword = TextEditingController();
   final TextEditingController _confirmPassword = TextEditingController();
 
-  bool showPassword = false;
+  bool _showCurrentPassword = false;
+  bool _showNewPassword = false;
+  bool _showConfirmPassword = false;
 
   @override
   Widget build(BuildContext context) {
@@ -188,7 +190,7 @@ class _ChangePasswordState extends State<ChangePassword> {
                             height: screenHeight * .061,
                             child: TextFormField(
                               controller: _currentPassword,
-                              obscureText: showPassword ? false : true,
+                              obscureText: _showCurrentPassword ? false : true,
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
                                   return 'Current password is required';
@@ -209,6 +211,14 @@ class _ChangePasswordState extends State<ChangePassword> {
                                 hintText: 'Enter current password',
                                 hintStyle: TextStyle(
                                   fontSize: screenHeight * .015,
+                                ),
+                                suffixIcon: IconButton(
+                                  icon: Icon(_showCurrentPassword ? Icons.visibility : Icons.visibility_off),
+                                  onPressed: () {
+                                    setState(() {
+                                      _showCurrentPassword = !_showCurrentPassword;
+                                    });
+                                  },
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
@@ -246,7 +256,7 @@ class _ChangePasswordState extends State<ChangePassword> {
                             height: screenHeight * .061,
                             child: TextFormField(
                               controller: _newPassword,
-                              obscureText: showPassword ? false : true,
+                              obscureText: _showNewPassword ? false : true,
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
                                   return 'New password is required';
@@ -267,6 +277,14 @@ class _ChangePasswordState extends State<ChangePassword> {
                                 hintText: 'Enter new password',
                                 hintStyle: TextStyle(
                                   fontSize: screenHeight * .015,
+                                ),
+                                suffixIcon: IconButton(
+                                  icon: Icon(_showNewPassword ? Icons.visibility : Icons.visibility_off),
+                                  onPressed: () {
+                                    setState(() {
+                                      _showNewPassword = !_showNewPassword;
+                                    });
+                                  },
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
@@ -304,7 +322,7 @@ class _ChangePasswordState extends State<ChangePassword> {
                             height: screenHeight * .061,
                             child: TextFormField(
                               controller: _confirmPassword,
-                              obscureText: showPassword ? false : true,
+                              obscureText: _showConfirmPassword ? false : true,
                               validator: (value) {
                                 if ((value == null || value.isEmpty) && !_newPassword.text.isEmpty) {
                                   return 'Please confirm your password';
@@ -323,6 +341,14 @@ class _ChangePasswordState extends State<ChangePassword> {
                                 contentPadding: EdgeInsets.all(screenHeight * .013), // Padding inside the inputbar
                                 filled: true,
                                 fillColor: Color(0x50D9D9D9),
+                                suffixIcon: IconButton(
+                                  icon: Icon(_showConfirmPassword ? Icons.visibility : Icons.visibility_off),
+                                  onPressed: () {
+                                    setState(() {
+                                      _showConfirmPassword = !_showConfirmPassword;
+                                    });
+                                  },
+                                ),
                                 hintText: 'Confirm new password',
                                 hintStyle: TextStyle(
                                   fontSize: screenHeight * .015,
@@ -350,32 +376,6 @@ class _ChangePasswordState extends State<ChangePassword> {
                           ),
                         ],
                       ),
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        SizedBox(width: 30,),
-                        Transform.scale(
-                          scale: .8,
-                          child: SizedBox(
-                            width: 23,
-                            child: Checkbox(
-                              value: showPassword,
-                              onChanged: (value) {
-                                setState(() {
-                                  showPassword = !showPassword;
-                                });
-                              }
-                            ),
-                          ),
-                        ),
-                        Text(
-                          'Show Password',
-                          style: TextStyle(
-                            fontSize: screenHeight * .015
-                          ),
-                        ),
-                      ],
                     ),
                     SizedBox(height: screenHeight * .013,),
                     ElevatedButton(
