@@ -28,10 +28,10 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
   // optional: local notif (Android usually shows system notif already if "notification" payload)
   // but safe if you rely on data-only messages
-  await NotificationsService.init();
+ /* await NotificationsService.init();
   final title = message.notification?.title ?? 'Attendly';
   final body = message.notification?.body ?? '';
-  await NotificationsService.show(title: title, body: body);
+  await NotificationsService.show(title: title, body: body);*/
 }
 
 Future<void> main() async {

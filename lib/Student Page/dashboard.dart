@@ -637,7 +637,7 @@ class _DashboardState extends State<Dashboard> {
                   ),
 
                   Container(
-                    margin: EdgeInsets.fromLTRB(screenWidth * .011, 0, 0, 10),
+                    margin: EdgeInsets.fromLTRB(screenWidth * .001, 0, 0, 10),
                     padding: const EdgeInsets.symmetric(vertical: 2),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(75),
@@ -1051,6 +1051,7 @@ class _DashboardState extends State<Dashboard> {
                       const Text(
                         'No classes yet. Join a class using the code.',
                         style: TextStyle(fontSize: 12, color: Colors.black54),
+                        textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 12),
                     ] else ...[

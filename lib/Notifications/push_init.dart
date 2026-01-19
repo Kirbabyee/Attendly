@@ -9,11 +9,11 @@ Future<void> initPush() async {
   await fcm.requestPermission(alert: true, badge: true, sound: true);
 
   // foreground messages
-  FirebaseMessaging.onMessage.listen((message) async {
+  /*FirebaseMessaging.onMessage.listen((message) async {
     final title = message.notification?.title ?? 'Attendly';
     final body = message.notification?.body ?? '';
     await NotificationsService.show(title: title, body: body);
-  });
+  });*/
 
   // token
   final token = await fcm.getToken();

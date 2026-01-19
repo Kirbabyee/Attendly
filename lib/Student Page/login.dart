@@ -4,7 +4,11 @@ import 'package:flutter_project_1/Student Page/face_registration.dart';
 import 'package:flutter_project_1/Student%20Page/dashboard.dart';
 import 'package:flutter_project_1/Student%20Page/mainshell.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../Notifications/push_manager.dart';
 import 'student_session.dart'; // adjust path kung nasaan file mo
+import 'dart:io';
+import 'package:firebase_messaging/firebase_messaging.dart';
+
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -14,6 +18,27 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
+  Future<void> _attachDeviceTokenToUser(String uid, {required bool enabled}) async {
+    // ✅ if disabled, ensure no tokens for this user and stop
+    if (!enabled) {
+      await supabase.from('device_tokens').delete().eq('user_id', uid);
+      return;
+    }
+
+    final token = await FirebaseMessaging.instance.getToken();
+    if (token == null || token.isEmpty) return;
+
+    // remove token from any previous user (multi-account)
+    await supabase.from('device_tokens').delete().eq('token', token);
+
+    await supabase.from('device_tokens').upsert({
+      'user_id': uid,
+      'token': token,
+      'platform': Platform.isAndroid ? 'android' : 'ios',
+      'updated_at': DateTime.now().toUtc().toIso8601String(),
+    }, onConflict: 'user_id,token');
+  }
+
   final supabase = Supabase.instance.client;
 
   bool showPassword = true;
@@ -331,7 +356,7 @@ class _LoginState extends State<Login> {
                           // To check if the account is for student
                           final studentRow = await supabase
                               .from('students')
-                              .select('id')
+                              .select('id, push_enabled')
                               .eq('id', uid)
                               .maybeSingle();
 
@@ -348,8 +373,13 @@ class _LoginState extends State<Login> {
                             return;
                           }
 
+                          final pushEnabled = (studentRow['push_enabled'] as bool?) ?? false;
+                          await _attachDeviceTokenToUser(uid, enabled: pushEnabled);
                           StudentSession.clear();
                           await StudentSession.get(force: true);
+
+                          await PushManager.initListenersOnce();
+                          await PushManager.syncFromDb();
 
                           if (!mounted) return;
                           Navigator.pop(context);

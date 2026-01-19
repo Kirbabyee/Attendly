@@ -1,9 +1,11 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_project_1/Student%20Page/login.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../Notifications/push_init.dart';
 import '../../Notifications/push_manager.dart';
+import '../../main.dart';
 import '../../widgets/push_notification.dart';
 import '../student_session.dart';
 import 'privacy_policy.dart';
@@ -19,8 +21,10 @@ class _SettingsState extends State<Settings> {
   @override
   void initState() {
     super.initState();
-    _loadStudent();
+    _loadStudent(force: true);
   }
+  bool _notifBusy = false;
+
 
   Map<String, dynamic>? _student;
   bool _loadingStudent = true;
@@ -38,12 +42,13 @@ class _SettingsState extends State<Settings> {
 
       setState(() {
         _student = s;
-
         // ✅ SYNC switch with DB value
-        isOn = (s?['push_enabled'] as bool?) ?? false;
-
+        isNotificationOn = (s?['push_enabled'] as bool?) ?? false;
         _loadingStudent = false;
       });
+
+      await PushManager.syncFromDb();
+
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -54,7 +59,7 @@ class _SettingsState extends State<Settings> {
   }
 
 
-  bool isOn = false;
+  bool isNotificationOn = false;
 
   String termOfService = 'Welcome to Attendly. By accessing or using the Attendly system, you agree to comply with and be bound by the following Terms of Service. If you do not agree with these terms, please refrain from using the system.\n'
   '\nAttendly is an attendance monitoring system designed for academic use. The system verifies attendance through network-based detection, hardware-assisted presence validation, and biometric face verification. Users are expected to use the system solely for its intended educational purpose.\n'
@@ -102,8 +107,6 @@ class _SettingsState extends State<Settings> {
 
   @override
   Widget build(BuildContext context) {
-    bool _notifBusy = false;
-
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
@@ -258,8 +261,9 @@ class _SettingsState extends State<Settings> {
                                 Transform.scale(
                                   scale: screenHeight * .001,
                                   child: Switch(
-                                    value: isOn,
-                                    onChanged: (value) async {
+                                    activeTrackColor: Color(0xFF004280),
+                                    value: isNotificationOn,
+                                    onChanged: _notifBusy ? null : (value) async {
                                       // 1️⃣ confirm muna
                                       final ok = await showDialog<bool>(
                                         context: context,
@@ -286,24 +290,27 @@ class _SettingsState extends State<Settings> {
                                       );
                                       if (ok != true) return;
 
-                                      final prev = isOn;
-                                      setState(() => isOn = value);
+                                      final prev = isNotificationOn;
+                                      setState(() {
+                                        _notifBusy = true;
+                                        isNotificationOn = value;
+                                      });
 
                                       final studentId = _student?['id']?.toString();
                                       if (studentId == null) return;
 
                                       try {
-                                        await PushManager.enableAndRegisterToken(
-                                          userId: studentId,
-                                          enabled: value,
-                                        );
+                                        await PushManager.setEnabled(enabled: value); // ✅ DB truth
+                                        await _loadStudent(force: true); // ✅ refresh UI from DB
+                                        print(await FirebaseMessaging.instance.getToken());
                                       } catch (e) {
-                                        // revert if failed
                                         if (!mounted) return;
-                                        setState(() => isOn = prev);
+                                        setState(() => isNotificationOn = prev);
                                         ScaffoldMessenger.of(context).showSnackBar(
                                           SnackBar(content: Text('Failed to update notifications: $e')),
                                         );
+                                      } finally {
+                                        if (mounted) setState(() => _notifBusy = false);
                                       }
                                     },
                                   )
@@ -667,6 +674,7 @@ class _SettingsState extends State<Settings> {
 
                         try {
                           // ✅ ito na yung tunay na “delay”
+                          try { await FirebaseMessaging.instance.deleteToken(); } catch (_) {}
                           await Supabase.instance.client.auth.signOut();
                           StudentSession.clear();
 

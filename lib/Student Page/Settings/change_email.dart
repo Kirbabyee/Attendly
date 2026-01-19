@@ -1,5 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ChangeEmail extends StatefulWidget {
   final String currentEmail;
@@ -14,11 +18,16 @@ class ChangeEmail extends StatefulWidget {
 }
 
 class _ChangeEmailState extends State<ChangeEmail> {
+  final supabase = Supabase.instance.client;
+
   // step control
   int step = 1;
 
   bool showPassword = false;
   bool saving = false;
+  bool _checkingPw = false;
+
+  String? _pwError;
 
   final _pwFormKey = GlobalKey<FormState>();
   final _emailFormKey = GlobalKey<FormState>();
@@ -35,6 +44,11 @@ class _ChangeEmailState extends State<ChangeEmail> {
     super.dispose();
   }
 
+  void _toast(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+
   Future<void> _showSuccess() async {
     await showDialog(
       context: context,
@@ -42,17 +56,98 @@ class _ChangeEmailState extends State<ChangeEmail> {
       builder: (_) => AlertDialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: Column(
-          children: [
-            Icon(Icons.check_circle_outline, color: Colors.green, size: 60,),
-          ],
+        title: const Icon(Icons.check_circle_outline, color: Colors.green, size: 60),
+        content: const Text(
+          'Your email has been changed successfully.',
+          textAlign: TextAlign.center,
         ),
-        content: const Text('Your email has been changed successfully.', textAlign: TextAlign.center,),
       ),
     );
   }
 
-  InputDecoration _input(String hint, {Widget? suffix}) {
+  // ✅ Step 1: check password
+  Future<void> _checkCurrentPassword() async {
+    final userId = supabase.auth.currentUser?.id;
+    if (userId == null) throw Exception("Not logged in");
+
+    final pw = _passwordController.text.trim();
+    if (pw.isEmpty) throw Exception("Password is required");
+
+    final res = await supabase.functions.invoke(
+      'student-check-password',
+      body: {
+        'student_id': userId,
+        'current_password': pw,
+      },
+    );
+
+    if (res.status != 200) {
+      final msg = (res.data is Map ? (res.data['message'] ?? res.data['error']) : null)
+          ?? 'Incorrect current password';
+      throw Exception(msg);
+    }
+  }
+
+  // ✅ Step 2: send otp to new email
+  Future<void> _sendOtpToNewEmail(String newEmail) async {
+    final userId = supabase.auth.currentUser?.id;
+    if (userId == null) throw Exception("Not logged in");
+
+    final res = await supabase.functions.invoke(
+      'student-change-email-otp',
+      body: {
+        'student_id': userId,
+        'new_email': newEmail,
+      },
+    );
+
+    if (res.status != 200) {
+      final msg = (res.data is Map ? (res.data['message'] ?? res.data['error']) : null)
+          ?? 'Failed to send OTP';
+      throw Exception(msg);
+    }
+  }
+
+  // ✅ verify otp + update students table only
+  Future<void> _verifyOtpAndChangeStudentsEmail(String otp) async {
+    final userId = supabase.auth.currentUser?.id;
+    if (userId == null) throw Exception("Not logged in");
+
+    final res = await supabase.functions.invoke(
+      'student-change-email-otp-verify',
+      body: {
+        'student_id': userId,
+        'otp': otp,
+      },
+    );
+
+    if (res.status != 200) {
+      final msg = (res.data is Map ? (res.data['message'] ?? res.data['error']) : null)
+          ?? 'OTP verification failed';
+      throw Exception(msg);
+    }
+  }
+
+  Future<bool> _showOtpModal({
+    required String email,
+    required Future<void> Function() onResend,
+    required Future<void> Function(String otp) onVerify,
+    int cooldownSeconds = 60,
+  }) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => _OtpDialog(
+        email: email,
+        cooldownSeconds: cooldownSeconds,
+        onResend: onResend,
+        onVerify: onVerify,
+      ),
+    );
+    return ok == true;
+  }
+
+  InputDecoration _input(String hint, {Widget? suffix, String? errorText}) {
     return InputDecoration(
       hintText: hint,
       hintStyle: const TextStyle(fontSize: 12),
@@ -63,6 +158,7 @@ class _ChangeEmailState extends State<ChangeEmail> {
         borderRadius: BorderRadius.circular(8),
         borderSide: BorderSide.none,
       ),
+      errorText: errorText, // ✅ null = no error
       suffixIcon: suffix,
     );
   }
@@ -101,17 +197,10 @@ class _ChangeEmailState extends State<ChangeEmail> {
                     children: [
                       Text(
                         'Change Email',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white,
-                          fontSize: 15,
-                        ),
+                        style: TextStyle(fontWeight: FontWeight.w500, color: Colors.white, fontSize: 15),
                       ),
                       SizedBox(height: 6),
-                      Text(
-                        'Manage your email',
-                        style: TextStyle(fontSize: 11, color: Colors.white),
-                      ),
+                      Text('Manage your email', style: TextStyle(fontSize: 11, color: Colors.white)),
                     ],
                   ),
                 ],
@@ -135,7 +224,7 @@ class _ChangeEmailState extends State<ChangeEmail> {
                     },
                     icon: const Icon(CupertinoIcons.arrow_left),
                   ),
-                  Text(step == 1 ? 'Back' : 'Back to password'),
+                  Text('Back'),
                 ],
               ),
             ),
@@ -153,9 +242,7 @@ class _ChangeEmailState extends State<ChangeEmail> {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(8),
-                      boxShadow: const [
-                        BoxShadow(color: Colors.black26, blurRadius: 2, offset: Offset(0, 5)),
-                      ],
+                      boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 2, offset: Offset(0, 5))],
                     ),
                     child: step == 1 ? _passwordStep() : _emailStep(),
                   ),
@@ -173,17 +260,9 @@ class _ChangeEmailState extends State<ChangeEmail> {
 
     return Column(
       children: [
-        const Text(
-          'Confirm your password',
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-          textAlign: TextAlign.center,
-        ),
+        const Text('Confirm your password', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
         const SizedBox(height: 6),
-        const Text(
-          'For security, enter your password to continue.',
-          style: TextStyle(fontSize: 12),
-          textAlign: TextAlign.center,
-        ),
+        const Text('For security, enter your password to continue.', style: TextStyle(fontSize: 12), textAlign: TextAlign.center),
         const SizedBox(height: 18),
 
         Form(
@@ -191,14 +270,18 @@ class _ChangeEmailState extends State<ChangeEmail> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Password', style: TextStyle(fontSize: 12)),
+              Text('Password', style: TextStyle(fontSize: 12)),
               const SizedBox(height: 6),
               TextFormField(
                 controller: _passwordController,
                 obscureText: !showPassword,
                 style: const TextStyle(fontSize: 12),
+                onChanged: (_) {
+                  if (_pwError != null) setState(() => _pwError = null);
+                },
                 decoration: _input(
                   'Enter your password',
+                  errorText: _pwError, // ✅ only shows when server says incorrect
                   suffix: IconButton(
                     onPressed: () => setState(() => showPassword = !showPassword),
                     icon: Icon(showPassword ? Icons.visibility : Icons.visibility_off, size: 18),
@@ -226,13 +309,32 @@ class _ChangeEmailState extends State<ChangeEmail> {
               side: BorderSide.none,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
-            onPressed: () {
-              if (_pwFormKey.currentState!.validate()) {
-                // In real app: reauthenticate here
+            onPressed: _checkingPw
+                ? null
+                : () async {
+              if (!_pwFormKey.currentState!.validate()) return;
+
+              setState(() {
+                _checkingPw = true;
+                _pwError = null;
+              });
+
+              try {
+                await _checkCurrentPassword(); // ✅ server validates
+
+                if (!mounted) return;
                 setState(() => step = 2);
+              } catch (e) {
+                final msg = e.toString().replaceFirst('Exception: ', '');
+                if (!mounted) return;
+                setState(() => _pwError = msg);
+              } finally {
+                if (mounted) setState(() => _checkingPw = false);
               }
             },
-            child: const Text('Next', style: TextStyle(color: Colors.white)),
+            child: _checkingPw
+                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                : const Text('Next', style: TextStyle(color: Colors.white)),
           ),
         ),
       ],
@@ -244,17 +346,9 @@ class _ChangeEmailState extends State<ChangeEmail> {
 
     return Column(
       children: [
-        const Text(
-          'Enter your new email',
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-          textAlign: TextAlign.center,
-        ),
+        const Text('Enter your new email', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
         const SizedBox(height: 6),
-        const Text(
-          'Make sure you can access this email.',
-          style: TextStyle(fontSize: 12),
-          textAlign: TextAlign.center,
-        ),
+        const Text('Make sure you can access this email.', style: TextStyle(fontSize: 12), textAlign: TextAlign.center),
         const SizedBox(height: 18),
 
         Form(
@@ -274,6 +368,9 @@ class _ChangeEmailState extends State<ChangeEmail> {
                   if (v.isEmpty) return 'Email is required';
                   final emailOk = RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(v);
                   if (!emailOk) return 'Enter a valid email';
+                  if (v.toLowerCase() == widget.currentEmail.trim().toLowerCase()) {
+                    return 'New email must be different';
+                  }
                   return null;
                 },
               ),
@@ -288,8 +385,10 @@ class _ChangeEmailState extends State<ChangeEmail> {
                 decoration: _input('Re-enter new email'),
                 validator: (value) {
                   final v = (value ?? '').trim();
-                  if (v.isEmpty && !_newEmailController.text.trim().isEmpty) return 'Confirm your email';
-                  if (v != _newEmailController.text.trim()) return 'Emails do not match';
+                  if (v.isEmpty) return 'Confirm your email';
+                  if (v.trim().toLowerCase() != _newEmailController.text.trim().toLowerCase()) {
+                    return 'Emails do not match';
+                  }
                   return null;
                 },
               ),
@@ -313,38 +412,266 @@ class _ChangeEmailState extends State<ChangeEmail> {
                 : () async {
               if (!_emailFormKey.currentState!.validate()) return;
 
+              final newEmail = _newEmailController.text.trim().toLowerCase();
+
               setState(() => saving = true);
+              try {
+                // 1) send otp to NEW EMAIL
+                await _sendOtpToNewEmail(newEmail);
 
-              // simulate update call
-              await Future.delayed(const Duration(milliseconds: 700));
+                if (!mounted) return;
 
-              if (!mounted) return;
-              setState(() => saving = false);
+                // 2) OTP modal
+                final verified = await _showOtpModal(
+                  email: newEmail,
+                  cooldownSeconds: 60,
+                  onResend: () => _sendOtpToNewEmail(newEmail),
+                  onVerify: (otp) => _verifyOtpAndChangeStudentsEmail(otp),
+                );
 
-              await _showSuccess();
-              if (!mounted) return;
-              Navigator.pop(context, _newEmailController.text.trim());
+                if (!mounted) return;
+                if (!verified) return;
+
+                await _showSuccess();
+                if (!mounted) return;
+
+                // ✅ return new email to caller (AccountInformation)
+                Navigator.pop(context, newEmail);
+              } catch (e) {
+                _toast(e.toString().replaceFirst('Exception: ', ''));
+              } finally {
+                if (mounted) setState(() => saving = false);
+              }
             },
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (saving) ...[
-                  const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                  ),
+                  const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
                   const SizedBox(width: 10),
                 ],
-                Text(
-                  saving ? 'Saving...' : 'Update Email',
-                  style: const TextStyle(color: Colors.white),
-                ),
+                Text(saving ? 'Saving...' : 'Update Email', style: const TextStyle(color: Colors.white)),
               ],
             ),
           ),
         ),
       ],
+    );
+  }
+}
+
+String? _otpError; // ✅ show warning + red border
+
+class _OtpDialog extends StatefulWidget {
+  final String email;
+  final int cooldownSeconds;
+  final Future<void> Function() onResend;
+  final Future<void> Function(String otp) onVerify;
+
+  const _OtpDialog({
+    required this.email,
+    required this.cooldownSeconds,
+    required this.onResend,
+    required this.onVerify,
+  });
+
+  @override
+  State<_OtpDialog> createState() => _OtpDialogState();
+}
+
+class _OtpDialogState extends State<_OtpDialog> {
+  final _otp = TextEditingController();
+  Timer? _t;
+  int _left = 0;
+
+  bool _verifying = false;
+  bool _resending = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _startCooldown(widget.cooldownSeconds);
+  }
+
+  @override
+  void dispose() {
+    _t?.cancel();
+    _otp.dispose();
+    super.dispose();
+  }
+
+  void _startCooldown(int seconds) {
+    _t?.cancel();
+    setState(() => _left = seconds);
+    _t = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) return;
+      if (_left <= 1) {
+        timer.cancel();
+        setState(() => _left = 0);
+      } else {
+        setState(() => _left -= 1);
+      }
+    });
+  }
+
+  String get _otpValue => _otp.text.trim();
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Enter OTP', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+            const SizedBox(height: 8),
+            const Text(
+              'We sent a 6-digit OTP to your email.\nPlease enter it below.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 12),
+            ),
+            const SizedBox(height: 14),
+
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: _otpError == null ? const Color(0xFFEAEAEA) : const Color(0xFFFFE5E5),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: _otpError == null ? Colors.transparent : Colors.red,
+                  width: 1,
+                ),
+              ),
+              child: TextField(
+                controller: _otp,
+                keyboardType: TextInputType.number,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 18,
+                  letterSpacing: 6,
+                  fontWeight: FontWeight.w600,
+                ),
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(6),
+                ],
+                onChanged: (_) {
+                  if (_otpError != null) setState(() => _otpError = null);
+                },
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  hintText: '000000',
+                ),
+              ),
+            ),
+            if (_otpError != null) ...[
+              const SizedBox(height: 5),
+              Row(
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.red, size: 16),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'Invalid OTP',
+                      style: const TextStyle(color: Colors.red, fontSize: 12, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+
+
+            const SizedBox(height: 14),
+
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.black87,
+                      side: const BorderSide(color: Color(0xFFDDDDDD)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    onPressed: _verifying ? null : () => Navigator.pop(context, false),
+                    child: const Text('Cancel'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF004280),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      elevation: 0,
+                    ),
+                    onPressed: (_verifying || _otpValue.length != 6)
+                        ? null
+                        : () async {
+                      setState(() => _verifying = true);
+                      try {
+                        await widget.onVerify(_otpValue);
+                        if (!mounted) return;
+                        Navigator.pop(context, true);
+                      } catch (e) {
+                        final msg = e.toString().replaceFirst('Exception: ', '');
+
+                        if (!mounted) return;
+                        setState(() => _otpError = msg.isEmpty ? 'Invalid OTP' : msg);
+
+                        // optional: haptic feedback
+                        HapticFeedback.mediumImpact();
+                      } finally {
+                        if (mounted) setState(() => _verifying = false);
+                      }
+                    },
+                    child: _verifying
+                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : const Text('Verify', style: TextStyle(color: Colors.white)),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 10),
+
+            InkWell(
+              onTap: (_left > 0 || _resending)
+                  ? null
+                  : () async {
+                setState(() => _resending = true);
+                try {
+                  await widget.onResend();
+                  if (!mounted) return;
+                  _startCooldown(widget.cooldownSeconds);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('OTP resent. Please check your email.')));
+                } catch (e) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+                  );
+                } finally {
+                  if (mounted) setState(() => _resending = false);
+                }
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Text(
+                  _left > 0 ? 'Resend OTP (${_left}s)' : 'Resend OTP',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: (_left > 0) ? Colors.grey : const Color(0xFF004280),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
