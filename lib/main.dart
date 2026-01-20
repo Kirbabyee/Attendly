@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_project_1/Student%20Page/mainshell.dart';
+import 'package:flutter_project_1/Student%20Page/terms_and_conditions.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:flutter_project_1/Student Page/login.dart';
@@ -69,6 +70,7 @@ class MyApp extends StatelessWidget {
         '/change_password': (context) => ChangePassword(),
         '/forgot_password': (context) => ForgotPassword(),
         '/new_password': (context) => NewPassword(),
+        '/terms_conditions': (context) => TermsAndConditionsPage(),
       },
     );
   }
