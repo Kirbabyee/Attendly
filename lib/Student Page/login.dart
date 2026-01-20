@@ -1,10 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_project_1/Student Page/face_registration.dart';
 import 'package:flutter_project_1/Student%20Page/dashboard.dart';
 import 'package:flutter_project_1/Student%20Page/mainshell.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../Notifications/push_manager.dart';
 import 'student_session.dart'; // adjust path kung nasaan file mo
 import 'dart:io';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -18,25 +19,37 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
-  Future<void> _attachDeviceTokenToUser(String uid, {required bool enabled}) async {
-    // ✅ if disabled, ensure no tokens for this user and stop
-    if (!enabled) {
-      await supabase.from('device_tokens').delete().eq('user_id', uid);
-      return;
-    }
+  bool _locked = false;
+  int _lockSeconds = 0;
+  Timer? _lockTimer;
 
-    final token = await FirebaseMessaging.instance.getToken();
-    if (token == null || token.isEmpty) return;
+  void _startLock(int seconds) {
+    _lockTimer?.cancel();
+    setState(() {
+      _locked = true;
+      _lockSeconds = seconds;
+    });
 
-    // remove token from any previous user (multi-account)
-    await supabase.from('device_tokens').delete().eq('token', token);
+    _lockTimer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (!mounted) return;
+      if (_lockSeconds <= 1) {
+        t.cancel();
+        setState(() {
+          _locked = false;
+          _lockSeconds = 0;
+        });
+      } else {
+        setState(() => _lockSeconds -= 1);
+      }
+    });
+  }
 
-    await supabase.from('device_tokens').upsert({
-      'user_id': uid,
-      'token': token,
-      'platform': Platform.isAndroid ? 'android' : 'ios',
-      'updated_at': DateTime.now().toUtc().toIso8601String(),
-    }, onConflict: 'user_id,token');
+  @override
+  void dispose() {
+    _lockTimer?.cancel();
+    _studentNoController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
   final supabase = Supabase.instance.client;
@@ -46,13 +59,6 @@ class _LoginState extends State<Login> {
 
   final _studentNoController = TextEditingController();
   final _passwordController = TextEditingController();
-
-  @override
-  void dispose() {
-    _studentNoController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
 
   String? _loginError;
 
@@ -301,7 +307,7 @@ class _LoginState extends State<Login> {
                             borderRadius: BorderRadiusGeometry.circular(6)
                         )
                       ),
-                      onPressed: () async {
+                      onPressed: _locked ? null : () async {
                         if (!_formKey.currentState!.validate()) return;
 
                         setState(() {
@@ -337,7 +343,7 @@ class _LoginState extends State<Login> {
                         );
 
                         try {
-                          final studentNo = _studentNoController.text.trim().toLowerCase();
+                          final studentNo = _studentNoController.text.trim();
                           final password = _passwordController.text;
 
                           // example mapping: studentNo -> email
@@ -373,13 +379,18 @@ class _LoginState extends State<Login> {
                             return;
                           }
 
-                          final pushEnabled = (studentRow['push_enabled'] as bool?) ?? false;
-                          await _attachDeviceTokenToUser(uid, enabled: pushEnabled);
+                          // ✅ reset attempts on successful login
+                          try {
+                            await supabase.functions.invoke(
+                              'student-login-reset',
+                              body: {'user_id': uid},
+                            );
+                          } catch (_) {
+                            // ignore
+                          }
+
                           StudentSession.clear();
                           await StudentSession.get(force: true);
-
-                          await PushManager.initListenersOnce();
-                          await PushManager.syncFromDb();
 
                           if (!mounted) return;
                           Navigator.pop(context);
@@ -388,15 +399,32 @@ class _LoginState extends State<Login> {
                           if (!mounted) return;
                           Navigator.pop(context);
 
-                          final msg = e.message.toLowerCase();
-
                           setState(() {
                             _loginError = 'Invalid student number or password';
                           });
-
-                          // force redraw + show red text immediately
                           _formKey.currentState!.validate();
-                        } catch (e) {
+
+                          // ✅ call edge function to increment attempts + email user
+                          try {
+                            final studentNo = _studentNoController.text.trim();
+
+                            final resp = await supabase.functions.invoke(
+                              'student-login-guard',
+                              body: {'student_number': studentNo},
+                            );
+
+                            final data = Map<String, dynamic>.from(resp.data ?? {});
+                            final locked = data['locked'] == true;
+                            final lockSeconds = (data['lock_seconds'] as num?)?.toInt() ?? 0;
+
+                            if (locked && lockSeconds > 0) {
+                              _startLock(lockSeconds); // disable button + countdown
+                            }
+                          } catch (_) {
+                            // ignore: anti-enumeration safe
+                          }
+                        }
+                        catch (e) {
                           if (!mounted) return;
                           Navigator.pop(context);
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -405,7 +433,7 @@ class _LoginState extends State<Login> {
                         }
                       },
                       child: Text(
-                        'Sign In',
+                        _locked ? 'Locked ($_lockSeconds s)' : 'Sign In',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: screenHeight * .017

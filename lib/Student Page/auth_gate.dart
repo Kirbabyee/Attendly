@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../Notifications/push_manager.dart';
 import 'student_session.dart';
 
 import '../main.dart'; // LandingPage
@@ -123,7 +122,6 @@ class _AuthGateState extends State<AuthGate> with SingleTickerProviderStateMixin
 
     if (_pushReady) return;
 
-    await PushManager.initListenersOnce();
     _pushReady = true;
   }
 

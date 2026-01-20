@@ -3,8 +3,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_project_1/Student%20Page/login.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../Notifications/push_init.dart';
-import '../../Notifications/push_manager.dart';
 import '../../main.dart';
 import '../../widgets/push_notification.dart';
 import '../student_session.dart';
@@ -47,7 +45,6 @@ class _SettingsState extends State<Settings> {
         _loadingStudent = false;
       });
 
-      await PushManager.syncFromDb();
 
     } catch (e) {
       if (!mounted) return;
@@ -300,7 +297,6 @@ class _SettingsState extends State<Settings> {
                                       if (studentId == null) return;
 
                                       try {
-                                        await PushManager.setEnabled(enabled: value); // ✅ DB truth
                                         await _loadStudent(force: true); // ✅ refresh UI from DB
                                         print(await FirebaseMessaging.instance.getToken());
                                       } catch (e) {
@@ -674,7 +670,6 @@ class _SettingsState extends State<Settings> {
 
                         try {
                           // ✅ ito na yung tunay na “delay”
-                          try { await FirebaseMessaging.instance.deleteToken(); } catch (_) {}
                           await Supabase.instance.client.auth.signOut();
                           StudentSession.clear();
 

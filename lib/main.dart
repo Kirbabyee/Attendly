@@ -17,8 +17,6 @@ import 'package:flutter_project_1/Student%20Page/History/history.dart';
 import 'package:flutter_project_1/Student%20Page/Settings/settings.dart';
 import 'package:flutter_project_1/Student%20Page/forgot_password.dart';
 import 'package:flutter_project_1/Student%20Page/new_password.dart';
-
-import 'Notifications/notification_service.dart';
 import 'Student Page/auth_gate.dart';
 import 'firebase_options.dart';
 
@@ -36,13 +34,6 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  await NotificationsService.init();
-
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   await Supabase.initialize(
     url: 'https://ucfundmbawljngzowzgd.supabase.co',
