@@ -576,7 +576,7 @@ class _OtpDialogState extends State<_OtpDialog> {
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
-                      'Invalid OTP',
+                      '$_otpError',
                       style: const TextStyle(color: Colors.red, fontSize: 12, fontWeight: FontWeight.w600),
                     ),
                   ),
