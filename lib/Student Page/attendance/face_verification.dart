@@ -43,6 +43,136 @@ class Face_Verification extends StatefulWidget {
 }
 
 class _Face_VerificationState extends State<Face_Verification> {
+  bool _checkingAttendance = false;
+  bool _alreadySubmitted = false;
+  bool _alreadyModalShown = false;
+
+  Future<void> _checkAlreadySubmitted() async {
+    if (_checkingAttendance) return;
+    if (_student == null) return;
+
+    final studentId = _student?['id']?.toString();
+    if (studentId == null || studentId.isEmpty) return;
+
+    setState(() => _checkingAttendance = true);
+
+    try {
+      final res = await Supabase.instance.client
+          .from('attendance')
+          .select('id, status, time_in, created_at')
+          .eq('session_id', widget.classSessionId)
+          .eq('student_id', studentId)
+          .limit(1)
+          .maybeSingle();
+
+      if (!mounted) return;
+
+      if (res != null) {
+        _alreadySubmitted = true;
+
+        // show modal once (after build)
+        if (!_alreadyModalShown) {
+          _alreadyModalShown = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            _showAlreadySubmittedModal();
+          });
+        }
+      }
+    } catch (_) {
+      // optional: ignore or show snackbar
+    } finally {
+      if (mounted) setState(() => _checkingAttendance = false);
+    }
+  }
+
+  Future<void> _showAlreadySubmittedModal() async {
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        backgroundColor: Colors.white, // ✅ white background
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
+        contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+        actionsPadding: const EdgeInsets.only(bottom: 12),
+
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ✅ Green check icon
+            Container(
+              width: 56,
+              height: 56,
+              decoration: const BoxDecoration(
+                color: Color(0xFFE6F4EA), // light green bg
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.check_circle,
+                color: Color(0xFF2E7D32),
+                size: 36,
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // ✅ Title
+            const Text(
+              'Attendance Submitted',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.black,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            // ✅ Message
+            const Text(
+              'You already submitted your attendance.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.black54,
+              ),
+            ),
+          ],
+        ),
+
+        actions: [
+          Center(
+            child: SizedBox(
+              width: 120,
+              height: 40,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2E7D32),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.of(context).pop(); // close dialog
+                  Navigator.of(context).pop(); // balik sa previous page
+                },
+                child: const Text(
+                  'OK',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
   Future<void> _goToNextPageWithLoading() async {
     if (_navigated) return;
     _navigated = true;
@@ -118,6 +248,9 @@ class _Face_VerificationState extends State<Face_Verification> {
         _student = s;
         _loadingStudent = false;
       });
+
+      // ✅ check attendance after student is loaded
+      await _checkAlreadySubmitted();
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -450,6 +583,14 @@ class _Face_VerificationState extends State<Face_Verification> {
                           ),
                         ),
                         onPressed: () async {
+                          if (_alreadySubmitted) {
+                            if (!_alreadyModalShown) {
+                              _alreadyModalShown = true;
+                              _showAlreadySubmittedModal();
+                            }
+                            return;
+                          }
+
                           if (_controller == null) {
                             await _startCamera();
                           }

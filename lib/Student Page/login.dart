@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_project_1/Student Page/face_registration.dart';
 import 'package:flutter_project_1/Student%20Page/dashboard.dart';
 import 'package:flutter_project_1/Student%20Page/mainshell.dart';
+import 'package:flutter_project_1/Student%20Page/two_fa_verification.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'student_session.dart'; // adjust path kung nasaan file mo
 import 'dart:io';
@@ -362,7 +363,7 @@ class _LoginState extends State<Login> {
                           // To check if the account is for student
                           final studentRow = await supabase
                               .from('students')
-                              .select('id, terms_conditions')
+                              .select('id, terms_conditions, two_fa_enabled, email')
                               .eq('id', uid)
                               .maybeSingle();
 
@@ -392,22 +393,72 @@ class _LoginState extends State<Login> {
                           StudentSession.clear();
                           await StudentSession.get(force: true);
 
-                          final raw = studentRow?['terms_conditions'];
-                          final terms = (raw is num) ? raw.toInt() : int.tryParse('$raw') ?? 0;
+                          // ✅ close loading dialog ONCE
+                          if (mounted) Navigator.pop(context);
 
-                          if (!mounted) return;
-                          if (terms != 1) {
-                            Navigator.of(context).pushNamedAndRemoveUntil(
-                              '/terms_conditions',
-                                  (route) => false,
+                          final rawTerms = studentRow['terms_conditions'];
+                          final terms = (rawTerms is num) ? rawTerms.toInt() : int.tryParse('$rawTerms') ?? 0;
+
+                          final twoFA = (studentRow['two_fa_enabled'] == true);
+                          final emailReal = (studentRow['email'] ?? '').toString().trim();
+
+                          // fallback kung sakaling walang email sa table
+                          final emailToUse = emailReal.isNotEmpty ? emailReal : email;
+
+                          // ✅ 2FA flow
+                          if (twoFA) {
+                            // 1) send OTP using email
+                            try {
+                              final res = await supabase.functions.invoke(
+                                'send-2fa-otp',
+                                body: {'email': emailToUse},
+                              );
+
+                              debugPrint(res.data);
+                            } catch (_) {
+                              // ok lang, user can resend inside modal
+                            }
+
+                            // 2) open OTP modal
+                            final verified = await TwoFAVerificationPage.open(
+                              context,
+                              email: emailToUse,
+                              resendSeconds: 60,
+                              onResend: () async {
+                                await supabase.functions.invoke(
+                                  'send-2fa-otp',
+                                  body: {'email': emailToUse},
+                                );
+                              },
+                              onVerify: (otp) async {
+                                final resp = await supabase.functions.invoke(
+                                  'verify-2fa-otp',
+                                  body: {'email': emailToUse, 'otp': otp},
+                                );
+
+                                final data = Map<String, dynamic>.from(resp.data ?? {});
+                                return data['verified'] == true; // ✅
+                              },
                             );
+
+                            if (!mounted) return;
+
+                            // cancel / failed
+                            if (verified != true) {
+                              await supabase.auth.signOut();
+                              StudentSession.clear();
+                              Navigator.of(context).pushNamedAndRemoveUntil('/login', (r) => false);
+                              return;
+                            }
+                          }
+
+                          // ✅ terms after 2FA
+                          if (terms != 1) {
+                            Navigator.of(context).pushNamedAndRemoveUntil('/terms_conditions', (r) => false);
                             return;
                           }
 
-                          Navigator.of(context).pushNamedAndRemoveUntil(
-                            '/mainshell',
-                                (route) => false,
-                          );
+                          Navigator.of(context).pushNamedAndRemoveUntil('/face_registration', (r) => false);
                           return;
                         } on AuthException catch (e) {
                           if (!mounted) return;

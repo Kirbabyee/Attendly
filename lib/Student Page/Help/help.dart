@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'FAQs.dart';
 
 class Help extends StatefulWidget {
@@ -10,6 +11,89 @@ class Help extends StatefulWidget {
 }
 
 class _HelpState extends State<Help> {
+  Future<void> _showSuccessModal() async {
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: const Text(
+          'Request Submitted',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+        content: const Text(
+          'Your support request has been successfully submitted.\n\n'
+              'Our support team will review your concern and get back to you as soon as possible.',
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF004280),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  final _subjectCtrl = TextEditingController();
+  final _messageCtrl = TextEditingController();
+
+  bool _sending = false;
+
+  @override
+  void dispose() {
+    _subjectCtrl.dispose();
+    _messageCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submitSupportRequest() async {
+    final subject = _subjectCtrl.text.trim();
+    final message = _messageCtrl.text.trim();
+
+    if (subject.isEmpty || message.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill in subject and message.')),
+      );
+      return;
+    }
+
+    setState(() => _sending = true);
+
+    try {
+      final supabase = Supabase.instance.client;
+      final uid = supabase.auth.currentUser?.id;      // if you store professor_id = auth uid
+      final email = supabase.auth.currentUser?.email; // optional
+
+      await supabase.from('support_requests').insert({
+        'user_id': uid, // nullable okay
+        'email': email,
+        'subject': subject,
+        'message': message,
+        'status': 'open',
+      });
+
+      if (!mounted) return;
+
+      _subjectCtrl.clear();
+      _messageCtrl.clear();
+
+      await _showSuccessModal();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to submit request: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
+  }
+
 
   int expandedIndex = -1; // ✅ Only one expands at a time
 
@@ -250,16 +334,13 @@ class _HelpState extends State<Help> {
                                     width: screenWidth * .7,
                                     height: screenHeight * .033,
                                     child: TextField(
-                                      style: TextStyle(
-                                        fontSize: screenHeight * .012,
-                                      ),
+                                      controller: _subjectCtrl,
+                                      style: TextStyle(fontSize: screenHeight * .012),
                                       textAlignVertical: TextAlignVertical.center,
                                       decoration: InputDecoration(
                                         hintText: 'Brief description of your issue',
-                                        hintStyle: TextStyle(
-                                          fontSize: screenHeight * .012,
-                                        ),
-                                        contentPadding: EdgeInsets.all(5),
+                                        hintStyle: TextStyle(fontSize: screenHeight * .012),
+                                        contentPadding: const EdgeInsets.all(5),
                                         enabledBorder: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(8),
                                           borderSide: const BorderSide(color: Colors.grey),
@@ -267,9 +348,9 @@ class _HelpState extends State<Help> {
                                         focusedBorder: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(8),
                                           borderSide: const BorderSide(color: Colors.grey),
-                                        )
+                                        ),
                                       ),
-                                    ),
+                                    )
                                   ),
                                 ),
                                 SizedBox(height: screenHeight * .023,),
@@ -285,50 +366,44 @@ class _HelpState extends State<Help> {
                                     width: screenWidth * .7,
                                     height: screenHeight * .13,
                                     child: TextField(
+                                      controller: _messageCtrl,
                                       textAlignVertical: TextAlignVertical.top,
                                       keyboardType: TextInputType.multiline,
-                                      maxLines: null, // allows multiple lines
-                                      expands: true,  // fills the SizedBox height
-                                      style: TextStyle(
-                                        fontSize: screenHeight * .012,
-                                      ),
+                                      maxLines: null,
+                                      expands: true,
+                                      style: TextStyle(fontSize: screenHeight * .012),
                                       decoration: InputDecoration(
-                                          alignLabelWithHint: false,
-                                          hintText: 'Describe your issue in detail...',
-                                          hintStyle: TextStyle(
-                                            fontSize: screenHeight * .012,
-                                          ),
-                                          contentPadding: EdgeInsets.all(5),
-                                          enabledBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(8),
-                                            borderSide: const BorderSide(color: Colors.grey),
-                                          ),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(8),
-                                            borderSide: const BorderSide(color: Colors.grey),
-                                          )
+                                        hintText: 'Describe your issue in detail...',
+                                        hintStyle: TextStyle(fontSize: screenHeight * .012),
+                                        contentPadding: const EdgeInsets.all(5),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(8),
+                                          borderSide: const BorderSide(color: Colors.grey),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(8),
+                                          borderSide: const BorderSide(color: Colors.grey),
+                                        ),
                                       ),
-                                    ),
+                                    )
                                   ),
                                 ),
                                 SizedBox(height: screenHeight * .023,),
                                 Center(
                                   child: OutlinedButton(
-                                    onPressed: () {},
+                                    onPressed: _sending ? null : _submitSupportRequest,
                                     style: OutlinedButton.styleFrom(
-                                      backgroundColor: Color(0xFF004280),
-                                      side: BorderSide(
-                                        color: Color(0xFF004280),
-                                      )
+                                      backgroundColor: const Color(0xFF004280),
+                                      side: const BorderSide(color: Color(0xFF004280)),
                                     ),
                                     child: Text(
-                                      'Submit Request',
+                                      _sending ? 'Submitting...' : 'Submit Request',
                                       style: TextStyle(
                                         fontSize: screenHeight * .013,
-                                        color: Colors.white
+                                        color: Colors.white,
                                       ),
-                                    )
-                                  ),
+                                    ),
+                                  )
                                 ),
                               ],
                             ),

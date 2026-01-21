@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_project_1/Student%20Page/face_registration.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'student_session.dart';
 
@@ -104,24 +105,32 @@ class _AuthGateState extends State<AuthGate> with SingleTickerProviderStateMixin
         return;
       }
 
-      // ✅ logged in: check terms_conditions
       int terms = 0;
+      bool twoFA = false;
+
+      // email to match in twofa_otps
+      String emailToUse = session.user.email?.trim().toLowerCase() ?? "";
 
       try {
         final row = await supabase
             .from('students')
-            .select('terms_conditions')
+            .select('terms_conditions, two_fa_enabled, email')
             .eq('id', session.user.id)
             .maybeSingle();
 
-        final raw = row?['terms_conditions'];
-        terms = (raw is num) ? raw.toInt() : int.tryParse('$raw') ?? 0;
+        final rawTerms = row?['terms_conditions'];
+        terms = (rawTerms is num) ? rawTerms.toInt() : int.tryParse('$rawTerms') ?? 0;
+
+        twoFA = row?['two_fa_enabled'] == true;
+
+        final emailReal = (row?['email'] ?? '').toString().trim().toLowerCase();
+        if (emailReal.isNotEmpty) emailToUse = emailReal;
       } catch (_) {
-        // if anything fails, be safe: treat as not accepted
         terms = 0;
+        twoFA = false;
       }
 
-      // ✅ if not accepted → sign out then go Landing/Login
+      // ✅ terms not accepted → sign out
       if (terms != 1) {
         await supabase.auth.signOut();
         StudentSession.clear();
@@ -134,10 +143,50 @@ class _AuthGateState extends State<AuthGate> with SingleTickerProviderStateMixin
         return;
       }
 
-      // ✅ accepted → go mainshell
+      // ✅ 2FA enabled: must be verified in twofa_otps
+      if (twoFA) {
+        bool verified = false;
+
+        try {
+          if (emailToUse.isNotEmpty) {
+            final otpRow = await supabase
+                .from('twofa_otps')
+                .select('verified, expires_at')
+                .eq('email', emailToUse)
+                .maybeSingle();
+
+            verified = otpRow?['verified'] == true;
+
+            // optional: if expired, treat as not verified
+            final expRaw = otpRow?['expires_at'];
+            if (verified && expRaw != null) {
+              final exp = DateTime.tryParse(expRaw.toString());
+              if (exp != null && exp.isBefore(DateTime.now().toUtc())) {
+                verified = false;
+              }
+            }
+          }
+        } catch (_) {
+          verified = false;
+        }
+
+        if (!verified) {
+          await supabase.auth.signOut();
+          StudentSession.clear();
+
+          if (!mounted) return;
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const LandingPage()),
+                (route) => false,
+          );
+          return;
+        }
+      }
+
+      // ✅ passed terms (+2FA if enabled) → mainshell
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const Mainshell()),
+        MaterialPageRoute(builder: (_) => const Face_Registration()),
             (route) => false,
       );
     } finally {

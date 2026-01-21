@@ -71,6 +71,7 @@ class MyApp extends StatelessWidget {
         '/forgot_password': (context) => ForgotPassword(),
         '/new_password': (context) => NewPassword(),
         '/terms_conditions': (context) => TermsAndConditionsPage(),
+        '/twofa': (context) => const SizedBox.shrink(),
       },
     );
   }

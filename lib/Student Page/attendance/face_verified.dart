@@ -50,7 +50,7 @@ class _Face_VerifiedState extends State<Face_Verified> {
     // ✅ compute minutes late
     final diffMins = DateTime.now().difference(startedAt).inMinutes;
 
-    final status = diffMins <= -15 ? 'late' : 'present';
+    final status = diffMins <= 15 ? 'present' : 'late';
 
     print(diffMins);
     print(status);
@@ -59,7 +59,7 @@ class _Face_VerifiedState extends State<Face_Verified> {
       'session_id': widget.classSessionId,
       'student_id': studentId,
       'status': status, // ✅ present OR late
-      'time_in': DateTime.now().toIso8601String(),
+      'time_in': DateTime.now().toUtc().toIso8601String(),
     }, onConflict: 'session_id,student_id');
   }
 

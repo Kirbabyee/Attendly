@@ -90,16 +90,18 @@ class _DashboardState extends State<Dashboard> {
       // 2.5) get latest session status per class (started/ended)
       final sessionRows = await supabase
           .from('class_sessions')
-          .select('class_id, status')
+          .select('class_id, status, started_at, ended_at')
           .inFilter('class_id', classIds)
-          .inFilter('status', ['started', 'ended']);
+          .inFilter('status', ['started', 'ended', 'system ended'])
+          .order('started_at', ascending: false);
 
-      final sessionMap = <String, String>{};
+      final sessionMap = <String, Map<String, dynamic>>{};
       for (final r in (sessionRows as List)) {
         final m = r as Map<String, dynamic>;
         final classId = m['class_id'] as String;
-        final status = (m['status'] as String?) ?? '';
-        sessionMap[classId] = status;
+
+        // since ordered desc, first time we see classId = latest
+        sessionMap.putIfAbsent(classId, () => m);
       }
 
       // 3) get professor names (batch)
@@ -130,10 +132,13 @@ class _DashboardState extends State<Dashboard> {
         final sched = (m['schedule'] ?? '') as String;
 
         String sessionText;
-        final dbStatus = sessionMap[classId];
-        if (dbStatus == 'started') {
+
+        final sRow = sessionMap[classId]; // Map<String,dynamic>?
+        final status = (sRow?['status'] as String?)?.toLowerCase() ?? '';
+
+        if (status == 'started') {
           sessionText = 'Session Started';
-        } else if (dbStatus == 'ended') {
+        } else if (status == 'ended' || status == 'system ended') {
           sessionText = 'Ended';
         } else {
           sessionText = _sessionFromSched(sched);
