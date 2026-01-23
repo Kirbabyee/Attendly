@@ -7,6 +7,7 @@ import 'package:flutter_project_1/Student%20Page/dashboard.dart';
 import 'package:flutter_project_1/Student%20Page/mainshell.dart';
 import 'package:flutter_project_1/Student%20Page/two_fa_verification.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'Notification/push_token_service.dart';
 import 'student_session.dart'; // adjust path kung nasaan file mo
 import 'dart:io';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -363,7 +364,7 @@ class _LoginState extends State<Login> {
                           // To check if the account is for student
                           final studentRow = await supabase
                               .from('students')
-                              .select('id, terms_conditions, two_fa_enabled, email')
+                              .select('id, terms_conditions, two_fa_enabled, email, push_enabled')
                               .eq('id', uid)
                               .maybeSingle();
 
@@ -456,6 +457,16 @@ class _LoginState extends State<Login> {
                           if (terms != 1) {
                             Navigator.of(context).pushNamedAndRemoveUntil('/terms_conditions', (r) => false);
                             return;
+                          }
+
+                          final pushEnabled = (studentRow['push_enabled'] == true);
+                          final svc = PushTokenService(supabase);
+
+                          if (pushEnabled) {
+                            await FirebaseMessaging.instance.requestPermission(alert: true, badge: true, sound: true);
+                            await svc.replaceTokenForUser(studentId: uid); // ✅ delete old then add new
+                          } else {
+                            await svc.removeAllForUser(studentId: uid);    // ✅ cleanup tokens
                           }
 
                           Navigator.of(context).pushNamedAndRemoveUntil('/face_registration', (r) => false);

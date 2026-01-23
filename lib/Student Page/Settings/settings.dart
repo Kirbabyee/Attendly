@@ -5,6 +5,7 @@ import 'package:flutter_project_1/Student%20Page/login.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../main.dart';
 import '../../widgets/push_notification.dart';
+import '../Notification/push_token_service.dart';
 import '../student_session.dart';
 import 'privacy_policy.dart';
 
@@ -267,7 +268,6 @@ class _SettingsState extends State<Settings> {
                                     activeTrackColor: Color(0xFF004280),
                                     value: isNotificationOn,
                                     onChanged: _notifBusy ? null : (value) async {
-                                      // 1️⃣ confirm muna
                                       final ok = await showDialog<bool>(
                                         context: context,
                                         barrierDismissible: true,
@@ -300,11 +300,32 @@ class _SettingsState extends State<Settings> {
                                       });
 
                                       final studentId = _student?['id']?.toString();
-                                      if (studentId == null) return;
+                                      if (studentId == null) {
+                                        if (mounted) setState(() => _notifBusy = false);
+                                        return;
+                                      }
 
                                       try {
-                                        await _loadStudent(force: true); // ✅ refresh UI from DB
-                                        print(await FirebaseMessaging.instance.getToken());
+                                        final svc = PushTokenService(supabase);
+
+                                        // 1) save preference in students table
+                                        await supabase
+                                            .from('students')
+                                            .update({'push_enabled': value})
+                                            .eq('id', studentId);
+
+                                        // 2) token behavior
+                                        if (value) {
+                                          await FirebaseMessaging.instance.requestPermission(alert: true, badge: true, sound: true);
+
+                                          await svc.replaceTokenForUser(studentId: studentId); // ✅ delete old then add new
+                                          svc.listenTokenRefresh(studentId: studentId);        // ✅ keep updated
+                                        } else {
+                                          await svc.removeAllForUser(studentId: studentId);    // ✅ remove tokens when off
+                                        }
+
+                                        // 3) refresh cache/UI from DB
+                                        await _loadStudent(force: true);
                                       } catch (e) {
                                         if (!mounted) return;
                                         setState(() => isNotificationOn = prev);
@@ -316,7 +337,6 @@ class _SettingsState extends State<Settings> {
                                       }
                                     },
                                   )
-
                                 )
                               ],
                             ),
@@ -793,6 +813,14 @@ class _SettingsState extends State<Settings> {
                             } catch (_) {
                               // ignore: kahit magfail to, tuloy pa rin signout
                             }
+                          }
+
+                          final studentId = _student?['id']?.toString();
+                          if (studentId != null) {
+                            try {
+                              final svc = PushTokenService(supabase);
+                              await svc.removeAllForUser(studentId: studentId); // ✅ logout = remove tokens
+                            } catch (_) {}
                           }
 
                           // 3) sign out

@@ -18,23 +18,38 @@ import 'package:flutter_project_1/Student%20Page/History/history.dart';
 import 'package:flutter_project_1/Student%20Page/Settings/settings.dart';
 import 'package:flutter_project_1/Student%20Page/forgot_password.dart';
 import 'package:flutter_project_1/Student%20Page/new_password.dart';
+import 'Student Page/Notification/notification_ui.dart';
 import 'Student Page/auth_gate.dart';
 import 'firebase_options.dart';
 
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp();
-  // optional: local notif (Android usually shows system notif already if "notification" payload)
-  // but safe if you rely on data-only messages
- /* await NotificationsService.init();
-  final title = message.notification?.title ?? 'Attendly';
-  final body = message.notification?.body ?? '';
-  await NotificationsService.show(title: title, body: body);*/
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  // optional: debug
+  // print('BG message: ${message.messageId}');
 }
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // ✅ Firebase init
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  // ✅ background handler register
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+  await NotificationUI.initOnce();
+
+  FirebaseMessaging.onMessage.listen((msg) async {
+    // ✅ show banner even when app is open
+    await NotificationUI.showFromMessage(msg);
+  });
 
   await Supabase.initialize(
     url: 'https://ucfundmbawljngzowzgd.supabase.co',
