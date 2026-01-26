@@ -1,6 +1,9 @@
 import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui';
+import 'dart:convert';
+import 'package:flutter_project_1/Student%20Page/student_session.dart';
+import 'package:http/http.dart' as http;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +21,20 @@ class Face_Registration extends StatefulWidget {
 }
 
 class _Face_RegistrationState extends State<Face_Registration> {
+  static const String _baseUrl = 'http://192.168.254.103:8000';
+
+  String _statusText = 'Align your face to the guide';
+
+// liveness
+  bool _livenessPassed = false;
+  int _blinkCount = 0;
+  bool _eyesWereOpen = false;
+  bool _eyesClosedOnce = false;
+  DateTime _livenessStart = DateTime.fromMillisecondsSinceEpoch(0);
+
+  static const double _eyeOpenThresh = 0.70;
+  static const double _eyeClosedThresh = 0.25;
+  static const Duration _livenessTimeout = Duration(seconds: 6);
 
   CameraController? _controller;
   Future<void>? _initFuture;
@@ -31,6 +48,54 @@ class _Face_RegistrationState extends State<Face_Registration> {
   bool _processing = false;
   bool _faceAligned = false;
   DateTime _lastRun = DateTime.fromMillisecondsSinceEpoch(0);
+
+  Future<void> _captureAndEnroll() async {
+    if (_showingModal || _navigated) return;
+    _showingModal = true;
+
+    final c = _controller;
+    if (c == null) {
+      _showingModal = false;
+      return;
+    }
+
+    try {
+      if (c.value.isStreamingImages) {
+        await c.stopImageStream();
+      }
+
+      final file = await c.takePicture();
+
+      // IMPORTANT: use SAME id you will use in verify
+      final student = await StudentSession.get();
+      final studentId = student?['id'].toString();
+
+      final uri = Uri.parse('$_baseUrl/enroll');
+      final req = http.MultipartRequest('POST', uri)
+        ..fields['user_id'] = studentId!
+        ..files.add(await http.MultipartFile.fromPath('image', file.path));
+
+      final res = await req.send();
+      final body = await res.stream.bytesToString();
+
+      if (res.statusCode != 200) throw Exception(body);
+
+      final json = jsonDecode(body);
+      if (json['ok'] != true) throw Exception(body);
+
+      if (!mounted) return;
+      _showSuccessModal(); // ✅ now legit registered
+    } catch (e) {
+      _showingModal = false;
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Enroll failed: $e')),
+      );
+      // restart camera if you want
+      await _stopCamera();
+    }
+  }
+
 
   // Show the Success Modal
   void _showSuccessModal() {
@@ -101,7 +166,7 @@ class _Face_RegistrationState extends State<Face_Registration> {
         performanceMode: FaceDetectorMode.fast,
         enableLandmarks: false,
         enableContours: false,
-        enableClassification: false,
+        enableClassification: true
       ),
     );
   }
@@ -130,6 +195,57 @@ class _Face_RegistrationState extends State<Face_Registration> {
 
     _controller = null;
     _initFuture = null;
+  }
+
+  void _resetLiveness() {
+    _livenessPassed = false;
+    _blinkCount = 0;
+    _eyesWereOpen = false;
+    _eyesClosedOnce = false;
+    _livenessStart = DateTime.fromMillisecondsSinceEpoch(0);
+  }
+
+  void _updateLivenessWithFace(Face face) {
+    // ML Kit eye probabilities can be null sometimes
+    final le = face.leftEyeOpenProbability;
+    final re = face.rightEyeOpenProbability;
+    if (le == null || re == null) return;
+
+    final avg = (le + re) / 2.0;
+
+    if (_livenessStart.millisecondsSinceEpoch == 0) {
+      _livenessStart = DateTime.now();
+    }
+
+    // timeout
+    if (DateTime.now().difference(_livenessStart) > _livenessTimeout) {
+      _resetLiveness();
+      _statusText = 'Try again: blink twice';
+      return;
+    }
+
+    final eyesOpen = avg >= _eyeOpenThresh;
+    final eyesClosed = avg <= _eyeClosedThresh;
+
+    if (eyesOpen) {
+      _eyesWereOpen = true;
+    }
+
+    // detect one blink: open -> closed -> open
+    if (_eyesWereOpen && eyesClosed) {
+      _eyesClosedOnce = true;
+    }
+
+    if (_eyesClosedOnce && eyesOpen) {
+      _blinkCount += 1;
+      _eyesClosedOnce = false; // ready for next blink
+      _statusText = 'Blink ${math.min(_blinkCount + 1, 2)}/2';
+    }
+
+    if (_blinkCount >= 2) {
+      _livenessPassed = true;
+      _statusText = 'Liveness passed. Capturing…';
+    }
   }
 
   Future<void> _startCamera() async {
@@ -173,12 +289,20 @@ class _Face_RegistrationState extends State<Face_Registration> {
           bool aligned = false;
           final metaSize = inputImage.metadata?.size;
 
+          Face? mainFace;
           if (faces.isNotEmpty && metaSize != null) {
-            // Use the largest face
             faces.sort((a, b) => _area(b.boundingBox).compareTo(_area(a.boundingBox)));
-            final faceBox = faces.first.boundingBox;
+            mainFace = faces.first;
+            final faceBox = mainFace.boundingBox;
 
             aligned = _isFaceInsideGuide(faceBox, metaSize);
+
+            // ✅ reject if multiple faces for attendance
+            if (faces.length > 1) {
+              aligned = false;
+              _resetLiveness();
+              if (mounted) setState(() => _statusText = 'Only one face at a time');
+            }
           }
 
           if (!mounted) return;
@@ -189,13 +313,32 @@ class _Face_RegistrationState extends State<Face_Registration> {
           }
 
           // Start delay when aligned
-          if (aligned && !_showingModal && !_navigated) {
-            _alignmentTimer ??= Timer(const Duration(seconds: 2), () {
-              if (!mounted || _showingModal || _navigated) return;
+          if (!mounted) return;
 
-              _showingModal = true;
-              _showSuccessModal();
-            });
+// status + liveness
+          if (!aligned) {
+            _alignmentTimer?.cancel();
+            _alignmentTimer = null;
+
+            if (_faceAligned != false) setState(() => _faceAligned = false);
+
+            _resetLiveness();
+            setState(() => _statusText = 'Align your face to the guide');
+            return;
+          }
+
+// aligned
+          if (_faceAligned != true) setState(() => _faceAligned = true);
+
+// start liveness
+          if (!_livenessPassed && mainFace != null) {
+            setState(() => _statusText = 'Blink twice');
+            _updateLivenessWithFace(mainFace);
+          }
+
+// once passed, capture and verify (only once)
+          if (_livenessPassed && !_showingModal && !_navigated) {
+            await _captureAndEnroll(); // ✅ calls POST /enroll
           }
 
           // Cancel if face moves
@@ -364,11 +507,7 @@ class _Face_RegistrationState extends State<Face_Registration> {
                       padding: EdgeInsets.symmetric(horizontal: screenWidth * .06),
                       child: Align(
                         alignment: Alignment.centerLeft,
-                        child: Text(_controller == null
-                            ? 'Tap Start to open camera'
-                            : (_faceAligned
-                            ? 'Hold still…'
-                            : 'Align your face to the guide'),
+                        child: Text(_controller == null ? 'Tap Start to open camera' : _statusText,
                           style: TextStyle(
                             fontSize: screenHeight * .015,
                             fontWeight: FontWeight.w500,

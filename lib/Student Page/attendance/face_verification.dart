@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -43,6 +45,133 @@ class Face_Verification extends StatefulWidget {
 }
 
 class _Face_VerificationState extends State<Face_Verification> {
+  Future<void> _showNotMatchedDialog() async {
+    if (!mounted) return;
+
+    await showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (_) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+        actionsPadding: const EdgeInsets.only(bottom: 12),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: const [
+            // red circle icon
+            SizedBox(height: 6),
+            Icon(Icons.cancel, color: Colors.red, size: 48),
+            SizedBox(height: 14),
+            Text(
+              'Face Not Matched',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Wrong face detected. Please try again.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: Colors.black54),
+            ),
+          ],
+        ),
+        actions: [
+          Center(
+            child: SizedBox(
+              width: 140,
+              height: 40,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Try again', style: TextStyle(color: Colors.white)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  bool _verifying = false;
+
+  String _statusText = 'Align your face to the guide';
+
+// liveness
+  bool _livenessPassed = false;
+  int _blinkCount = 0;
+  bool _eyesWereOpen = false;
+  bool _eyesClosedOnce = false;
+  DateTime _livenessStart = DateTime.fromMillisecondsSinceEpoch(0);
+
+  static const double _eyeOpenThresh = 0.70;
+  static const double _eyeClosedThresh = 0.25;
+  static const Duration _livenessTimeout = Duration(seconds: 6);
+
+// backend (set to your PC IP)
+  static const String _baseUrl = 'http://192.168.254.103:8000'; // ✅ palitan mo
+
+  void _resetLiveness() {
+    _livenessPassed = false;
+    _blinkCount = 0;
+    _eyesWereOpen = false;
+    _eyesClosedOnce = false;
+    _livenessStart = DateTime.fromMillisecondsSinceEpoch(0);
+  }
+
+  void _updateLivenessWithFace(Face face) {
+    final le = face.leftEyeOpenProbability;
+    final re = face.rightEyeOpenProbability;
+
+    // minsan null
+    if (le == null || re == null) return;
+
+    final avg = (le + re) / 2.0;
+
+    if (_livenessStart.millisecondsSinceEpoch == 0) {
+      _livenessStart = DateTime.now();
+    }
+
+    if (DateTime.now().difference(_livenessStart) > _livenessTimeout) {
+      _resetLiveness();
+      _statusText = 'Try again: blink twice';
+      return;
+    }
+
+    final eyesOpen = avg >= _eyeOpenThresh;
+    final eyesClosed = avg <= _eyeClosedThresh;
+
+    if (eyesOpen) _eyesWereOpen = true;
+
+    // open -> closed
+    if (_eyesWereOpen && eyesClosed) {
+      _eyesClosedOnce = true;
+    }
+
+    // closed -> open = one blink
+    if (_eyesClosedOnce && eyesOpen) {
+      _blinkCount += 1;
+      _eyesClosedOnce = false;
+
+      if (mounted) {
+        setState(() {
+          _statusText = 'Blink ${math.min(_blinkCount + 1, 2)}/2';
+        });
+      }
+    }
+
+    if (_blinkCount >= 2) {
+      _livenessPassed = true;
+      _statusText = 'Liveness passed. Capturing…';
+    }
+  }
+
   bool _checkingAttendance = false;
   bool _alreadySubmitted = false;
   bool _alreadyModalShown = false;
@@ -233,7 +362,7 @@ class _Face_VerificationState extends State<Face_Verification> {
         performanceMode: FaceDetectorMode.fast,
         enableContours: false,
         enableLandmarks: false,
-        enableClassification: false,
+        enableClassification: true,
       ),
     );
 
@@ -328,13 +457,20 @@ class _Face_VerificationState extends State<Face_Verification> {
           bool aligned = false;
           final metaSize = inputImage.metadata?.size;
 
+          Face? mainFace;
           if (faces.isNotEmpty && metaSize != null) {
-            // Largest face
-            faces.sort((a, b) =>
-                _area(b.boundingBox).compareTo(_area(a.boundingBox)));
-            final faceBox = faces.first.boundingBox;
+            faces.sort((a, b) => _area(b.boundingBox).compareTo(_area(a.boundingBox)));
+            mainFace = faces.first;
+            final faceBox = mainFace.boundingBox;
 
             aligned = _isFaceInsideGuide(faceBox, metaSize);
+
+            // ✅ attendance safety: reject multiple faces
+            if (faces.length > 1) {
+              aligned = false;
+              _resetLiveness();
+              if (mounted) setState(() => _statusText = 'Only one face at a time');
+            }
           }
 
           if (!mounted) return;
@@ -344,19 +480,31 @@ class _Face_VerificationState extends State<Face_Verification> {
             setState(() => _faceAligned = aligned);
           }
 
-          // ✅ Start delay when aligned
-          if (aligned && !_navigated) {
-            _alignmentTimer ??= Timer(const Duration(seconds: 2), () {
-              if (!mounted || _navigated) return;
-              _goToNextPageWithLoading();
-            });
+          if (!mounted) return;
+
+          if (!aligned) {
+            _resetLiveness();
+            if (_statusText != 'Align your face to the guide') {
+              setState(() => _statusText = 'Align your face to the guide');
+            }
+            return;
           }
 
-          // ❌ Cancel delay if face moves away
-          if (!aligned) {
-            _alignmentTimer?.cancel();
-            _alignmentTimer = null;
+          // aligned
+          if (!_livenessPassed && mainFace != null) {
+            if (_statusText != 'Blink twice') {
+              setState(() => _statusText = 'Blink twice');
+            }
+            _updateLivenessWithFace(mainFace);
           }
+
+          // passed → capture + verify once
+          if (_livenessPassed && !_navigated) {
+            await _captureAndVerify(); // ✅ add function below
+          }
+
+          // ✅ Start delay when aligned
+
 
         } catch (_) {
           // ignore per-frame errors
@@ -372,6 +520,96 @@ class _Face_VerificationState extends State<Face_Verification> {
         SnackBar(content: Text('Camera error: $e')),
       );
     }
+  }
+
+  Future<void> _captureAndVerify() async {
+    if (_verifying || _navigated) return;
+    _verifying = true;
+
+    final c = _controller;
+    if (c == null) return;
+
+    try {
+      // stop stream to take picture
+      if (c.value.isStreamingImages) {
+        await c.stopImageStream();
+      }
+
+      final file = await c.takePicture();
+
+      final studentId = _student?['id']?.toString();
+      if (studentId == null || studentId.isEmpty) {
+        setState(() {
+          _statusText = 'Missing student id';
+          _navigated = false;
+        });
+        return;
+      }
+
+      // call backend verify
+      final uri = Uri.parse('$_baseUrl/verify');
+      final req = http.MultipartRequest('POST', uri)
+        ..fields['user_id'] = studentId
+        ..files.add(await http.MultipartFile.fromPath('image', file.path));
+
+      final res = await req.send();
+      final body = await res.stream.bytesToString();
+      if (res.statusCode != 200) throw Exception(body);
+
+      final json = jsonDecode(body) as Map<String, dynamic>;
+      final verified = json['verified'] == true;
+
+      if (!verified) {
+        _resetLiveness();
+
+        if (mounted) {
+          setState(() {
+            _statusText = 'Not matched. Try again.';
+            _verifying = false;
+            _navigated = false;
+          });
+        }
+
+        // ✅ show notice
+        await _showNotMatchedDialog();
+
+        // ✅ restart stream
+        await _restartStream();
+        return;
+      }
+
+      // ✅ verified: write attendance (example)
+      /*await Supabase.instance.client.from('attendance').insert({
+        'session_id': widget.classSessionId,
+        'student_id': studentId,
+        'status': 'present',
+        'time_in': DateTime.now().toIso8601String(),
+      });*/
+
+      if (!mounted) return;
+      await _goToNextPageWithLoading();
+    } catch (e) {
+      _resetLiveness();
+      if (mounted) {
+        setState(() {
+          _statusText = 'Error. Try again.';
+          _navigated = false;
+          _verifying = false;
+        });
+      }
+      await _restartStream();
+    }
+  }
+
+  Future<void> _restartStream() async {
+    final c = _controller;
+    if (c == null) return;
+
+    // just call _startCamera() fresh if you prefer, but avoid re-init controller.
+    // simplest: start stream again with same handler by calling _startCamera() after stop+dispose.
+    // Here we re-use your existing setup by disposing and starting again.
+    await _stopCamera();
+    await _startCamera();
   }
 
   double _area(Rect r) => r.width * r.height;
@@ -559,9 +797,7 @@ class _Face_VerificationState extends State<Face_Verification> {
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: screenHeight * .013),
                       child: Text(
-                        _controller == null
-                            ? 'Tap start to open camera'
-                            : (_faceAligned ? 'Hold still...' : 'Align your face to the guide'),
+                        _controller == null ? 'Tap start to open camera' : _statusText,
                         style: TextStyle(
                           fontSize: screenHeight * .015,
                           fontWeight: FontWeight.w500,

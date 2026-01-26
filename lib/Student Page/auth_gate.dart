@@ -107,6 +107,7 @@ class _AuthGateState extends State<AuthGate> with SingleTickerProviderStateMixin
 
       int terms = 0;
       bool twoFA = false;
+      bool isFaceRegistered = false;
 
       // email to match in twofa_otps
       String emailToUse = session.user.email?.trim().toLowerCase() ?? "";
@@ -114,12 +115,15 @@ class _AuthGateState extends State<AuthGate> with SingleTickerProviderStateMixin
       try {
         final row = await supabase
             .from('students')
-            .select('terms_conditions, two_fa_enabled, email')
+            .select('terms_conditions, two_fa_enabled, email, face_registered_at')
             .eq('id', session.user.id)
             .maybeSingle();
 
         final rawTerms = row?['terms_conditions'];
         terms = (rawTerms is num) ? rawTerms.toInt() : int.tryParse('$rawTerms') ?? 0;
+
+        final faceRegisteredAt = row?['face_registered_at'];
+        isFaceRegistered = faceRegisteredAt != null && faceRegisteredAt.toString().isNotEmpty;
 
         twoFA = row?['two_fa_enabled'] == true;
 
@@ -186,7 +190,9 @@ class _AuthGateState extends State<AuthGate> with SingleTickerProviderStateMixin
       // ✅ passed terms (+2FA if enabled) → mainshell
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const Face_Registration()),
+        MaterialPageRoute(
+          builder: (_) => isFaceRegistered ? const Mainshell() : const Face_Registration(),
+        ),
             (route) => false,
       );
     } finally {

@@ -42,7 +42,7 @@ class _HistoryState extends State<History> {
                     ),
                     child: Icon(
                       Icons.history_sharp,
-                      size: screenHeight * .07,
+                      size: screenHeight * .06,
                       color: Colors.white,
                     ),
                   ),

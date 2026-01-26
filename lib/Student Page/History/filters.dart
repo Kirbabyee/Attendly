@@ -1,5 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../student_session.dart';
 
 class AttendanceRecord {
   final String courseName;
@@ -23,6 +26,55 @@ class DataFilter extends StatefulWidget {
 }
 
 class _DataFilterState extends State<DataFilter> {
+  Future<void> _loadAttendance() async {
+    final student = await StudentSession.get();
+    final studentId = student?['id']?.toString();
+
+    if (studentId == null || studentId.isEmpty) return;
+
+    final res = await Supabase.instance.client
+        .from('attendance')
+        .select('status, time_in, created_at, session_id, class_sessions!inner(class_id, started_at, created_at, classes!inner(course, class_code, course_code))')
+        .eq('student_id', studentId)
+        .order('created_at', ascending: false);
+
+    final rows = (res as List).cast<Map<String, dynamic>>();
+
+    final records = rows.map((r) {
+      final sess = r['class_sessions'] as Map<String, dynamic>;
+      final cl = sess['classes'] as Map<String, dynamic>;
+
+      final course = (cl['course'] ?? '').toString();
+      final classCode = (cl['course_code'] ?? '').toString();
+
+      // prefer time_in, fallback created_at
+      final dateRaw = r['time_in'] ?? r['created_at'];
+      final date = DateTime.tryParse(dateRaw.toString()) ?? DateTime.now();
+
+      String _cap(String s) => s.isEmpty ? s : (s[0].toUpperCase() + s.substring(1).toLowerCase());
+      final status = _cap((r['status'] ?? 'unknown').toString());
+
+      return AttendanceRecord(
+        courseName: course.isEmpty ? '-' : course,
+        className: classCode.isEmpty ? '-' : classCode,
+        date: date,
+        status: status,
+      );
+    }).toList();
+
+    setState(() {
+      allRecords = records;
+      filteredRecords = List.from(allRecords);
+
+      classOptions = [
+        'All',
+        ...{ for (final r in allRecords) r.courseName }
+      ].toList();
+    });
+
+    applyFilters();
+  }
+
   List<String> classOptions = ['All'];
 
   final TextEditingController searchController = TextEditingController();
@@ -35,42 +87,22 @@ class _DataFilterState extends State<DataFilter> {
   List<AttendanceRecord> allRecords = [];
   List<AttendanceRecord> filteredRecords = [];
 
+  bool _refreshing = false;
+
+  Future<void> _onRefresh() async {
+    if (_refreshing) return;
+    _refreshing = true;
+    try {
+      await _loadAttendance();
+    } finally {
+      _refreshing = false;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
-
-    allRecords = [
-      AttendanceRecord(
-        courseName: 'Introduction to Computer Interaction',
-        className: 'CCS101',
-        date: DateTime(2025, 12, 13),
-        status: 'Present',
-      ),
-      AttendanceRecord(
-        courseName: 'Introduction to Computer Interaction',
-        className: 'CCS101',
-        date: DateTime(2025, 11, 30),
-        status: 'Late',
-      ),
-      AttendanceRecord(
-        courseName: 'Software Engineering',
-        className: 'CCS125',
-        date: DateTime(2025, 12, 21),
-        status: 'Absent',
-      ),
-      AttendanceRecord(
-        courseName: 'Software Engineering',
-        className: 'CCS125',
-        date: DateTime(2025, 12, 1),
-        status: 'Absent',
-      ),
-      AttendanceRecord(
-        courseName: 'Software Engineering',
-        className: 'CCS125',
-        date: DateTime(2025, 12, 20),
-        status: 'Absent',
-      ),
-    ];
+    _loadAttendance();
 
     filteredRecords = List.from(allRecords); // show all at start
 
@@ -362,48 +394,53 @@ class _DataFilterState extends State<DataFilter> {
 
                 // ✅ LIST AREA (scrollable)
                 Expanded(
-                  child: filteredRecords.isEmpty
-                      ? const Center(child: Text('No records found.'))
-                      : ListView.builder(
-                    itemCount: filteredRecords.length,
-                    itemBuilder: (context, index) {
-                      final record = filteredRecords[index];
-                      final bg = index.isEven
-                          ? Colors.white
-                          : Colors.grey[300];
+                  child: RefreshIndicator(
+                    onRefresh: _onRefresh,
+                    child: filteredRecords.isEmpty
+                        ? ListView( // ✅ kailangan ListView pa rin para gumana pull-to-refresh kahit empty
+                      children: const [
+                        SizedBox(height: 200),
+                        Center(child: Text('No records found.')),
+                      ],
+                    )
+                        : ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(), // ✅ para kahit konti items, pwede mag pull
+                      itemCount: filteredRecords.length,
+                      itemBuilder: (context, index) {
+                        final record = filteredRecords[index];
+                        final bg = index.isEven ? Colors.white : Colors.grey[300];
 
-                      return Container(
-                        height: screenHeight * .12,
-                        decoration: BoxDecoration(
-                          color: bg,
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Colors.black26,
-                              blurRadius: 2,
-                              offset: Offset(0, 5),
-                            ),
-                          ],
-                        ),
-                        child: Center(
-                          child: ListTile(
-                            title: Text(
-                              record.courseName,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: screenHeight * .014
+                        return Container(
+                          height: screenHeight * .12,
+                          decoration: BoxDecoration(
+                            color: bg,
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Colors.black26,
+                                blurRadius: 2,
+                                offset: Offset(0, 5),
                               ),
-                            ),
-                            subtitle: Text(
-                              '${record.className} • ${record.date.toIso8601String().split("T")[0]}',
-                              style: TextStyle(
-                                fontSize: screenHeight * .013
-                              ),
-                            ),
-                            trailing: _statusBadge(record.status),
+                            ],
                           ),
-                        ),
-                      );
-                    },
+                          child: Center(
+                            child: ListTile(
+                              title: Text(
+                                record.courseName,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: screenHeight * .014,
+                                ),
+                              ),
+                              subtitle: Text(
+                                '${record.className} • ${record.date.toIso8601String().split("T")[0]}',
+                                style: TextStyle(fontSize: screenHeight * .013),
+                              ),
+                              trailing: _statusBadge(record.status),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ),
               ],
