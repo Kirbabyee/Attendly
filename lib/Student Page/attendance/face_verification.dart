@@ -115,7 +115,7 @@ class _Face_VerificationState extends State<Face_Verification> {
   static const Duration _livenessTimeout = Duration(seconds: 6);
 
 // backend (set to your PC IP)
-  static const String _baseUrl = 'http://192.168.254.103:8000'; // ✅ palitan mo
+  static const String _baseUrl = 'https://web-production-f2d54.up.railway.app'; // ✅ palitan mo
 
   void _resetLiveness() {
     _livenessPassed = false;

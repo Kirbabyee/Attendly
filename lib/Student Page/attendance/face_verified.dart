@@ -45,13 +45,14 @@ class _Face_VerifiedState extends State<Face_Verified> {
     final startedAtStr = session?['started_at'] as String?;
     if (startedAtStr == null) throw 'Session start time not found';
 
-    final startedAt = DateTime.parse(startedAtStr);
+    final startedAt = DateTime.parse(startedAtStr).toLocal();
+    final nowUtc = DateTime.now().toLocal();
 
-    // ✅ compute minutes late
-    final diffMins = DateTime.now().difference(startedAt).inMinutes;
-
+    final diffMins = nowUtc.difference(startedAt).inMinutes;
     final status = diffMins <= 15 ? 'present' : 'late';
 
+    print('startedAt: $startedAt | isUtc: ${startedAt.isUtc}');
+    print('now: $nowUtc | isUtc: ${nowUtc.isUtc}');
     print(diffMins);
     print(status);
 

@@ -36,7 +36,7 @@ class NotificationUI {
   static Future<void> showFromMessage(RemoteMessage message) async {
     final n = message.notification;
 
-    final title = n?.title ?? (message.data['title']?.toString() ?? 'Attendly');
+    final title = n?.title ?? (message.data['title']?.toString() ?? 'asd');
     final body = n?.body ?? (message.data['body']?.toString() ?? '');
 
     final details = NotificationDetails(
