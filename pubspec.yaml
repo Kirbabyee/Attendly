@@ -46,6 +46,8 @@ dependencies:
   flutter_local_notifications: ^19.5.0
   app_links: ^6.0.0
   url_launcher: ^6.3.0
+  syncfusion_flutter_datepicker: ^32.1.23
+
 
 dev_dependencies:
   flutter_test:

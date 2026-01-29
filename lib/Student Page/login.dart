@@ -364,7 +364,7 @@ class _LoginState extends State<Login> {
                           // To check if the account is for student
                           final studentRow = await supabase
                               .from('students')
-                              .select('id, terms_conditions, two_fa_enabled, email, push_enabled')
+                              .select('id, terms_conditions, two_fa_enabled, email, push_enabled, face_registered_at, status, archived')
                               .eq('id', uid)
                               .maybeSingle();
 
@@ -376,6 +376,34 @@ class _LoginState extends State<Login> {
 
                             setState(() {
                               _loginError = 'This account is not allowed in the Student app.';
+                            });
+                            _formKey.currentState!.validate();
+                            return;
+                          }
+                          // archived: behave like “account doesn’t exist”
+                          final isArchived = (studentRow['archived'] == true);
+                          if (isArchived) {
+                            await supabase.auth.signOut();
+                            if (!mounted) return;
+                            Navigator.pop(context);
+
+                            setState(() {
+                              _loginError = 'Invalid student number or password';
+                            });
+                            _formKey.currentState!.validate();
+                            return;
+                          }
+
+                          // inactive: show custom message
+                          final status = (studentRow['status'] ?? '').toString().trim().toLowerCase();
+                          if (status == 'inactive') {
+                            await supabase.auth.signOut();
+                            if (!mounted) return;
+                            Navigator.pop(context);
+
+                            setState(() {
+                              _loginError =
+                              'This account has been deactivated.';
                             });
                             _formKey.currentState!.validate();
                             return;
@@ -469,8 +497,20 @@ class _LoginState extends State<Login> {
                             await svc.removeAllForUser(studentId: uid);    // ✅ cleanup tokens
                           }
 
-                          Navigator.of(context).pushNamedAndRemoveUntil('/face_registration', (r) => false);
+                          final faceRegisteredAt = studentRow['face_registered_at'];
+
+                          final bool isFaceRegistered =
+                              faceRegisteredAt != null && faceRegisteredAt.toString().isNotEmpty;
+
+                          if (!mounted) return;
+
+                          if (isFaceRegistered) {
+                            Navigator.of(context).pushNamedAndRemoveUntil('/mainshell', (r) => false);
+                          } else {
+                            Navigator.of(context).pushNamedAndRemoveUntil('/face_registration', (r) => false);
+                          }
                           return;
+
                         } on AuthException catch (e) {
                           if (!mounted) return;
                           Navigator.pop(context);

@@ -115,19 +115,35 @@ class _AuthGateState extends State<AuthGate> with SingleTickerProviderStateMixin
       try {
         final row = await supabase
             .from('students')
-            .select('terms_conditions, two_fa_enabled, email, face_registered_at')
+            .select('terms_conditions, two_fa_enabled, email, face_registered_at, status, archived')
             .eq('id', session.user.id)
             .maybeSingle();
 
-        final rawTerms = row?['terms_conditions'];
+        final isArchived = (row?['archived'] == true);
+        final status = (row?['status'] ?? '').toString().trim().toLowerCase();
+
+        // ✅ archived OR inactive OR no row → logout
+        if (row == null || isArchived || status == 'inactive') {
+          await supabase.auth.signOut();
+          StudentSession.clear();
+
+          if (!mounted) return;
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const LandingPage()),
+                (route) => false,
+          );
+          return;
+        }
+
+        final rawTerms = row['terms_conditions'];
         terms = (rawTerms is num) ? rawTerms.toInt() : int.tryParse('$rawTerms') ?? 0;
 
-        final faceRegisteredAt = row?['face_registered_at'];
+        final faceRegisteredAt = row['face_registered_at'];
         isFaceRegistered = faceRegisteredAt != null && faceRegisteredAt.toString().isNotEmpty;
 
-        twoFA = row?['two_fa_enabled'] == true;
+        twoFA = row['two_fa_enabled'] == true;
 
-        final emailReal = (row?['email'] ?? '').toString().trim().toLowerCase();
+        final emailReal = (row['email'] ?? '').toString().trim().toLowerCase();
         if (emailReal.isNotEmpty) emailToUse = emailReal;
       } catch (_) {
         terms = 0;

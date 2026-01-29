@@ -75,7 +75,6 @@ class MyApp extends StatelessWidget {
       home: const AuthGate(), // ✅ ito na root
       routes: {
         '/login': (context) => Login(),
-        '/dashboard': (context) => Dashboard(),
         '/face_registration': (context) => Face_Registration(),
         '/history': (context) => History(),
         '/settings': (context) => Settings(),

@@ -7,8 +7,14 @@ import 'student_session.dart'; // adjust path kung iba
 import 'archives.dart';
 
 class Dashboard extends StatefulWidget {
-  const Dashboard({super.key});
+  final bool unRead;
+  final VoidCallback onOpenNotifications;
 
+  const Dashboard({
+    super.key,
+    required this.unRead,
+    required this.onOpenNotifications,
+  });
   @override
   State<Dashboard> createState() => _DashboardState();
 }
@@ -179,7 +185,7 @@ class _DashboardState extends State<Dashboard> {
     }
   }
 
-  Future<void> _joinClassByCode(String code) async {
+  Future<String> _joinClassByCode(String code) async {
     final authUid = supabase.auth.currentUser?.id;
     if (authUid == null) throw 'Not logged in';
 
@@ -234,7 +240,9 @@ class _DashboardState extends State<Dashboard> {
     final sessionText = _sessionFromSched(sched);
 
     // 5) update UI (local add)
+    final course = (classRow['course'] ?? 'Class').toString();
     await _loadMyClasses();
+    return course;
   }
 
   String? _avatarUrl;
@@ -459,10 +467,10 @@ class _DashboardState extends State<Dashboard> {
     return 'Upcoming';
   }
 
-
   @override
   void initState() {
     super.initState();
+
     _sortClasses();
     _loadStudent().then((_) => _loadMyClasses());
   }
@@ -493,7 +501,7 @@ class _DashboardState extends State<Dashboard> {
       String sched,
       String session,
       double screenHeight,
-      VoidCallback onArchive,
+      Future<void> Function() onArchive,
       ) {
     final size = MediaQuery.of(context).size;
     final screenWidth = size.width;
@@ -681,8 +689,17 @@ class _DashboardState extends State<Dashboard> {
                     ],
                     onSelected: (value) async {
                       if (value == 'archive') {
+                        // first confirmation (normal)
                         final ok = await _confirmArchive();
-                        if (ok) onArchive();
+                        if (!ok) return;
+
+                        // ✅ if session started, ask again
+                        if (session == 'Session Started') {
+                          final ok2 = await _confirmArchiveStartedSession();
+                          if (!ok2) return;
+                        }
+
+                        await onArchive(); // will call DB archive
                       }
                     },
                   ),
@@ -723,6 +740,69 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
+  Future<void> _archiveClass({
+    required ClassItem item,
+    required int index,
+  }) async {
+    try {
+      // ✅ update DB
+      await supabase
+          .from('classes')
+          .update({'archived': true})
+          .eq('id', item.classId);
+
+      if (!mounted) return;
+
+      // ✅ update UI
+      setState(() {
+        _archivedClasses.add(item);
+        _classes.removeAt(index);
+        _sortClasses();
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to archive class: $e')),
+      );
+    }
+  }
+
+  Future<bool> _confirmArchiveStartedSession() async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: const Text(
+          'Session is currently started',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+        content: const Text(
+          'This class has an ongoing session. Are you sure you want to archive it?',
+          style: TextStyle(fontSize: 13),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel', style: TextStyle(color: Colors.black)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Archive anyway', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    return result ?? false;
+  }
+
   void _showJoinClassDialog() {
     final controller = TextEditingController();
     final formKey = GlobalKey<FormState>();
@@ -745,12 +825,18 @@ class _DashboardState extends State<Dashboard> {
               });
 
               try {
-                await _joinClassByCode(controller.text);
+                final course = await _joinClassByCode(controller.text);
 
                 if (!mounted) return;
 
-                // ✅ success → close modal
+                // ✅ close join dialog once
                 Navigator.pop(context);
+
+                // ✅ show success dialog after closing
+                Future.microtask(() {
+                  if (!mounted) return;
+                  _showSuccessDialog('Joined: $course');
+                });
               } catch (e) {
                 setLocal(() {
                   error = e.toString().replaceFirst('Exception: ', '');
@@ -852,6 +938,39 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
+  void _showSuccessDialog(String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (_) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: const Text(
+          'Success',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+        content: Text(
+          message,
+          style: const TextStyle(fontSize: 13),
+        ),
+        actions: [
+          SizedBox(
+            height: 36,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF16A34A),
+                elevation: 0,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK', style: TextStyle(color: Colors.white)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<bool> _confirmArchive() async {
     final result = await showDialog<bool>(
       context: context,
@@ -921,7 +1040,7 @@ class _DashboardState extends State<Dashboard> {
         child: Column(
           children: [
             Container(
-              height: screenHeight * .29,
+              height: screenHeight * .30,
               decoration: BoxDecoration(
                 color: Color(0xFF004280),
                 borderRadius: BorderRadius.vertical(
@@ -929,10 +1048,9 @@ class _DashboardState extends State<Dashboard> {
                   bottom: Radius.circular(20),
                 ),
               ),
-              padding: EdgeInsets.all(10),
+              padding: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
               child: Column(
                 children: [
-                  SizedBox(height: 10),
                   Container(
                     margin: EdgeInsets.symmetric(horizontal: 20),
                     child: Row(
@@ -959,22 +1077,55 @@ class _DashboardState extends State<Dashboard> {
                             ),
                           ],
                         ),
-                        OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: Size(100, 30),
-                            backgroundColor: Color(0xFFFFF8D2),
-                            side: BorderSide(color: Color(0xFFE6C402)),
-                          ),
-                          onPressed: () {
-                            _showJoinClassDialog();
-                          },
-                          child: Text(
-                            'Join a class',
-                            style: TextStyle(
-                              color: Color(0xFFB09602),
-                              fontSize: screenHeight * .016
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Container(
+                              margin: const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                              child: Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  IconButton(
+                                    onPressed: () async {
+                                      widget.onOpenNotifications();
+                                    },
+                                    icon: const Icon(CupertinoIcons.bell),
+                                    color: Colors.white,
+                                  ),
+                                  if (widget.unRead)
+                                    Positioned(
+                                      right: 10,
+                                      top: 10,
+                                      child: Container(
+                                        width: 10,
+                                        height: 10,
+                                        decoration: const BoxDecoration(
+                                          color: Colors.red,
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
                             ),
-                          ),
+                            OutlinedButton(
+                              style: OutlinedButton.styleFrom(
+                                minimumSize: Size(100, 30),
+                                backgroundColor: Color(0xFFFFF8D2),
+                                side: BorderSide(color: Color(0xFFE6C402)),
+                              ),
+                              onPressed: () {
+                                _showJoinClassDialog();
+                              },
+                              child: Text(
+                                'Join a class',
+                                style: TextStyle(
+                                  color: Color(0xFFB09602),
+                                  fontSize: screenHeight * .016
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -1074,12 +1225,8 @@ class _DashboardState extends State<Dashboard> {
                           c.sched,
                           c.session,
                           screenHeight,
-                              () {
-                            setState(() {
-                              _archivedClasses.add(_classes[i]);
-                              _classes.removeAt(i);
-                              _sortClasses();
-                            });
+                          () async {
+                            await _archiveClass(item: c, index: i);
                           },
                         );
                       }).toList(),

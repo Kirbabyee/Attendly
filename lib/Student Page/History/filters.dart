@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 
 import '../student_session.dart';
 
@@ -82,7 +83,7 @@ class _DataFilterState extends State<DataFilter> {
   String selectedStatus = 'All'; // chips: All/Present/Late/Absent
   String selectedClass = 'All';  // dropdown: Filter by class
 
-  DateTime? selectedDate;
+  DateTimeRange? selectedRange;
 
   List<AttendanceRecord> allRecords = [];
   List<AttendanceRecord> filteredRecords = [];
@@ -130,10 +131,20 @@ class _DataFilterState extends State<DataFilter> {
             selectedClass == 'All' || record.courseName == selectedClass;
 
         // Date filter (same day only)
-        final matchesDate = selectedDate == null ||
-            (record.date.year == selectedDate!.year &&
-                record.date.month == selectedDate!.month &&
-                record.date.day == selectedDate!.day);
+        final matchesDate = selectedRange == null || (() {
+          final d = DateTime(record.date.year, record.date.month, record.date.day);
+          final start = DateTime(
+            selectedRange!.start.year,
+            selectedRange!.start.month,
+            selectedRange!.start.day,
+          );
+          final end = DateTime(
+            selectedRange!.end.year,
+            selectedRange!.end.month,
+            selectedRange!.end.day,
+          );
+          return !d.isBefore(start) && !d.isAfter(end);
+        })();
 
         return matchesSearch && matchesClass && matchesStatus && matchesDate;
 
@@ -141,37 +152,73 @@ class _DataFilterState extends State<DataFilter> {
     });
   }
 
-  Future<void> pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: selectedDate ?? DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
+  Future<void> pickDateRangeDialogCalendar() async {
+    DateTimeRange? temp = selectedRange;
 
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Colors.blue,
-              onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: Colors.black,
-            ),
-            dialogBackgroundColor: Colors.white,
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          title: const Text(
+            'Select date range',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
-          child: child!,
+          content: SizedBox(
+            width: 340,
+            height: 360,
+            child: SfDateRangePicker(
+              selectionMode: DateRangePickerSelectionMode.range,
+              startRangeSelectionColor: const Color(0xFF004280),
+              endRangeSelectionColor: const Color(0xFF004280),
+              rangeSelectionColor: const Color(0xFF004280),
+              rangeTextStyle: const TextStyle(color: Colors.white),
+              toggleDaySelection: true,
+              todayHighlightColor: const Color(0xFF004280),
+              backgroundColor: Colors.white,
+              headerStyle: const DateRangePickerHeaderStyle(
+                backgroundColor: Colors.white,
+              ),
+              initialSelectedRange: temp == null
+                  ? null
+                  : PickerDateRange(temp!.start, temp!.end),
+              onSelectionChanged: (args) {
+                final r = args.value;
+                if (r is PickerDateRange) {
+                  final DateTime? start = r.startDate;
+                  if (start == null) return;
+                  final DateTime end = r.endDate ?? start; // ✅ fallback
+                  temp = DateTimeRange(start: start, end: end);
+                }
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel', style: TextStyle(color: Colors.black)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF004280),
+              ),
+              onPressed: () {
+                setState(() => selectedRange = temp);
+                applyFilters();
+                Navigator.pop(context);
+              },
+              child: const Text('Apply', style: TextStyle(color: Colors.white)),
+            ),
+          ],
         );
       },
     );
-
-    if (picked != null) {
-      setState(() => selectedDate = picked);
-      applyFilters();
-    }
   }
 
   String _fmt(DateTime d) =>
       '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+  String _fmtRange(DateTimeRange r) => '${_fmt(r.start)} - ${_fmt(r.end)}';
 
   Widget statusChip(String label, double screenHeight) {
     return ChoiceChip(
@@ -298,57 +345,72 @@ class _DataFilterState extends State<DataFilter> {
                       Align(
                         alignment: Alignment.centerRight,
                         child: SizedBox(
-                          width: screenWidth * 0.30,
+                          width: MediaQuery.of(context).size.width * 0.4,
                           child: OutlinedButton(
                             style: OutlinedButton.styleFrom(
-                              backgroundColor: const Color(0xFFEAEAEA),
-                              side: BorderSide.none,
+                              side: BorderSide(color: Colors.grey),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
                             ),
-                            onPressed: pickDate,
+                            onPressed: pickDateRangeDialogCalendar,
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
-                                  selectedDate == null
-                                      ? 'Select date'
-                                      : _fmt(selectedDate!),
-                                  style: TextStyle(fontSize: screenHeight * .014, color: Colors.black),
+                                Expanded(
+                                  child: Text(
+                                    selectedRange == null ? 'Select date' : _fmtRange(selectedRange!),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    softWrap: false,
+                                    style: const TextStyle(fontSize: 12, color: Colors.black),
+                                  ),
                                 ),
-                                if (selectedDate != null)
+                                if (selectedRange != null)
                                   GestureDetector(
                                     onTap: () {
-                                      setState(() => selectedDate = null);
+                                      setState(() => selectedRange = null);
                                       applyFilters();
                                     },
                                     child: const Icon(Icons.close, size: 16),
                                   ),
+                                SizedBox(width: 5,),
+                                Icon(CupertinoIcons.calendar, color: Colors.black,)
                               ],
                             ),
                           ),
                         ),
                       ),
 
-                      SizedBox(width: screenHeight * 0.135),
+                      SizedBox(width: screenWidth * 0.15),
 
                       // Dropdown
                       Align(
                         alignment: Alignment.centerRight,
-                        child: SizedBox(
-                          width: MediaQuery.of(context).size.width * 0.3,
+                        child: Container(
+                          width: screenWidth * 0.35,
+                          padding: const EdgeInsets.symmetric(horizontal: 15),
+                          height: 42,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                           child: DropdownButton<String>(
-                            isExpanded: true, // important so it uses the SizedBox width
-                            dropdownColor: Colors.white,
-                            style: TextStyle(fontSize: screenHeight * .014, color: Colors.grey[700]),
+                            isExpanded: true,
+                            dropdownColor: Colors.white, // dropdown list bg
+                            underline: const SizedBox(), // ❌ remove default underline
+                            iconEnabledColor: Colors.black, // arrow color
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.black, // text color
+                            ),
                             value: selectedClass,
                             items: classOptions.map((c) {
                               return DropdownMenuItem(
                                 value: c,
                                 child: Text(
                                   c,
-                                  overflow: TextOverflow.ellipsis, // prevent long text overflow
+                                  overflow: TextOverflow.ellipsis,
                                   maxLines: 1,
                                 ),
                               );

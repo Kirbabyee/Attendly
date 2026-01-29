@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_project_1/Student%20Page/face_registration.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'student_session.dart';
 import 'mainshell.dart';
@@ -80,7 +81,7 @@ class _TermsAndConditionsPageState extends State<TermsAndConditionsPage> {
 
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const Mainshell()),
+        MaterialPageRoute(builder: (_) => const Face_Registration()),
             (route) => false,
       );
     } catch (e) {
