@@ -1,5 +1,7 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'attendance/face_verification.dart';
 import 'student_session.dart'; // adjust path kung iba
@@ -42,6 +44,12 @@ class ClassItem {
 }
 
 class _DashboardState extends State<Dashboard> {
+  Future<bool> _hasInternet() async {
+    final conn = await Connectivity().checkConnectivity();
+    if (conn == ConnectivityResult.none) return false;
+    return InternetConnection().hasInternetAccess;
+  }
+
   bool _loadingClasses = false;
   String? _classesError;
 
@@ -60,6 +68,16 @@ class _DashboardState extends State<Dashboard> {
   Future<void> _loadMyClasses() async {
     final studentId = _student?['id'] as String?;
     if (studentId == null) return;
+
+    final ok = await _hasInternet();
+    if (!ok) {
+      if (!mounted) return;
+      setState(() {
+        _classesError = null; // ✅ wag supabase error
+        _loadingClasses = false;
+      });
+      return;
+    }
 
     if (!mounted) return;
     setState(() {
@@ -328,6 +346,21 @@ class _DashboardState extends State<Dashboard> {
   final List<ClassItem> _archivedClasses = [];
 
   Future<void> _refresh() async {
+    final ok = await _hasInternet();
+    if (!ok) {
+      if (!mounted) return;
+
+      // ✅ don't call supabase, just show message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No internet connection'),
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
     await _loadStudent(force: true);
     await _loadMyClasses();
   }
