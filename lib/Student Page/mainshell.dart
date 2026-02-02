@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter_project_1/Student%20Page/wifi_guard.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../widgets/navbar.dart';
 
@@ -26,6 +28,8 @@ class Mainshell extends StatefulWidget {
 }
 
 class _MainshellState extends State<Mainshell> {
+  final supabase = Supabase.instance.client;
+  RealtimeChannel? _locationSub;
   late int _index;
 
   final GlobalKey<ScaffoldState> _shellKey = GlobalKey<ScaffoldState>();
@@ -53,6 +57,39 @@ class _MainshellState extends State<Mainshell> {
     ];
 
     _startInternetWatcher();
+    _startLocationWatcher(); // ✅ Idagdag ito
+  }
+
+  void _startLocationWatcher() {
+    final userId = supabase.auth.currentUser?.id;
+    if (userId == null) return;
+
+    _locationSub = supabase
+        .channel('public:students_check')
+        .onPostgresChanges(
+      event: PostgresChangeEvent.update,
+      schema: 'public',
+      table: 'students',
+      filter: PostgresChangeFilter(
+        type: PostgresChangeFilterType.eq,
+        column: 'id',
+        value: userId,
+      ),
+      callback: (payload) {
+        final newLocation = payload.newRecord['location']?.toString().toUpperCase();
+
+        // ✅ KONTRA-REFRESH: Kapag lumayo sa classroom, lock ang app
+        if (newLocation == 'GATE' || newLocation == 'NULL') {
+          if (mounted) {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (_) => const WifiGuard()),
+                  (route) => false,
+            );
+          }
+        }
+      },
+    )
+        .subscribe();
   }
 
   Future<void> _startInternetWatcher() async {
@@ -80,6 +117,7 @@ class _MainshellState extends State<Mainshell> {
   @override
   void dispose() {
     _connSub?.cancel();
+    _locationSub?.unsubscribe();
     super.dispose();
   }
 

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_project_1/Student%20Page/face_registration.dart';
+import 'package:flutter_project_1/Student%20Page/wifi_guard.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'student_session.dart';
 
@@ -95,7 +96,7 @@ class _AuthGateState extends State<AuthGate> with SingleTickerProviderStateMixin
     _routing = true;
 
     try {
-      // ✅ logged out → landing
+      // ✅ 1. Kapag hindi logged in -> Landing/Login Page
       if (session == null) {
         if (!mounted) return;
         Navigator.of(context).pushAndRemoveUntil(
@@ -105,28 +106,20 @@ class _AuthGateState extends State<AuthGate> with SingleTickerProviderStateMixin
         return;
       }
 
+      String location = "NULL"; // Default
       int terms = 0;
-      bool twoFA = false;
       bool isFaceRegistered = false;
 
-      // email to match in twofa_otps
-      String emailToUse = session.user.email?.trim().toLowerCase() ?? "";
-
       try {
+        // Idagdag ang 'location' sa select query
         final row = await supabase
             .from('students')
-            .select('terms_conditions, two_fa_enabled, email, face_registered_at, status, archived')
+            .select('terms_conditions, face_registered_at, status, archived, location')
             .eq('id', session.user.id)
             .maybeSingle();
 
-        final isArchived = (row?['archived'] == true);
-        final status = (row?['status'] ?? '').toString().trim().toLowerCase();
-
-        // ✅ archived OR inactive OR no row → logout
-        if (row == null || isArchived || status == 'inactive') {
+        if (row == null || row['archived'] == true || row['status'] == 'inactive') {
           await supabase.auth.signOut();
-          StudentSession.clear();
-
           if (!mounted) return;
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (_) => const LandingPage()),
@@ -135,26 +128,22 @@ class _AuthGateState extends State<AuthGate> with SingleTickerProviderStateMixin
           return;
         }
 
+        // Kunin ang current location mula sa DB
+        location = (row['location'] ?? "NULL").toString().toUpperCase();
+
         final rawTerms = row['terms_conditions'];
-        terms = (rawTerms is num) ? rawTerms.toInt() : int.tryParse('$rawTerms') ?? 0;
+        terms = (rawTerms is num) ? rawTerms.toInt() : 0;
 
         final faceRegisteredAt = row['face_registered_at'];
         isFaceRegistered = faceRegisteredAt != null && faceRegisteredAt.toString().isNotEmpty;
 
-        twoFA = row['two_fa_enabled'] == true;
-
-        final emailReal = (row['email'] ?? '').toString().trim().toLowerCase();
-        if (emailReal.isNotEmpty) emailToUse = emailReal;
-      } catch (_) {
-        terms = 0;
-        twoFA = false;
+      } catch (e) {
+        print("Error fetching student data: $e");
       }
 
-      // ✅ terms not accepted → sign out
+      // ✅ 2. Terms Check
       if (terms != 1) {
         await supabase.auth.signOut();
-        StudentSession.clear();
-
         if (!mounted) return;
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const LandingPage()),
@@ -163,54 +152,33 @@ class _AuthGateState extends State<AuthGate> with SingleTickerProviderStateMixin
         return;
       }
 
-      // ✅ 2FA enabled: must be verified in twofa_otps
-      if (twoFA) {
-        bool verified = false;
+      if (!mounted) return;
 
-        try {
-          if (emailToUse.isNotEmpty) {
-            final otpRow = await supabase
-                .from('twofa_otps')
-                .select('verified, expires_at')
-                .eq('email', emailToUse)
-                .maybeSingle();
-
-            verified = otpRow?['verified'] == true;
-
-            // optional: if expired, treat as not verified
-            final expRaw = otpRow?['expires_at'];
-            if (verified && expRaw != null) {
-              final exp = DateTime.tryParse(expRaw.toString());
-              if (exp != null && exp.isBefore(DateTime.now().toUtc())) {
-                verified = false;
-              }
-            }
-          }
-        } catch (_) {
-          verified = false;
-        }
-
-        if (!verified) {
-          await supabase.auth.signOut();
-          StudentSession.clear();
-
-          if (!mounted) return;
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const LandingPage()),
-                (route) => false,
-          );
-          return;
-        }
+      // ✅ 3. Location-Based Routing
+      // Kapag 'GATE', kahit registered na ang face, dapat dumaan sa WifiGuard
+      if (location == "GATE") {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const WifiGuard()), // Gawa ka ng WifiGuard page
+              (route) => false,
+        );
+      }
+      // Kapag 'CLASSROOM', check kung may face registration na
+      else if (location == "CLASSROOM") {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (_) => isFaceRegistered ? const Mainshell() : const Face_Registration(),
+          ),
+              (route) => false,
+        );
+      }
+      // Default / Unknown Location
+      else {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const Mainshell()),
+              (route) => false,
+        );
       }
 
-      // ✅ passed terms (+2FA if enabled) → mainshell
-      if (!mounted) return;
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(
-          builder: (_) => isFaceRegistered ? const Mainshell() : const Face_Registration(),
-        ),
-            (route) => false,
-      );
     } finally {
       _routing = false;
     }
