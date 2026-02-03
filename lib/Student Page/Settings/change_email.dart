@@ -28,6 +28,8 @@ class _ChangeEmailState extends State<ChangeEmail> {
   bool _checkingPw = false;
 
   String? _pwError;
+  // Sa loob ng _ChangeEmailState
+  String? _newEmailError; // Para sa server-side validation (e.g. "Email already taken")
 
   final _pwFormKey = GlobalKey<FormState>();
   final _emailFormKey = GlobalKey<FormState>();
@@ -281,7 +283,7 @@ class _ChangeEmailState extends State<ChangeEmail> {
                 },
                 decoration: _input(
                   'Enter your password',
-                  errorText: _pwError, // ✅ only shows when server says incorrect
+                  errorText: _pwError != null ? 'Invalid password' : null, // ✅ only shows when server says incorrect
                   suffix: IconButton(
                     onPressed: () => setState(() => showPassword = !showPassword),
                     icon: Icon(showPassword ? Icons.visibility : Icons.visibility_off, size: 18),
@@ -362,7 +364,14 @@ class _ChangeEmailState extends State<ChangeEmail> {
                 controller: _newEmailController,
                 keyboardType: TextInputType.emailAddress,
                 style: const TextStyle(fontSize: 12),
-                decoration: _input('Enter new email'),
+                onChanged: (_) {
+                  // Kapag nag-type ang user, tanggalin ang server error
+                  if (_newEmailError != null) setState(() => _newEmailError = null);
+                },
+                decoration: _input(
+                  'Enter new email',
+                  errorText: _newEmailError, // Dito lalabas ang "Email already registered"
+                ),
                 validator: (value) {
                   final v = (value ?? '').trim();
                   if (v.isEmpty) return 'Email is required';
@@ -414,14 +423,18 @@ class _ChangeEmailState extends State<ChangeEmail> {
 
               final newEmail = _newEmailController.text.trim().toLowerCase();
 
-              setState(() => saving = true);
+              setState(() {
+                saving = true;
+                _newEmailError = null; // Reset error before request
+              });
+
               try {
-                // 1) send otp to NEW EMAIL
+                // 1) Send OTP (Dito ma-checheck kung existing na ang email sa DB)
                 await _sendOtpToNewEmail(newEmail);
 
                 if (!mounted) return;
 
-                // 2) OTP modal
+                // 2) Kung successful ang send, ipakita ang OTP modal
                 final verified = await _showOtpModal(
                   email: newEmail,
                   cooldownSeconds: 60,
@@ -435,10 +448,16 @@ class _ChangeEmailState extends State<ChangeEmail> {
                 await _showSuccess();
                 if (!mounted) return;
 
-                // ✅ return new email to caller (AccountInformation)
                 Navigator.pop(context, newEmail);
               } catch (e) {
-                _toast(e.toString().replaceFirst('Exception: ', ''));
+                final msg = e.toString().replaceFirst('Exception: ', '');
+
+                // Check if the error is about existing email
+                if (msg.contains('already registered') || msg.contains('existing')) {
+                  setState(() => _newEmailError = 'Email already registered to another account');
+                } else {
+                  _toast(msg); // For other errors like network issues
+                }
               } finally {
                 if (mounted) setState(() => saving = false);
               }
@@ -591,7 +610,7 @@ class _OtpDialogState extends State<_OtpDialog> {
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
-                      '$_otpError',
+                      'Invalid OTP',
                       style: const TextStyle(color: Colors.red, fontSize: 12, fontWeight: FontWeight.w600),
                     ),
                   ),

@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_project_1/Student%20Page/login.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../main.dart';
@@ -62,6 +65,199 @@ class _SettingsState extends State<Settings> {
     }
   }
 
+  // Sa loob ng _SettingsState class
+
+  Future<void> _handle2FAToggle(bool value) async {
+    final actionText = value ? "Enable" : "Disable";
+    final email = _student?['email']?.toString() ?? '';
+    final studentNumber = _student?['student_number']?.toString() ?? '';
+
+    // 1. Initial Confirmation Dialog
+    final proceed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        backgroundColor: Colors.white,
+        title: Text('$actionText 2FA?', style: const TextStyle(fontWeight: FontWeight.bold)),
+        content: Text(
+            'To $actionText Two-Factor Authentication, we need to verify your identity. We will send a 6-digit OTP to your registered email address.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel', style: TextStyle(color: Colors.black)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF004280)),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Send OTP', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (proceed != true) {
+      // Ibalik ang switch sa dating state kung cinancel
+      setState(() => is2FAOn = !value);
+      return;
+    }
+
+    // --- LOADING START ---
+    _showLoadingDialog("Sending OTP...");
+
+    try {
+      // Step A: Send OTP via Edge Function
+      // Pwede mong gamitin ang same activation function o gawa ng generic na 'send-2fa-otp'
+      await _sendActivationOtp(email, studentNumber);
+
+      if (mounted) Navigator.pop(context); // Close Loading
+
+      // Step B: Show OTP Modal
+      if (!mounted) return;
+      final verified = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => _OtpDialog(
+          email: email,
+          password: "",
+          cooldownSeconds: 60,
+          onResend: () => _sendActivationOtp(email, studentNumber),
+          onVerify: (otp) => _verifyActivationOtp(email, studentNumber, otp),
+        ),
+      );
+
+      if (verified == true) {
+        await _update2FAInDatabase(value); // Save 'true' or 'false'
+
+        if (value) {
+          await _show2FASuccess(); // Pakita lang ang success modal kung i-e-enable
+        } else {
+          _toast("Two-Factor Authentication has been disabled.");
+        }
+      } else {
+        // Kung nag-fail ang verification, ibalik ang switch
+        setState(() => is2FAOn = !value);
+      }
+    } catch (e) {
+      if (mounted && Navigator.canPop(context)) Navigator.pop(context);
+      _toast(e.toString().replaceFirst('Exception: ', ''));
+      setState(() => is2FAOn = !value);
+    }
+  }
+
+  // ✅ Loading Dialog Helper
+  void _showLoadingDialog(String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => Dialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(strokeWidth: 2),
+              const SizedBox(width: 20),
+              Text(message, style: const TextStyle(fontSize: 14)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ✅ Success Modal (Gaya ng sa Change Password)
+  Future<void> _show2FASuccess() async {
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    await showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (_) => Center(
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.7, // Mas maliit na width
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Material( // Para hindi maging weird ang text style
+            color: Colors.transparent,
+            child: Column(
+              mainAxisSize: MainAxisSize.min, // Importante: kukunin lang ang space na kailangan
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFE8F5E9),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.check_circle_rounded,
+                    color: Colors.green,
+                    size: screenHeight * 0.05, // Responsive size
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  '2FA Enabled',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+                const SizedBox(height: 5),
+                const Text(
+                  'Your account is now more secure.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 13, color: Colors.grey),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF004280),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      elevation: 0,
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Got it!', style: TextStyle(color: Colors.white, fontSize: 13)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // --- Helper Functions ---
+  Future<void> _sendActivationOtp(String email, String studentNumber) async {
+    final res = await supabase.functions.invoke('send-2fa-activation-otp', body: {
+      'email': email,
+      'student_number': studentNumber,
+    });
+    if (res.status != 200) throw Exception(res.data['message'] ?? 'Failed to send OTP');
+  }
+
+  Future<void> _verifyActivationOtp(String email, String studentNumber, String otp) async {
+    final res = await supabase.functions.invoke('verify-2fa-activation-otp', body: {
+      'email': email,
+      'student_number': studentNumber,
+      'otp': otp,
+    });
+    if (res.status != 200) throw Exception(res.data['message'] ?? 'Invalid OTP');
+  }
+
+  Future<void> _update2FAInDatabase(bool enabled) async {
+    final uid = _student?['id'];
+    await supabase.from('students').update({'two_fa_enabled': enabled}).eq('id', uid);
+    await _loadStudent(force: true); // Refresh local state
+  }
+
+  void _toast(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
 
   bool isNotificationOn = false;
 
@@ -441,71 +637,7 @@ class _SettingsState extends State<Settings> {
                                   child: Switch(
                                     activeTrackColor: const Color(0xFF004280),
                                     value: is2FAOn,
-                                    onChanged: _twoFaBusy ? null : (value) async {
-                                      final ok = await showDialog<bool>(
-                                        context: context,
-                                        barrierDismissible: true,
-                                        builder: (_) => AlertDialog(
-                                          backgroundColor: Colors.white,
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                          title: Text(
-                                            value ? 'Enable 2FA?' : 'Disable 2FA?',
-                                            style: const TextStyle(fontWeight: FontWeight.w600),
-                                          ),
-                                          content: Text(
-                                            value
-                                                ? 'You will receive OTP during sensitive actions (e.g., password reset).'
-                                                : 'OTP verification will be turned off.',
-                                          ),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () => Navigator.pop(context, false),
-                                              child: const Text('Cancel'),
-                                            ),
-                                            ElevatedButton(
-                                              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF004280)),
-                                              onPressed: () => Navigator.pop(context, true),
-                                              child: const Text('Confirm', style: TextStyle(color: Colors.white)),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                      if (ok != true) return;
-
-                                      final prev = is2FAOn;
-                                      setState(() {
-                                        _twoFaBusy = true;
-                                        is2FAOn = value;
-                                      });
-
-                                      final uid = _student?['id']?.toString();
-                                      if (uid == null) {
-                                        setState(() {
-                                          _twoFaBusy = false;
-                                          is2FAOn = prev;
-                                        });
-                                        return;
-                                      }
-
-                                      try {
-                                        // ✅ write to DB
-                                        await supabase
-                                            .from('students')
-                                            .update({'two_fa_enabled': value})
-                                            .eq('id', uid);
-
-                                        // ✅ refresh cache/UI from DB
-                                        await _loadStudent(force: true);
-                                      } catch (e) {
-                                        if (!mounted) return;
-                                        setState(() => is2FAOn = prev);
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text('Failed to update 2FA: $e')),
-                                        );
-                                      } finally {
-                                        if (mounted) setState(() => _twoFaBusy = false);
-                                      }
-                                    },
+                                    onChanged: _twoFaBusy ? null : (value) => _handle2FAToggle(value),
                                   ),
                                 )
                               ],
@@ -844,6 +976,239 @@ class _SettingsState extends State<Settings> {
 
                     SizedBox(height: screenHeight * .023),
                   ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _OtpDialog extends StatefulWidget {
+  final String email; // ✅ add
+  final String password;
+  final int cooldownSeconds;
+  final Future<void> Function() onResend;
+  final Future<void> Function(String otp) onVerify;
+
+  const _OtpDialog({
+    required this.email, // ✅ add
+    required this.password,
+    required this.cooldownSeconds,
+    required this.onResend,
+    required this.onVerify,
+  });
+
+  @override
+  State<_OtpDialog> createState() => _OtpDialogState();
+}
+
+class _OtpDialogState extends State<_OtpDialog> {
+  String? _otpError; // ✅ show warning + red border
+  String maskEmail(String email) {
+    final e = email.trim();
+    final at = e.indexOf('@');
+    if (at <= 1) return email;
+
+    final local = e.substring(0, at);
+    final domain = e.substring(at); // includes '@'
+
+    if (local.length == 2) return '${local[0]}*$domain';
+    if (local.length <= 1) return '*$domain';
+
+    final start = local.substring(0, 1);
+    final end = local.substring(local.length - 1);
+    return '$start${'*' * (local.length - 2)}$end$domain';
+  }
+
+  final _otp = TextEditingController();
+  Timer? _t;
+  int _left = 0;
+
+  bool _verifying = false;
+  bool _resending = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _startCooldown(widget.cooldownSeconds);
+  }
+
+  @override
+  void dispose() {
+    _t?.cancel();
+    _otp.dispose();
+    super.dispose();
+  }
+
+  void _startCooldown(int seconds) {
+    _t?.cancel();
+    setState(() => _left = seconds);
+    _t = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) return;
+      if (_left <= 1) {
+        timer.cancel();
+        setState(() => _left = 0);
+      } else {
+        setState(() => _left -= 1);
+      }
+    });
+  }
+
+  String get _otpValue => _otp.text.trim();
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Enter OTP', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+            const SizedBox(height: 8),
+            Text(
+              'We sent a 6-digit OTP to:\n${maskEmail(widget.email)}',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 12),
+            ),
+            const SizedBox(height: 14),
+
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: _otpError == null ? const Color(0xFFEAEAEA) : const Color(0xFFFFE5E5),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: _otpError == null ? Colors.transparent : Colors.red,
+                  width: 1,
+                ),
+              ),
+              child: TextField(
+                controller: _otp,
+                keyboardType: TextInputType.number,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 18,
+                  letterSpacing: 6,
+                  fontWeight: FontWeight.w600,
+                ),
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(6),
+                ],
+                onChanged: (_) {
+                  if (_otpError != null) setState(() => _otpError = null);
+                },
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  hintText: '000000',
+                ),
+              ),
+            ),
+            if (_otpError != null) ...[
+              const SizedBox(height: 5),
+              Row(
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.red, size: 16),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'Invalid OTP',
+                      style: const TextStyle(color: Colors.red, fontSize: 12, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+
+
+            const SizedBox(height: 14),
+
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.black87,
+                      side: const BorderSide(color: Color(0xFFDDDDDD)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    onPressed: _verifying ? null : () => Navigator.pop(context, false),
+                    child: const Text('Cancel'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF004280),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      elevation: 0,
+                    ),
+                    onPressed: (_verifying || _otpValue.length != 6)
+                        ? null
+                        : () async {
+                      setState(() => _verifying = true);
+                      try {
+                        await widget.onVerify(_otpValue);
+                        if (!mounted) return;
+                        Navigator.pop(context, true);
+                      } catch (e) {
+                        final msg = e.toString().replaceFirst('Exception: ', '');
+
+                        if (!mounted) return;
+                        setState(() => _otpError = msg.isEmpty ? 'Invalid OTP' : msg);
+
+                        // optional: haptic feedback
+                        HapticFeedback.mediumImpact();
+                      } finally {
+                        if (mounted) setState(() => _verifying = false);
+                      }
+                    },
+                    child: _verifying
+                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : const Text('Verify', style: TextStyle(color: Colors.white)),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 10),
+
+            InkWell(
+              onTap: (_left > 0 || _resending)
+                  ? null
+                  : () async {
+                setState(() => _resending = true);
+                try {
+                  await widget.onResend();
+                  if (!mounted) return;
+                  _startCooldown(widget.cooldownSeconds);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('OTP resent. Please check your email.')));
+                } catch (e) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+                  );
+                } finally {
+                  if (mounted) setState(() => _resending = false);
+                }
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Text(
+                  _left > 0 ? 'Resend OTP (${_left}s)' : 'Resend OTP',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: (_left > 0) ? Colors.grey : const Color(0xFF004280),
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
