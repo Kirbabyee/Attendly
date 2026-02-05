@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui';
 import 'dart:convert';
+import 'package:flutter_project_1/Student%20Page/device_registration.dart';
 import 'package:flutter_project_1/Student%20Page/student_session.dart';
 import 'package:http/http.dart' as http;
 
@@ -154,7 +155,7 @@ class _Face_RegistrationState extends State<Face_Registration> {
     if (!mounted) return;
 
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const DashboardLoading()),
+      MaterialPageRoute(builder: (_) => const DeviceRegistration()),
     );
   }
 

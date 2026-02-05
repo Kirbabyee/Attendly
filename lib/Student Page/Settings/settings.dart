@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_project_1/Student%20Page/login.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../main.dart';
 import '../../widgets/push_notification.dart';
@@ -126,15 +127,10 @@ class _SettingsState extends State<Settings> {
       );
 
       if (verified == true) {
-        await _update2FAInDatabase(value); // Save 'true' or 'false'
-
-        if (value) {
-          await _show2FASuccess(); // Pakita lang ang success modal kung i-e-enable
-        } else {
-          _toast("Two-Factor Authentication has been disabled.");
-        }
+        await _update2FAInDatabase(value);
+        // ✅ Dynamic Success Modal call
+        await _showToggleSuccess(value);
       } else {
-        // Kung nag-fail ang verification, ibalik ang switch
         setState(() => is2FAOn = !value);
       }
     } catch (e) {
@@ -168,49 +164,53 @@ class _SettingsState extends State<Settings> {
   }
 
   // ✅ Success Modal (Gaya ng sa Change Password)
-  Future<void> _show2FASuccess() async {
+  // ✅ Dynamic Success Modal para sa Enable at Disable
+  Future<void> _showToggleSuccess(bool isEnabling) async {
     final screenHeight = MediaQuery.of(context).size.height;
+
+    // UI Colors & Icons base sa action
+    final Color themeColor = isEnabling ? Colors.green : Colors.orange;
+    final Color bgColor = isEnabling ? const Color(0xFFE8F5E9) : const Color(0xFFFFF3E0);
+    final IconData displayIcon = isEnabling ? Icons.verified_user : Icons.shield_outlined;
+    final String title = isEnabling ? '2FA Enabled' : '2FA Disabled';
+    final String subtitle = isEnabling
+        ? 'Your account is now more secure.'
+        : 'Your account security has been updated.';
 
     await showDialog(
       context: context,
       barrierDismissible: true,
       builder: (_) => Center(
         child: Container(
-          width: MediaQuery.of(context).size.width * 0.7, // Mas maliit na width
+          width: MediaQuery.of(context).size.width * 0.7,
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(15),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(15),
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)]
           ),
-          child: Material( // Para hindi maging weird ang text style
+          child: Material(
             color: Colors.transparent,
             child: Column(
-              mainAxisSize: MainAxisSize.min, // Importante: kukunin lang ang space na kailangan
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFE8F5E9),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.check_circle_rounded,
-                    color: Colors.green,
-                    size: screenHeight * 0.05, // Responsive size
-                  ),
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  '2FA Enabled',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-                const SizedBox(height: 5),
-                const Text(
-                  'Your account is now more secure.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 13, color: Colors.grey),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(color: bgColor, shape: BoxShape.circle),
+                  child: Icon(displayIcon, color: themeColor, size: screenHeight * 0.05),
                 ),
                 const SizedBox(height: 12),
+                Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  subtitle,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 13, color: Colors.grey),
+                ),
+                const SizedBox(height: 15),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -220,7 +220,7 @@ class _SettingsState extends State<Settings> {
                       elevation: 0,
                     ),
                     onPressed: () => Navigator.pop(context),
-                    child: const Text('Got it!', style: TextStyle(color: Colors.white, fontSize: 13)),
+                    child: const Text('Got it!', style: TextStyle(color: Colors.white)),
                   ),
                 ),
               ],
@@ -648,6 +648,70 @@ class _SettingsState extends State<Settings> {
                     ),
                     SizedBox(height: screenHeight * .023),
 
+                    Container(
+                      width: screenWidth * .9,
+                      padding: EdgeInsets.all(screenHeight * .023),
+                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.memory, color: Colors.black),
+                              SizedBox(width: 10),
+                              Text('Device', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
+                            ],
+                          ),
+                          const SizedBox(height: 15),
+                          OutlinedButton(
+                            onPressed: () {
+                              Navigator.pushNamed(context, '/add_device');
+                            },
+                            style: OutlinedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadiusGeometry.circular(8),
+                              ),
+                              side: BorderSide.none,
+                              backgroundColor: Color(0x90D9D9D9),
+                            ),
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(vertical: screenHeight * .013),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Change Device',
+                                        style: TextStyle(
+                                          fontSize: screenHeight * .014,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Update your linked ESP32 device',
+                                        style: TextStyle(
+                                          fontSize: screenHeight * .014,
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.w300,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Icon(
+                                    Icons.keyboard_arrow_right,
+                                    size: screenHeight * .023,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    SizedBox(height: screenHeight * .023),
                     // About
                     Container(
                       width: screenWidth * .9,

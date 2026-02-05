@@ -1,6 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_project_1/Student%20Page/Settings/add_device.dart';
+import 'package:flutter_project_1/Student%20Page/device_registration.dart';
 import 'package:flutter_project_1/Student%20Page/mainshell.dart';
 import 'package:flutter_project_1/Student%20Page/terms_and_conditions.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -86,6 +88,8 @@ class MyApp extends StatelessWidget {
         '/new_password': (context) => NewPassword(),
         '/terms_conditions': (context) => TermsAndConditionsPage(),
         '/twofa': (context) => const SizedBox.shrink(),
+        '/add_device': (context) => AddDevice(),
+        '/device_registration': (context) => DeviceRegistration(),
       },
     );
   }

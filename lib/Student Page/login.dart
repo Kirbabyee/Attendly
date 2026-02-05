@@ -364,7 +364,7 @@ class _LoginState extends State<Login> {
                           // To check if the account is for student
                           final studentRow = await supabase
                               .from('students')
-                              .select('id, terms_conditions, two_fa_enabled, email, push_enabled, face_registered_at, status, archived')
+                              .select('id, terms_conditions, two_fa_enabled, email, push_enabled, face_registered_at, status, archived, mac_address')
                               .eq('id', uid)
                               .maybeSingle();
 
@@ -487,6 +487,7 @@ class _LoginState extends State<Login> {
                             return;
                           }
 
+
                           final pushEnabled = (studentRow['push_enabled'] == true);
                           final svc = PushTokenService(supabase);
 
@@ -502,13 +503,25 @@ class _LoginState extends State<Login> {
                           final bool isFaceRegistered =
                               faceRegisteredAt != null && faceRegisteredAt.toString().isNotEmpty;
 
+                          final macAddress = studentRow['mac_address'];
+                          final bool isDeviceLinked = macAddress != null && macAddress.toString().isNotEmpty;
+
                           if (!mounted) return;
 
-                          if (isFaceRegistered) {
-                            Navigator.of(context).pushNamedAndRemoveUntil('/mainshell', (r) => false);
-                          } else {
+                          // 1. Kung wala pang Face Registration, unahin ito
+                          if (!isFaceRegistered) {
                             Navigator.of(context).pushNamedAndRemoveUntil('/face_registration', (r) => false);
+                            return;
                           }
+
+                          // 2. KUNG WALANG MAC ADDRESS, REDIRECT SA DEVICE REGISTRATION
+                          if (!isDeviceLinked) {
+                            Navigator.of(context).pushNamedAndRemoveUntil('/device_registration', (r) => false);
+                            return;
+                          }
+
+                          // 3. Kung lahat ay okay (Face at Device), punta sa Main Shell
+                          Navigator.of(context).pushNamedAndRemoveUntil('/mainshell', (r) => false);
                           return;
 
                         } on AuthException catch (e) {

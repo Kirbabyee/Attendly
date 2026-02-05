@@ -283,7 +283,7 @@ class _ChangeEmailState extends State<ChangeEmail> {
                 },
                 decoration: _input(
                   'Enter your password',
-                  errorText: _pwError != null ? 'Invalid password' : null, // ✅ only shows when server says incorrect
+                  errorText: _pwError != null ? 'Password incorrect' : null, // ✅ only shows when server says incorrect
                   suffix: IconButton(
                     onPressed: () => setState(() => showPassword = !showPassword),
                     icon: Icon(showPassword ? Icons.visibility : Icons.visibility_off, size: 18),
