@@ -25,12 +25,16 @@ class _ArchivesState extends State<Archives> {
     required ClassItem item,
     required int index,
   }) async {
+    final userId = supabase.auth.currentUser?.id;
+    if (userId == null) return;
+
     try {
-      // ✅ DB restore
+      // ✅ Update class_enrollments table instead of classes table
       await supabase
-          .from('classes')
+          .from('class_enrollments')
           .update({'archived': false})
-          .eq('id', item.classId);
+          .eq('class_id', item.classId)
+          .eq('student_id', userId);
 
       if (!mounted) return;
 
@@ -50,48 +54,30 @@ class _ArchivesState extends State<Archives> {
   }
 
   Widget classCard(
-      String classId, // ✅ add
+      String classId,
       String course,
       String classCode,
       String professor,
       String room,
       String sched,
-      String session,
       double screenHeight,
-      Future<void> Function() onRestore, // ✅ async
+      Future<void> Function() onRestore,
     ) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-    final borderColor = session == 'Pending'
-        ? const Color(0xFFB09602)
-        : session == 'Ended'
-        ? const Color(0xFFFB8C7A)
-        : const Color(0x90A9CBF9);
 
-    final bgColor = session == 'Pending'
-        ? const Color(0x25FBD600)
-        : session == 'Ended'
-        ? const Color(0xFFFDDCDC)
-        : const Color(0x90DBEAFE);
-
-    final textColor = session == 'Pending'
-        ? const Color(0xFFB09602)
-        : session == 'Ended'
-        ? const Color(0xFFFB8C7A)
-        : const Color(0x90004280);
     return Center(
       child: Container(
-        margin: EdgeInsets.symmetric(vertical: screenHeight * .023),
-        padding: EdgeInsets.all(10),
+        margin: EdgeInsets.symmetric(vertical: screenHeight * .015),
+        padding: const EdgeInsets.all(12),
         width: screenWidth * .9,
         decoration: BoxDecoration(
-          color: session != 'Upcoming' ? Colors.white : Colors.grey[300],
-          borderRadius: BorderRadiusGeometry.circular(10),
-          boxShadow: [
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: const [
             BoxShadow(
-              color: Colors.black26,
-              blurRadius: 2,
-              offset: Offset(0, 5),
+              color: Colors.black12,
+              blurRadius: 4,
+              offset: Offset(0, 2),
             ),
           ],
         ),
@@ -102,28 +88,38 @@ class _ArchivesState extends State<Archives> {
             fontFamily: 'Montserrat',
           ),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: screenWidth * .7,
-                        child: Text(
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
                           course,
-                          style: TextStyle(fontWeight: FontWeight.w500),
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                      SizedBox(height: screenHeight * .008,),
-                      Text(classCode, style: TextStyle(fontSize: screenHeight * .015),),
-                      SizedBox(height: screenHeight * .013,),
-                    ],
+                        SizedBox(height: screenHeight * .004),
+                        Text(
+                          classCode,
+                          style: TextStyle(
+                            fontSize: screenHeight * .014,
+                            color: Colors.black54,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   PopupMenuButton<String>(
                     color: Colors.white,
-                    icon: Icon(Icons.more_vert_outlined, size: screenHeight * .023,),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    icon: Icon(Icons.more_vert_outlined, size: screenHeight * .023),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -133,8 +129,8 @@ class _ArchivesState extends State<Archives> {
                         child: Row(
                           children: [
                             Icon(Icons.restore, size: screenHeight * .021),
-                            SizedBox(width: 8),
-                            Text('Restore', style: TextStyle(fontSize: screenHeight * .017),),
+                            const SizedBox(width: 8),
+                            Text('Restore', style: TextStyle(fontSize: screenHeight * .017)),
                           ],
                         ),
                       ),
@@ -148,57 +144,20 @@ class _ArchivesState extends State<Archives> {
                   ),
                 ],
               ),
+              SizedBox(height: screenHeight * .012),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(CupertinoIcons.person, size: screenHeight * .023),
-                          SizedBox(width: 5),
-                          Text(professor),
-                        ],
-                      ),
-                      SizedBox(height: 5),
-                      Row(
-                        children: [
-                          Icon(Icons.pin_drop_outlined, size: screenHeight * .023),
-                          SizedBox(width: 5),
-                          Text(room),
-                        ],
-                      ),
-                      SizedBox(height: 5),
-                      Row(
-                        children: [
-                          Icon(CupertinoIcons.clock, size: screenHeight * .023),
-                          SizedBox(width: 5),
-                          Text(sched),
-                        ],
-                      ),
-                    ],
-                  ),
-                  Container(
-                    margin: EdgeInsets.fromLTRB(screenWidth * .1, 0, 0, screenWidth < 370 ? 3 : 5),
-                    padding: EdgeInsets.symmetric(vertical: 2),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadiusGeometry.circular(75),
-                      border: Border.all(
-                        color: borderColor,
-                      ),
-                      color:
-                      bgColor,
-                    ),
-                    width: screenWidth * .28,
-                    height: screenHeight * .028,
-                    child: Text(
-                      session,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: screenHeight * .014,
-                        color: textColor,
-                      ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildInfoRow(CupertinoIcons.person, professor, screenHeight),
+                        SizedBox(height: screenHeight * .006),
+                        _buildInfoRow(Icons.pin_drop_outlined, room, screenHeight),
+                        SizedBox(height: screenHeight * .006),
+                        _buildInfoRow(CupertinoIcons.clock, sched, screenHeight),
+                      ],
                     ),
                   ),
                 ],
@@ -210,18 +169,34 @@ class _ArchivesState extends State<Archives> {
     );
   }
 
+  Widget _buildInfoRow(IconData icon, String text, double screenHeight) {
+    return Row(
+      children: [
+        Icon(icon, size: screenHeight * .02),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: screenHeight * .014),
+          ),
+        ),
+      ],
+    );
+  }
+
   Future<bool> _confirmArchive() async {
     final result = await showDialog<bool>(
       context: context,
       barrierDismissible: true,
       builder: (context) {
-        final w = MediaQuery.of(context).size.width;
         final screenHeight = MediaQuery.of(context).size.height;
 
         return AlertDialog(
           backgroundColor: Colors.white,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 40, vertical: 24), // smaller dialog width
-          contentPadding: const EdgeInsets.fromLTRB(20, 16, 20, 8), // tighter inside
+          insetPadding: const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
+          contentPadding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
           titlePadding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
           actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -231,7 +206,7 @@ class _ArchivesState extends State<Archives> {
             style: TextStyle(fontSize: screenHeight * 0.019, fontWeight: FontWeight.w600),
           ),
           content: Text(
-            'This class will be moved back to the classes.',
+            'This class will be moved back to the active classes.',
             style: TextStyle(fontSize: screenHeight * 0.016),
           ),
 
@@ -246,14 +221,14 @@ class _ArchivesState extends State<Archives> {
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
                 onPressed: () => Navigator.pop(context, false),
-                child: Text('Cancel'),
+                child: const Text('Cancel'),
               ),
             ),
             SizedBox(
               height: screenHeight * 0.039,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF004280),
+                  backgroundColor: const Color(0xFF004280),
                   padding: EdgeInsets.symmetric(horizontal: screenHeight * 0.015),
                   elevation: 0,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -274,16 +249,16 @@ class _ArchivesState extends State<Archives> {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-    final screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
+      backgroundColor: const Color(0xFFEAF5FB),
       body: SafeArea(
         child: Column(
           children: [
             // HEADER
             Container(
               height: screenHeight * .13,
-              padding: EdgeInsets.symmetric(horizontal: 30),
-              decoration: BoxDecoration(
+              padding: const EdgeInsets.symmetric(horizontal: 30),
+              decoration: const BoxDecoration(
                 color: Color(0xFF004280),
                 borderRadius: BorderRadius.vertical(
                   top: Radius.zero,
@@ -295,36 +270,37 @@ class _ArchivesState extends State<Archives> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Container(
+                    padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadiusGeometry.circular(7),
-                      color: Color(0x30FFFFFF),
+                      borderRadius: BorderRadius.circular(7),
+                      color: const Color(0x30FFFFFF),
                     ),
                     child: Icon(
                       Icons.archive,
                       color: Colors.white,
-                      size: screenHeight * .053,
+                      size: screenHeight * .04,
                     ),
                   ),
-                  SizedBox(width: 15),
-                  Container(
-                    height: screenHeight * .06,
+                  const SizedBox(width: 15),
+                  Expanded(
                     child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           'Archives',
                           style: TextStyle(
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.bold,
                             color: Colors.white,
-                            fontSize: screenHeight * .018,
+                            fontSize: screenHeight * .02,
                           ),
                         ),
-                        SizedBox(height: screenHeight * .013),
+                        SizedBox(height: screenHeight * .005),
                         Text(
                           'Manage archived classes',
                           style: TextStyle(
                             fontSize: screenHeight * .014,
-                            color: Colors.white,
+                            color: Colors.white70,
                           ),
                         )
                       ],
@@ -333,7 +309,8 @@ class _ArchivesState extends State<Archives> {
                 ],
               ),
             ),
-            Container(
+            Padding(
+              padding: const EdgeInsets.only(left: 8.0),
               child: Row(
                 children: [
                   IconButton(
@@ -343,7 +320,8 @@ class _ArchivesState extends State<Archives> {
                   Text(
                     'Back',
                     style: TextStyle(
-                      fontSize: screenHeight * .017
+                      fontSize: screenHeight * .017,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
@@ -354,7 +332,7 @@ class _ArchivesState extends State<Archives> {
               child: widget.archivedClasses.isEmpty
                   ? const Center(child: Text('No archived classes yet.'))
                   : ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 15),
+                padding: const EdgeInsets.fromLTRB(15, 0, 15, 20),
                 itemCount: widget.archivedClasses.length,
                 itemBuilder: (context, index) {
                   final c = widget.archivedClasses[index];
@@ -366,7 +344,6 @@ class _ArchivesState extends State<Archives> {
                     c.professor,
                     c.room,
                     c.sched,
-                    c.session,
                     screenHeight,
                         () async {
                       await _restoreClass(item: c, index: index);

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -16,36 +17,51 @@ class _AddDeviceState extends State<AddDevice> {
   Map<String, dynamic>? _deviceInfo;
   bool _isLoadingInfo = true;
 
+  // ✅ Controller para sa kontroladong scanning
+  final MobileScannerController _scannerController = MobileScannerController(
+    detectionSpeed: DetectionSpeed.noDuplicates,
+    facing: CameraFacing.back,
+  );
+
+  StreamSubscription<List<Map<String, dynamic>>>? _deviceSubscription;
+
   final Color primaryBlue = const Color(0xFF004280);
   final Color backgroundColor = const Color(0xFFf0f4f7);
 
   @override
   void initState() {
     super.initState();
-    _fetchCurrentDevice();
+    _initRealtimeListener();
   }
 
-  Future<void> _fetchCurrentDevice() async {
-    try {
-      final user = _supabase.auth.currentUser;
-      if (user == null) return;
+  void _initRealtimeListener() {
+    final user = _supabase.auth.currentUser;
+    if (user == null) return;
 
-      final data = await _supabase
-          .from('devices')
-          .select()
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-      setState(() {
-        _deviceInfo = data;
-        _isLoadingInfo = false;
-      });
-    } catch (e) {
-      setState(() => _isLoadingInfo = false);
-    }
+    _deviceSubscription = _supabase
+        .from('devices')
+        .stream(primaryKey: ['mac_address'])
+        .eq('user_id', user.id)
+        .listen((List<Map<String, dynamic>> data) {
+      if (mounted) {
+        setState(() {
+          _deviceInfo = data.isNotEmpty ? data.first : null;
+          _isLoadingInfo = false;
+        });
+      }
+    }, onError: (error) {
+      if (mounted) setState(() => _isLoadingInfo = false);
+    });
   }
 
-  // Reminder Dialog bago mag-scan
+  @override
+  void dispose() {
+    _deviceSubscription?.cancel();
+    _scannerController.dispose();
+    _detectionTimer?.cancel(); // ✅ Cancel timer on dispose
+    super.dispose();
+  }
+
   Future<void> _showChangeDeviceReminder() async {
     final bool? proceed = await showDialog<bool>(
       context: context,
@@ -98,77 +114,46 @@ class _AddDeviceState extends State<AddDevice> {
               padding: EdgeInsets.symmetric(horizontal: screenHeight * .033),
               decoration: const BoxDecoration(
                 color: Color(0xFF004280),
-                borderRadius: BorderRadius.vertical(
-                  top: Radius.zero,
-                  bottom: Radius.circular(20),
-                ),
+                borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
               ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(7),
                       color: const Color(0x30FFFFFF),
                     ),
-                    child: Icon(
-                      Icons.settings,
-                      color: Colors.white,
-                      size: screenHeight * .053,
-                    ),
+                    child: Icon(Icons.memory, color: Colors.white, size: screenHeight * .053),
                   ),
                   const SizedBox(width: 15),
-                  SizedBox(
-                    height: screenHeight * .06,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Settings',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white,
-                            fontSize: screenHeight * .018,
-                          ),
-                        ),
-                        SizedBox(height: screenHeight * .013),
-                        Text(
-                          'Manage your preferences',
-                          style: TextStyle(
-                            fontSize: screenHeight * .014,
-                            color: Colors.white,
-                          ),
-                        )
-                      ],
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('ESP32 Device', style: TextStyle(fontWeight: FontWeight.w500, color: Colors.white, fontSize: 18)),
+                      SizedBox(height: screenHeight * .005),
+                      const Text('Manage your device', style: TextStyle(fontSize: 12, color: Colors.white70)),
+                    ],
                   )
                 ],
               ),
             ),
-
-            SizedBox(height: screenHeight * .053),
-
-            // Back
+            SizedBox(height: screenHeight * .013),
             Row(
               children: [
                 IconButton(
                   onPressed: () => Navigator.pop(context),
                   icon: Icon(CupertinoIcons.arrow_left, size: screenHeight * .023),
                 ),
-                Text(
-                  'Back',
-                  style: TextStyle(fontSize: screenHeight * .017),
-                ),
+                Text('Back', style: TextStyle(fontSize: screenHeight * .017)),
               ],
             ),
-
-            SizedBox(height: screenHeight * .023),
+            SizedBox(height: screenHeight * .013),
+            // ✅ Layout Switching
             _isScanning
-                ? _buildScannerUI()
+                ? _buildScannerUI() // Fixed height scanner
                 : _isLoadingInfo
-                ? _buildLoadingUI() // DITO ANG LOADING STATE
+                ? _buildLoadingUI()
                 : _buildMainUI(screenHeight, screenWidth),
           ],
         ),
@@ -176,18 +161,114 @@ class _AddDeviceState extends State<AddDevice> {
     );
   }
 
-  Widget _buildLoadingUI() {
-    return Center(
+  Timer? _detectionTimer;
+  String? _lastDetectedCode;
+  bool _isProcessing = false;
+
+  Widget _buildScannerUI() {
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 30),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const CupertinoActivityIndicator(radius: 15), // Elegant iOS-style loading
+          ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: SizedBox(
+              height: screenHeight * .35,
+              width: double.infinity,
+              child: Stack(
+                children: [
+                  MobileScanner(
+                    controller: _scannerController,
+                    onDetect: (capture) {
+                      final List<Barcode> barcodes = capture.barcodes;
+                      if (barcodes.isNotEmpty && !_isProcessing) {
+                        final String? code = barcodes.first.rawValue;
+
+                        if (code != null) {
+                          // Kung bago ang code o nawala ang focus, i-reset ang timer
+                          if (code != _lastDetectedCode) {
+                            _detectionTimer?.cancel();
+                            _lastDetectedCode = code;
+
+                            // ✅ Simulan ang delay (e.g., 1.5 seconds na tutok sa QR)
+                            _detectionTimer = Timer(const Duration(milliseconds: 1500), () async {
+                              _isProcessing = true; // Lock scanning
+                              _scannerController.stop();
+
+                              // Visual feedback na nakuha na
+                              if (mounted) {
+                                setState(() => _isScanning = false);
+                                _showConfirmDialog(code);
+                                _isProcessing = false;
+                                _lastDetectedCode = null;
+                              }
+                            });
+                          }
+                        }
+                      } else {
+                        // Kung walang ma-detect, i-cancel ang timer
+                        _detectionTimer?.cancel();
+                        _lastDetectedCode = null;
+                      }
+                    },
+                  ),
+
+                  // Square Guide Overlay
+                  Center(
+                    child: Container(
+                      width: 200,
+                      height: 200,
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          // Magpapalit ng kulay kapag "puno" na ang timer (Optional visual cue)
+                          color: Colors.greenAccent,
+                          width: 2,
+                        ),
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      // Hint na kailangan mag-antay
+                      child: _lastDetectedCode != null
+                          ? const Center(child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                          : null,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
           const SizedBox(height: 15),
-          Text(
-            "Fetching device status...",
-            style: TextStyle(color: Colors.grey[600], fontSize: 14),
+          const Text(
+            'Hold steady for a moment...', // I-update ang text instruction
+            style: TextStyle(color: Colors.green, fontSize: 13, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 10),
+          TextButton.icon(
+            onPressed: () {
+              _detectionTimer?.cancel();
+              _scannerController.stop();
+              setState(() => _isScanning = false);
+            },
+            icon: const Icon(Icons.close, color: Colors.grey),
+            label: const Text('Cancel Scan', style: TextStyle(color: Colors.grey)),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLoadingUI() {
+    return const Expanded(
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CupertinoActivityIndicator(radius: 15),
+            SizedBox(height: 15),
+            Text("Fetching device status...", style: TextStyle(color: Colors.grey, fontSize: 14)),
+          ],
+        ),
       ),
     );
   }
@@ -195,15 +276,15 @@ class _AddDeviceState extends State<AddDevice> {
   Widget _buildMainUI(double screenHeight, double screenWidth) {
     int battery = _deviceInfo?['battery_level'] ?? 0;
     bool isOnline = _deviceInfo?['is_online'] ?? false;
+    String ssid = _deviceInfo?['connected_ssid'] ?? "Not Connected";
+    int rssi = _deviceInfo?['rssi'] ?? -100;
 
-    return Center(
+    return Expanded(
       child: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(25.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // BIG CPU/MEMORY ICON
               Container(
                 padding: const EdgeInsets.all(40),
                 decoration: BoxDecoration(
@@ -211,19 +292,15 @@ class _AddDeviceState extends State<AddDevice> {
                   shape: BoxShape.circle,
                   boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20)],
                 ),
-                child: Icon(Icons.memory, size: 100, color: primaryBlue),
+                child: Icon(Icons.memory, size: 80, color: primaryBlue),
               ),
               const SizedBox(height: 30),
-
-              // DEVICE STATUS SECTION
               Text(
                 _deviceInfo != null ? "ESP32 Device Linked" : "No Device Linked",
                 style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
-
               if (_deviceInfo != null) ...[
-                // ONLINE/OFFLINE CHIP
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
@@ -237,53 +314,25 @@ class _AddDeviceState extends State<AddDevice> {
                   ),
                 ),
                 const SizedBox(height: 25),
-
-                // BATTERY INFO
-                SizedBox(
-                  width: screenWidth * 0.6,
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(_getBatteryIcon(battery), color: _getBatteryColor(battery)),
-                          const SizedBox(width: 10),
-                          Text("$battery%", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: LinearProgressIndicator(
-                          value: battery / 100,
-                          backgroundColor: Colors.grey[300],
-                          color: _getBatteryColor(battery),
-                          minHeight: 10,
-                        ),
-                      ),
-                    ],
-                  ),
+                _buildInfoCard(
+                  icon: isOnline ? Icons.wifi : Icons.wifi_off,
+                  label: "Connected Network",
+                  value: isOnline ? ssid : "Disconnected",
+                  trailing: isOnline ? _buildSignalIndicator(rssi) : null,
+                  iconColor: isOnline ? Colors.blue : Colors.grey,
                 ),
+                const SizedBox(height: 20),
+                _buildBatteryCard(battery),
               ],
-
-              const SizedBox(height: 50),
-
-              // CHANGE DEVICE BUTTON
+              const SizedBox(height: 40),
               SizedBox(
                 width: double.infinity,
                 height: 55,
                 child: ElevatedButton.icon(
                   onPressed: _showChangeDeviceReminder,
                   icon: const Icon(Icons.qr_code_scanner, color: Colors.white),
-                  label: Text(
-                    _deviceInfo != null ? "Change Device" : "Link New Device",
-                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryBlue,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                    elevation: 0,
-                  ),
+                  label: Text(_deviceInfo != null ? "Change Device" : "Link New Device", style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(backgroundColor: primaryBlue, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)), elevation: 0),
                 ),
               ),
               if (_deviceInfo != null)
@@ -298,50 +347,46 @@ class _AddDeviceState extends State<AddDevice> {
     );
   }
 
-  Widget _buildScannerUI() {
-    return Stack(
-      children: [
-        MobileScanner(
-          onDetect: (capture) {
-            final code = capture.barcodes.first.rawValue;
-            if (code != null) {
-              setState(() => _isScanning = false);
-              _showConfirmDialog(code);
-            }
-          },
-        ),
-        // Overlay guide
-        Center(
-          child: Container(
-            width: 250,
-            height: 250,
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.green, width: 3),
-              borderRadius: BorderRadius.circular(20),
-            ),
-          ),
-        ),
-        Positioned(
-          top: 40,
-          left: 20,
-          child: IconButton(
-            icon: const Icon(Icons.close, color: Colors.white, size: 30),
-            onPressed: () => setState(() => _isScanning = false),
-          ),
-        ),
-      ],
+  Widget _buildInfoCard({required IconData icon, required String label, required String value, Widget? trailing, required Color iconColor}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10)]),
+      child: Row(
+        children: [
+          Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: iconColor.withOpacity(0.1), shape: BoxShape.circle), child: Icon(icon, color: iconColor, size: 20)),
+          const SizedBox(width: 15),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)), Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15), overflow: TextOverflow.ellipsis)])),
+          if (trailing != null) trailing,
+        ],
+      ),
     );
   }
 
-  // Helpers para sa kulay at icons
-  Color _getBatteryColor(int level) => level > 60 ? Colors.green : (level > 20 ? Colors.orange : Colors.red);
-  IconData _getBatteryIcon(int level) => level > 80 ? Icons.battery_full : (level > 50 ? Icons.battery_6_bar : Icons.battery_alert);
+  Widget _buildBatteryCard(int battery) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10)]),
+      child: Column(
+        children: [
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text("Battery Level", style: TextStyle(color: Colors.grey)), Text("$battery%", style: const TextStyle(fontWeight: FontWeight.bold))]),
+          const SizedBox(height: 12),
+          ClipRRect(borderRadius: BorderRadius.circular(10), child: LinearProgressIndicator(value: battery / 100, backgroundColor: Colors.grey[100], color: _getBatteryColor(battery), minHeight: 8)),
+        ],
+      ),
+    );
+  }
 
-  // Success, Error, at Confirmation Dialogs (Manatili ang dati mong logic...)
-  // --- CONFIRMATION DIALOG ---
+  Widget _buildSignalIndicator(int rssi) {
+    int bars = rssi > -60 ? 3 : (rssi > -75 ? 2 : (rssi > -90 ? 1 : 0));
+    return Row(mainAxisSize: MainAxisSize.min, children: List.generate(3, (index) => Container(margin: const EdgeInsets.symmetric(horizontal: 1), width: 4, height: (index + 1) * 4.0, decoration: BoxDecoration(color: index < bars ? Colors.blue : Colors.grey[300], borderRadius: BorderRadius.circular(2)))));
+  }
+
+  Color _getBatteryColor(int level) => level > 60 ? Colors.green : (level > 20 ? Colors.orange : Colors.red);
+
   void _showConfirmDialog(String detectedValue) {
     String macAddress = detectedValue.trim().toUpperCase();
-
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -352,37 +397,18 @@ class _AddDeviceState extends State<AddDevice> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              "Device Detected!",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-            ),
+            const Text("Device Detected!", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
             const SizedBox(height: 10),
-            Text(
-              "MAC: $macAddress",
-              style: const TextStyle(fontFamily: 'monospace', fontSize: 13),
-              textAlign: TextAlign.center,
-            ),
+            Text("MAC: $macAddress", style: const TextStyle(fontFamily: 'monospace', fontSize: 13)),
             const SizedBox(height: 15),
             const Text("Link this device to your account?"),
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              setState(() => _isScanning = true); // Balik sa scanner kung ayaw
-            },
-            child: const Text("Cancel", style: TextStyle(color: Colors.black)),
-          ),
+          TextButton(onPressed: () { Navigator.pop(context); setState(() => _isScanning = true); _scannerController.start(); }, child: const Text("Cancel")),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: primaryBlue,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-            onPressed: () {
-              Navigator.pop(context); // Close confirm dialog
-              _linkDeviceToSupabase(macAddress); // Proceed to validation and linking
-            },
+            style: ElevatedButton.styleFrom(backgroundColor: primaryBlue),
+            onPressed: () { Navigator.pop(context); _linkDeviceToSupabase(macAddress); },
             child: const Text("Bind Device", style: TextStyle(color: Colors.white)),
           ),
         ],
@@ -390,61 +416,31 @@ class _AddDeviceState extends State<AddDevice> {
     );
   }
 
-  // --- SUPABASE LINKING WITH VALIDATION ---
   Future<void> _linkDeviceToSupabase(String macAddress) async {
-
     try {
       final user = _supabase.auth.currentUser;
       if (user == null) throw 'User session not found.';
 
-      // 1. VALIDATION: Check if this MAC is already owned by someone else
-      final existingDevice = await _supabase
-          .from('devices')
-          .select('user_id')
-          .eq('mac_address', macAddress)
-          .maybeSingle();
+      final existingDevice = await _supabase.from('devices').select('user_id').eq('mac_address', macAddress).maybeSingle();
 
-      // Kung may nahanap at hindi ID ng current user, error!
       if (existingDevice != null && existingDevice['user_id'] != user.id) {
-        if (mounted) Navigator.pop(context); // Close loading
-        _showCompactError(
-            "Device Busy",
-            "This ESP32 is already registered to another user."
-        );
+        _showCompactError("Device Busy", "This ESP32 is already registered to another user.");
         return;
       }
 
-      // 2. UPDATE Students Table (Para sa profile details)
-      await _supabase
-          .from('students')
-          .update({'mac_address': macAddress})
-          .eq('id', user.id);
+      // ✅ Update Student Table
+      await _supabase.from('students').update({'mac_address': macAddress}).eq('id', user.id);
 
-      // 3. UPSERT Devices Table (Para sa hardware monitoring)
-      await _supabase
-          .from('devices')
-          .upsert({
-        'user_id': user.id,
-        'mac_address': macAddress,
-        'battery_level': 0,
-        'is_online': false,
-        'last_seen': DateTime.now().toUtc().toIso8601String(),
-      }, onConflict: 'mac_address');
+      await _supabase.from('devices').upsert({'user_id': user.id, 'mac_address': macAddress, 'is_online': true, 'last_seen': DateTime.now().toUtc().toIso8601String()}, onConflict: 'mac_address');
 
       if (!mounted) return;
-      Navigator.pop(context); // Close loading
-
       await _showCompactSuccess();
-
-      // Redirect balik sa main shell para ma-refresh ang data
       Navigator.of(context).pushNamedAndRemoveUntil('/mainshell', (route) => false);
     } catch (e) {
-      if (mounted) {
-        Navigator.pop(context); // Close loading
-        _showCompactError("Link Failed", e.toString());
-      }
+      if (mounted) _showCompactError("Link Failed", e.toString());
     }
   }
+
   void _showCompactError(String title, String msg) {
     showDialog(
       context: context,
@@ -461,17 +457,7 @@ class _AddDeviceState extends State<AddDevice> {
               const SizedBox(height: 8),
               Text(msg, textAlign: TextAlign.center, style: const TextStyle(fontSize: 13)),
               const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    setState(() => _isScanning = true);
-                  },
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                  child: const Text("OK", style: TextStyle(color: Colors.white)),
-                ),
-              )
+              SizedBox(width: double.infinity, child: ElevatedButton(onPressed: () => Navigator.pop(context), style: ElevatedButton.styleFrom(backgroundColor: Colors.red), child: const Text("OK", style: TextStyle(color: Colors.white)))),
             ],
           ),
         ),
@@ -485,18 +471,18 @@ class _AddDeviceState extends State<AddDevice> {
       barrierDismissible: false,
       builder: (context) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
+        child: const Padding(
+          padding: EdgeInsets.all(20.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.check_circle_outline, color: Colors.green, size: 45),
-              const SizedBox(height: 15),
-              const Text("Registered!", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
-              const SizedBox(height: 8),
-              const Text("Device linked successfully.", style: TextStyle(fontSize: 13, color: Colors.grey)),
-              const SizedBox(height: 20),
-              const CircularProgressIndicator(strokeWidth: 2),
+              Icon(Icons.check_circle_outline, color: Colors.green, size: 45),
+              SizedBox(height: 15),
+              Text("Registered!", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+              SizedBox(height: 8),
+              Text("Device linked successfully.", style: TextStyle(fontSize: 13, color: Colors.grey)),
+              SizedBox(height: 20),
+              CircularProgressIndicator(strokeWidth: 2),
             ],
           ),
         ),

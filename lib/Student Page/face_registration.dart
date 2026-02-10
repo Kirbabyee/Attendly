@@ -22,7 +22,7 @@ class Face_Registration extends StatefulWidget {
 }
 
 class _Face_RegistrationState extends State<Face_Registration> {
-  static const String _baseUrl = 'https://web-production-f2d54.up.railway.app';
+  static const String _baseUrl = 'https://web-production-72dd7.up.railway.app';
 
   String _statusText = 'Align your face to the guide';
 

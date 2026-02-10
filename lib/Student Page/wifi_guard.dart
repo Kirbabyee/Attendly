@@ -1,7 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'mainshell.dart'; // Siguraduhing tama ang import path nito
+import 'mainshell.dart';
+import 'student_session.dart';
 
 class WifiGuard extends StatefulWidget {
   const WifiGuard({super.key});
@@ -13,50 +14,92 @@ class WifiGuard extends StatefulWidget {
 class _WifiGuardState extends State<WifiGuard> {
   final supabase = Supabase.instance.client;
   RealtimeChannel? _channel;
+  String? _macAddress;
+  String? _currentLocation;
 
   @override
   void initState() {
     super.initState();
-    _subscribeToLocationChanges();
+    _initGuard();
   }
 
-  void _subscribeToLocationChanges() {
+  Future<void> _initGuard() async {
     final userId = supabase.auth.currentUser?.id;
     if (userId == null) return;
 
-    _channel = supabase
-        .channel('public:students') // Mas simple na channel name
-        .onPostgresChanges(
-      event: PostgresChangeEvent.all, // Pakinggan lahat (update, insert, delete)
-      schema: 'public',
-      table: 'students',
-      callback: (payload) {
-        print('Realtime Payload Received: ${payload.newRecord}'); // Tingnan sa console
+    try {
+      // 1. Kunin ang mac_address ng student
+      final res = await supabase
+          .from('students')
+          .select('mac_address')
+          .eq('id', userId)
+          .maybeSingle();
 
-        final newLocation = payload.newRecord['location']?.toString().toUpperCase();
-        final recordId = payload.newRecord['id'];
+      if (res != null && res['mac_address'] != null) {
+        final mac = res['mac_address'].toString();
+        setState(() => _macAddress = mac);
 
-        // Siguraduhin na ang update ay para sa kasalukuyang user
-        if (recordId == userId && newLocation == 'CLASSROOM') {
-          print('Match found! Redirecting...');
-          if (mounted) {
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (_) => const Mainshell()),
-                  (route) => false,
-            );
+        // 2. INITIAL CHECK: Baka classroom na agad ang device
+        final deviceRes = await supabase
+            .from('devices')
+            .select('current_location')
+            .eq('mac_address', mac)
+            .maybeSingle();
+
+        if (deviceRes != null) {
+          final loc = deviceRes['current_location']?.toString().toUpperCase();
+          setState(() => _currentLocation = loc);
+          if (loc == 'CLASSROOM') {
+            _unlock();
+            return;
           }
         }
-      },
-    )
-        .subscribe((status, [error]) {
-      print('Subscription Status: $status'); // Dapat lumabas ay 'SUBSCRIBED'
-      if (error != null) print('Subscription Error: $error');
-    });
+
+        // 3. Subukan pakinggan ang mga susunod na updates
+        _subscribeToDeviceLocation(mac);
+      }
+    } catch (e) {
+      debugPrint("Error fetching student mac: $e");
+    }
+  }
+
+  void _subscribeToDeviceLocation(String mac) {
+    _channel = supabase
+        .channel('public:device_location_guard')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.update,
+          schema: 'public',
+          table: 'devices',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'mac_address',
+            value: mac,
+          ),
+          callback: (payload) {
+            final newLoc = payload.newRecord['current_location']?.toString().toUpperCase();
+            setState(() => _currentLocation = newLoc);
+            
+            // Unlock kapag naging CLASSROOM lang.
+            // Pag OUTSIDE, GATE, o null, mananatili dito (Disabled).
+            if (newLoc == 'CLASSROOM') {
+              _unlock();
+            }
+          },
+        )
+        .subscribe();
+  }
+
+  void _unlock() {
+    if (mounted) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const Mainshell()),
+        (route) => false,
+      );
+    }
   }
 
   @override
   void dispose() {
-    // Importante: I-stop ang pag-listen kapag umalis na sa page para iwas memory leak
     if (_channel != null) {
       supabase.removeChannel(_channel!);
     }
@@ -99,13 +142,12 @@ class _WifiGuardState extends State<WifiGuard> {
               ),
               const SizedBox(height: 15),
               const Text(
-                'You are not connected to the classroom\'s AP. Attendly features are disabled for security purposes.',
+                'Your device location is currently outside the classroom. Access to Attendly features is restricted for security.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 16, color: Colors.grey, height: 1.5),
               ),
               const SizedBox(height: 50),
 
-              // Animated Loader para ipakita na "nagbabantay" ang app
               const CupertinoActivityIndicator(radius: 12),
               const SizedBox(height: 10),
               const Text(
@@ -121,19 +163,28 @@ class _WifiGuardState extends State<WifiGuard> {
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: Colors.orange.withOpacity(0.3)),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(CupertinoIcons.location_north_fill, size: 16, color: Colors.orange),
-                    SizedBox(width: 8),
-                    Text("Current Location: GATE", style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold)),
+                    const Icon(CupertinoIcons.location_north_fill, size: 16, color: Colors.orange),
+                    const SizedBox(width: 8),
+                    Text(
+                      "Location: ${_currentLocation ?? 'Detecting...'}",
+                      style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
+                    ),
                   ],
                 ),
               ),
               const SizedBox(height: 30),
               CupertinoButton(
                 child: const Text('Log Out', style: TextStyle(color: Colors.black)),
-                onPressed: () async => await supabase.auth.signOut(),
+                onPressed: () async {
+                  await supabase.auth.signOut();
+                  StudentSession.clear();
+                  if (mounted) {
+                    Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+                  }
+                },
               ),
             ],
           ),

@@ -8,6 +8,7 @@ import 'package:flutter_project_1/Student%20Page/mainshell.dart';
 import 'package:flutter_project_1/Student%20Page/two_fa_verification.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'Notification/push_token_service.dart';
+import 'maintenance.dart';
 import 'student_session.dart'; // adjust path kung nasaan file mo
 import 'dart:io';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -281,17 +282,20 @@ class _LoginState extends State<Login> {
                             },
                           ),
                         ),
-                        Container(
-                          margin: EdgeInsets.fromLTRB(screenWidth * .46,0,0,0),
-                          child: InkWell(
-                            onTap: () {
-                              Navigator.pushNamed(context, '/forgot_password');
-                            },
-                            child: Text(
-                              'Forgot Password?',
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontSize: screenHeight * .015,
+                        SizedBox(
+                          width: screenWidth * .83,
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: InkWell(
+                              onTap: () {
+                                Navigator.pushNamed(context, '/forgot_password');
+                              },
+                              child: Text(
+                                'Forgot Password?',
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: screenHeight * .015,
+                                ),
                               ),
                             ),
                           ),
@@ -460,12 +464,12 @@ class _LoginState extends State<Login> {
                                 );
                               },
                               onVerify: (otp) async {
-                                final resp = await supabase.functions.invoke(
+                                final res = await supabase.functions.invoke(
                                   'verify-2fa-otp',
                                   body: {'email': emailToUse, 'otp': otp},
                                 );
 
-                                final data = Map<String, dynamic>.from(resp.data ?? {});
+                                final data = Map<String, dynamic>.from(res.data ?? {});
                                 return data['verified'] == true; // ✅
                               },
                             );
@@ -518,6 +522,25 @@ class _LoginState extends State<Login> {
                           if (!isDeviceLinked) {
                             Navigator.of(context).pushNamedAndRemoveUntil('/device_registration', (r) => false);
                             return;
+                          }
+
+                          try {
+                            final maintenanceRow = await supabase
+                                .from('system_settings')
+                                .select('is_active')
+                                .eq('id', 'maintenance_mode')
+                                .maybeSingle();
+
+                            if (maintenanceRow != null && maintenanceRow['is_active'] == true) {
+                              if (!mounted) return;
+                              Navigator.of(context).pushAndRemoveUntil(
+                                MaterialPageRoute(builder: (_) => const MaintenanceGuard()),
+                                    (route) => false,
+                              );
+                              return;
+                            }
+                          } catch (e) {
+                            debugPrint("Maintenance check error: $e");
                           }
 
                           // 3. Kung lahat ay okay (Face at Device), punta sa Main Shell

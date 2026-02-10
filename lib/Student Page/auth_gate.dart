@@ -4,6 +4,7 @@ import 'package:flutter_project_1/Student%20Page/face_registration.dart';
 import 'package:flutter_project_1/Student%20Page/device_registration.dart'; // Siguraduhing imported ito
 import 'package:flutter_project_1/Student%20Page/wifi_guard.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'maintenance.dart';
 import 'student_session.dart';
 
 import '../main.dart';
@@ -94,6 +95,25 @@ class _AuthGateState extends State<AuthGate> with SingleTickerProviderStateMixin
           MaterialPageRoute(builder: (_) => const LandingPage()), (route) => false,
         );
         return;
+      }
+
+      try {
+        final maintenanceRow = await supabase
+            .from('system_settings')
+            .select('is_active')
+            .eq('id', 'maintenance_mode')
+            .maybeSingle();
+
+        if (maintenanceRow != null && maintenanceRow['is_active'] == true) {
+          if (!mounted) return;
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const MaintenanceGuard()),
+                (route) => false,
+          );
+          return; // Stop further routing
+        }
+      } catch (e) {
+        debugPrint("Error checking maintenance status: $e");
       }
 
       String location = "NULL";

@@ -311,6 +311,7 @@ class _ChangePasswordState extends State<ChangePassword> {
 
         Form(
           key: _pwFormKey,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -411,6 +412,7 @@ class _ChangePasswordState extends State<ChangePassword> {
 
         Form(
           key: _newPwFormKey,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -572,6 +574,10 @@ class _OtpDialogState extends State<_OtpDialog> {
   void initState() {
     super.initState();
     _startCooldown(widget.cooldownSeconds);
+
+    _otp.addListener(() {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
@@ -596,6 +602,27 @@ class _OtpDialogState extends State<_OtpDialog> {
   }
 
   String get _otpValue => _otp.text.trim();
+
+  void _showOtpSuccessSent(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: const Icon(Icons.check_circle_outline, color: Colors.green, size: 50),
+        content: const Text(
+          "OTP Sent successfully. Please check your email.",
+          textAlign: TextAlign.center,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("OK", style: TextStyle(color: Color(0xFF004280), fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -723,12 +750,16 @@ class _OtpDialogState extends State<_OtpDialog> {
               onTap: (_left > 0 || _resending)
                   ? null
                   : () async {
-                setState(() => _resending = true);
+                setState(() {
+                  _resending = true;
+                  _otpError = null;
+                  _otp.clear();
+                });
                 try {
                   await widget.onResend();
                   if (!mounted) return;
                   _startCooldown(widget.cooldownSeconds);
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('OTP resent. Please check your email.')));
+                  _showOtpSuccessSent(context);
                 } catch (e) {
                   if (!mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(

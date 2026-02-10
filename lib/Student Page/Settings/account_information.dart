@@ -244,6 +244,27 @@ class _AccountInformationState extends State<AccountInformation> {
     );
   }
 
+  String maskEmail(String email, {int keepStart = 3, int keepEnd = 2}) { // email masking
+    email = email.trim();
+    final atIndex = email.indexOf('@');
+    if (atIndex == -1) return email; // not a valid email format
+
+    final local = email.substring(0, atIndex);      // before @
+    final domain = email.substring(atIndex + 1);    // after @
+
+    if (local.length <= keepStart + keepEnd) {
+      // Too short to mask nicely
+      return '${local[0]}***@$domain';
+    }
+
+    final start = local.substring(0, keepStart);
+    final end = local.substring(local.length - keepEnd);
+
+    final stars = '*' * (local.length - keepStart - keepEnd);
+
+    return '$start$stars$end@$domain';
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
@@ -470,7 +491,7 @@ class _AccountInformationState extends State<AccountInformation> {
                           _infoRow('Student No.:', displayStudentNo, screenHeight),
                           _infoRow('Year Level:', displayYear, screenHeight),
                           _infoRow('Section:', displaySection, screenHeight),
-                          _infoRow('Email:', displayEmail, screenHeight),
+                          _infoRow('Email:', maskEmail(displayEmail), screenHeight),
                           SizedBox(height: 10,),
                           Container(
                             child: InkWell(

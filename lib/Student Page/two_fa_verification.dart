@@ -136,6 +136,27 @@ class _TwoFAVerificationPageState extends State<TwoFAVerificationPage> {
     }
   }
 
+  void _showOtpSuccessSent(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: const Icon(Icons.check_circle_outline, color: Colors.green, size: 50),
+        content: const Text(
+          "OTP Sent successfully. Please check your email.",
+          textAlign: TextAlign.center,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("OK", style: TextStyle(color: Color(0xFF004280), fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _resend() async {
     if (_remaining > 0) return;
 
@@ -147,6 +168,7 @@ class _TwoFAVerificationPageState extends State<TwoFAVerificationPage> {
       _otp.clear();
       _otpFocus.requestFocus();
       _startCountdown();
+      _showOtpSuccessSent(context);
     } catch (e) {
       if (!mounted) return;
       setState(() => _error = "Resend failed. $e");
