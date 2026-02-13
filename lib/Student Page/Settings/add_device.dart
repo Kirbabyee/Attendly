@@ -199,8 +199,18 @@ class _AddDeviceState extends State<AddDevice> {
 
                               // Visual feedback na nakuha na
                               if (mounted) {
-                                setState(() => _isScanning = false);
-                                _showConfirmDialog(code);
+                                final rawValue = code.trim().toUpperCase();
+
+                                if (rawValue.startsWith("ATTENDLY-")) {
+                                  String cleanedCode = rawValue.replaceFirst("ATTENDLY-", "");
+                                  setState(() => _isScanning = false);
+                                  _showConfirmDialog(cleanedCode);
+                                } else {
+                                  // Kung walang "ATTENDLY-", invalid QR ang lalabas
+                                  setState(() => _isScanning = false);
+                                  _showCompactError("Invalid QR", "The scanned QR code is not a valid Attendly device.");
+                                }
+
                                 _isProcessing = false;
                                 _lastDetectedCode = null;
                               }
@@ -335,11 +345,6 @@ class _AddDeviceState extends State<AddDevice> {
                   style: ElevatedButton.styleFrom(backgroundColor: primaryBlue, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)), elevation: 0),
                 ),
               ),
-              if (_deviceInfo != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 15),
-                  child: Text("MAC: ${_deviceInfo?['mac_address']}", style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                ),
             ],
           ),
         ),
@@ -398,10 +403,8 @@ class _AddDeviceState extends State<AddDevice> {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text("Device Detected!", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-            const SizedBox(height: 10),
-            Text("MAC: $macAddress", style: const TextStyle(fontFamily: 'monospace', fontSize: 13)),
             const SizedBox(height: 15),
-            const Text("Link this device to your account?"),
+            const Text("Link new device to your account?"),
           ],
         ),
         actions: [
@@ -445,6 +448,7 @@ class _AddDeviceState extends State<AddDevice> {
     showDialog(
       context: context,
       builder: (context) => Dialog(
+        backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         child: Padding(
           padding: const EdgeInsets.all(20.0),

@@ -352,8 +352,24 @@ class _LoginState extends State<Login> {
                           final studentNo = _studentNoController.text.trim();
                           final password = _passwordController.text;
 
-                          // example mapping: studentNo -> email
-                          final email = '$studentNo@attendly.com';
+                          // ✅ Find email from students table using student number
+                          final studentData = await supabase
+                              .from('students')
+                              .select('email')
+                              .eq('student_number', studentNo)
+                              .maybeSingle();
+
+                          if (studentData == null) {
+                            if (!mounted) return;
+                            Navigator.pop(context); // close loading
+                            setState(() {
+                              _loginError = 'Invalid student number or password';
+                            });
+                            _formKey.currentState!.validate();
+                            return;
+                          }
+
+                          final email = studentData['email'];
 
                           final res = await supabase.auth.signInWithPassword(
                             email: email,
